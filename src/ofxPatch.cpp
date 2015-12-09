@@ -7,53 +7,61 @@
 //
 
 #include "ofxPatch.h"
+#include <GLUT/glut.h>
 
 ofxPatch::ofxPatch(){
-    nId         = -1;
-    type        = "none";
-    filePath    = "none";
-    configFile  = "config.xml";
+    nId                 = -1;
+    type                = "none";
+    filePath            = "none";
+    configFile          = "config.xml";
     
-    selectedMaskCorner = -1;
+    selectedMaskCorner  = -1;
     selectedTextureCorner = -1;
     
-    bEditMode   = true;
-    bEditMask   = false;
-    bActive     = false;
-    bVisible    = true;
+    bEditMode           = true;
+    bEditMask           = false;
+    bActive             = false;
+    bVisible            = true;
     
-    bMasking    = false;
+    bMasking            = false;
     
-    bUpdateMask = true;
-    bUpdateCoord= true;
+    bUpdateMask         = true;
+    bUpdateCoord        = true;
     
-    image       = NULL;
-    shader      = NULL;
-    videoPlayer = NULL;
-    videoGrabber= NULL;
-    texture     = NULL;
+    image               = NULL;
+    shader              = NULL;
+    videoPlayer         = NULL;
+    videoGrabber        = NULL;
+    texture             = NULL;
     
-    width       = 640;
-    height      = 480;
-    texOpacity  = 1.0;
-    maskOpacity = 1.0;
+    width               = 640;
+    height              = 480;
+    texOpacity          = 1.0;
+    maskOpacity         = 1.0;
+    
+    disabledPatch       = false;
+    
+    selectedLink        = -1;
+    selectedLinkPath    = -1;
+    
+    bInspector          = false;
     
     string shaderProgram = "#version 120\n\
-#extension GL_ARB_texture_rectangle : enable\n\
-\n\
-uniform sampler2DRect tex0;\n\
-uniform sampler2DRect maskTex;\n\
-uniform float texOpacity;\n\
-uniform float maskOpacity;\n\
-\n\
-void main (void){\n\
+    #extension GL_ARB_texture_rectangle : enable\n\
+    \n\
+    uniform sampler2DRect tex0;\n\
+    uniform sampler2DRect maskTex;\n\
+    uniform float texOpacity;\n\
+    uniform float maskOpacity;\n\
+    \n\
+    void main (void){\n\
     vec2 pos = gl_TexCoord[0].st;\n\
     \n\
     vec4 src = texture2DRect(tex0, pos);\n\
     float mask = texture2DRect(maskTex, pos).r;\n\
     \n\
     gl_FragColor = vec4( src.rgb * texOpacity , clamp( min(src.a,mask) , maskOpacity, 1.0));\n\
-}\n";
+    }\n";
     maskShader.setupShaderFromSource(GL_FRAGMENT_SHADER, shaderProgram);
     maskShader.linkProgram();
     maskFbo.allocate(width, height);
@@ -73,12 +81,14 @@ void main (void){\n\
     title = new ofxTitleBar(&box, &nId);
     title->addButton('m', &bEditMask, TOGGLE_BUTTON);
     title->addButton('v', &bVisible, TOGGLE_BUTTON);
+    title->addButton('i', &bInspector, TOGGLE_BUTTON);
+    title->setParent(*this);
     ofAddListener( title->reset , this, &ofxPatch::_reMakeFrame);
     
-	ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed);
-	ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged);
-	ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased);
-	ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed);
+    ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     
 };
 
@@ -91,95 +101,36 @@ ofxPatch::~ofxPatch(){
     
     if ( videoPlayer != NULL )
         delete videoPlayer;
-
+    
     if ( videoGrabber != NULL )
         delete videoGrabber;
     
     if ( texture != NULL )
         delete texture;
-
+    
     inPut.clear();
     outPut.clear();
     textureCorners.clear();
     maskCorners.clear();
 }
 
-//------------------------------------------------------------------- SET's & GET's
-void ofxPatch::setFrag( string _code){
-    if ( shader != NULL ){
-        if (shader->setFragmentShader( _code )){
-            saveSettings();
-            // Calculate the need dots.
-            //
-            if (shader != NULL){
-                if (shader->getNumberOfTextures() > inPut.size()){
-                    LinkDot p;
-                    bUpdateCoord = true;
-                    inPut.push_back(p);
-                } else if (shader->getNumberOfTextures() < inPut.size()) {
-                    inPut.erase( inPut.end() );
-                    bUpdateCoord = true;
-                }
-            }
+/* ================================================ */
+/*                      LOOPS                       */
+/* ================================================ */
+void ofxPatch::update(){
+    
+    // for Base Nodes, always loads the image
+    //
+    if (imageSrc != "") {
+        delete image;
+        image   = new ofImage();
+        image->loadImage( imageSrc );
+        
+        if (width != image->getWidth() || height != image->getHeight()) {
+            this->resetSize(image->getWidth(), image->getHeight());
         }
     }
-}
-
-void ofxPatch::setTexture(ofTexture& tex, int _texNum){
-    if ( shader != NULL ){
-        shader->setTexture(tex, _texNum);
-    } else {
-        texture = &tex;
-    }
-}
-
-void ofxPatch::setCoorners(ofPoint _coorners[4]){
-    for (int i = 0; i < 4; i++){
-        textureCorners[i].set(_coorners[i]);
-    }
-    bUpdateCoord = true;
-    bUpdateMask = true;
-}
-
-string ofxPatch::getFrag(){
-    if ( shader != NULL ){
-        return shader->getFragmentShader();
-    }
-}
-
-ofTexture& ofxPatch::getSrcTexture(){
-    if (image != NULL)
-        return image->getTextureReference();
-    else if (videoPlayer != NULL)
-        return videoPlayer->getTextureReference();
-    else if (videoGrabber != NULL)
-        return videoGrabber->getTextureReference();
-    else if (texture != NULL)
-        return *texture;
-    else if (shader != NULL)
-        return shader->getTextureReference();
-    else if (texture != NULL)
-        return *texture;
-    else 
-        return maskFbo.dst->getTextureReference();
-}
-
-ofTexture& ofxPatch::getTextureReference(){
-    if (bMasking)
-        return maskFbo.dst->getTextureReference();
-    else
-        return getSrcTexture();
-}
-
-bool ofxPatch::isOver(ofPoint _pos){ 
-    ofRectangle biggerBox = textureCorners.getBoundingBox();
-    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+20);
-
-    return biggerBox.inside(_pos);
-};
-
-//---------------------------------------------------------------------- LOOPS
-void ofxPatch::update(){
+    
     if ((width != getSrcTexture().getWidth()) ||
         (height != getSrcTexture().getHeight()) ){
         width = getSrcTexture().getWidth();
@@ -230,7 +181,7 @@ void ofxPatch::update(){
             texOpacity = ofLerp(texOpacity, 0.8, 0.01);
             maskOpacity = ofLerp(maskOpacity, 0.0, 0.01);
         }
-    
+        
         maskFbo.dst->begin();
         ofClear(0, 0);
         maskShader.begin();
@@ -263,11 +214,11 @@ void ofxPatch::update(){
     // Update shader or video content
     //
     if (videoPlayer != NULL){
-            videoPlayer->update();
+        videoPlayer->update();
     } else if (videoGrabber != NULL){
-            videoGrabber->update();
+        videoGrabber->update();
     } else if (shader != NULL){
-            shader->update();
+        shader->update();
     }
     
     // Send the texture to the linked Patches
@@ -279,7 +230,7 @@ void ofxPatch::update(){
     }
 }
 
-void ofxPatch::draw(){
+void ofxPatch::customDraw(){
     
     if ( bEditMode || bVisible ) {
         
@@ -296,7 +247,8 @@ void ofxPatch::draw(){
         ofPopMatrix();
     }
     
-    if (bEditMode){
+    if (bEditMode) {
+        
         ofPushStyle();
         
         if (title != NULL)
@@ -314,7 +266,12 @@ void ofxPatch::draw(){
                 
                 // Draw contour Line
                 //
+                if(bActive){
+                    ofSetLineWidth(3.f);
+                    ofSetColor(150,150,250);
+                }
                 ofLine(textureCorners[i].x, textureCorners[i].y, textureCorners[(i+1)%4].x, textureCorners[(i+1)%4].y);
+                ofSetLineWidth(1.f);
             }
         } else {
             // Draw dragables mask corners
@@ -323,7 +280,8 @@ void ofxPatch::draw(){
                 ofVec3f pos = ofVec3f( maskCorners[i].x * width, maskCorners[i].y * height, 0.0);
                 pos = surfaceToScreenMatrix * pos;
                 
-                if ( (selectedMaskCorner == i) || ( ofDist(ofGetMouseX(), ofGetMouseY(), pos.x, pos.y) <= 4 ) ) {
+                ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
+                if ( (selectedMaskCorner == i) || ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 4 ) ) {
                     ofSetColor(255,255);
                     ofCircle( pos, 4);
                     ofSetColor(255,100);
@@ -338,7 +296,7 @@ void ofxPatch::draw(){
                 // Draw contour mask line
                 //
                 ofSetColor(255,200);
-                ofVec3f nextPos = ofVec3f(maskCorners[(i+1)%maskCorners.size()].x*width, 
+                ofVec3f nextPos = ofVec3f(maskCorners[(i+1)%maskCorners.size()].x*width,
                                           maskCorners[(i+1)%maskCorners.size()].y*height, 0.0);
                 nextPos = surfaceToScreenMatrix * nextPos;
                 ofLine(pos.x,pos.y,nextPos.x,nextPos.y);
@@ -368,29 +326,618 @@ void ofxPatch::draw(){
             }
         }
         
+        if (type.compare("ofImage") == 0) {
+            if (bInspector) {
+                ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+                inspector->setPosition(textureCorners[1].x/scale.x+2, textureCorners[1].y/scale.y);
+                inspector->setVisible(true);
+            }
+            else inspector->setVisible(false);
+        }
+        
         // Draw the output linking dot
         //
         ofNoFill();
         ofSetColor(255, 150);
         ofCircle(getOutPutPosition(), 5);
         ofPopStyle();
-    
-        // Draw the links
+        
+        // Draw the links between nodes
         //
         for (int i = 0; i < outPut.size(); i++){
             if (outPut[i].to != NULL){
-                ofSetColor(150);
                 ofFill();
                 ofCircle(outPut[i].pos, 3);
-                ofLine(outPut[i].pos, outPut[i].to->pos);
+                if (linkType == STRAIGHT_LINKS)
+                    ofLine(outPut[i].pos, outPut[i].to->pos);
+                else if (linkType == CURVE_LINKS) {
+                    ofNoFill();
+                    ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, outPut[i].to->pos.x-55, outPut[i].to->pos.y, outPut[i].to->pos.x, outPut[i].to->pos.y);
+                    ofFill();
+                }
+                else {
+                    if (outPut[i].link_vertices.size() > 0) {
+                        ofNoFill();
+                        for(int j = 0; j < outPut[i].link_vertices.size(); j++){
+                            ofCircle( outPut[i].link_vertices[j], 4);
+                        }
+                    }
+                    
+                    outPut[i].link_line.clear();
+                    outPut[i].link_line.addVertex(outPut[i].pos);
+                    if (outPut[i].link_vertices.size() > 0)
+                        outPut[i].link_line.addVertices(outPut[i].link_vertices);
+                    outPut[i].link_line.addVertex(outPut[i].to->pos);
+                    outPut[i].link_line.draw();
+                    
+                    ofFill();
+                }
+                
                 ofCircle(outPut[i].to->pos, 3);
+            }
+        }
+    }
+    else {
+        if (bInspector) {
+            inspector->setVisible(false);
+        }
+    }
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                     EVENTS                       */
+/* ================================================ */
+
+void ofxPatch::_reMakeFrame( int &_nId ){
+    float offSet = 0.0;
+    
+    if (title != NULL)
+        offSet = 15;
+    
+    if (type == "ofxGLEditor"){
+        textureCorners[0].set(0.0, height + offSet);
+        textureCorners[1].set(width, height + offSet);
+        textureCorners[2].set(width, offSet);
+        textureCorners[3].set(0.0, offSet);
+    } else {
+        textureCorners[0].set(0.0, offSet);
+        textureCorners[1].set(width, offSet);
+        textureCorners[2].set(width, height + offSet);
+        textureCorners[3].set(0.0, height + offSet);
+    }
+    
+    bUpdateCoord = true;
+    saveSettings();
+}
+
+void ofxPatch::_mousePressed(ofMouseEventArgs &e){
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    
+    if (bEditMode){
+        
+        // check is mouse is pressing over the inspector
+        if (inspector != NULL and inspector->isVisible() and inspector->isHit(mouse.x, mouse.y)) {
+            gui->setOtherSelected(true);
+            return;
+        }
+    }
+    
+    if (bEditMode && bActive ){
+        if (!bEditMask){
+            // Editing the texture corners
+            //
+            for(int i = 0; i < 4; i++){
+                if ( ofDist(mouse.x, mouse.y, textureCorners[i].x, textureCorners[i].y) <= 10 )
+                    selectedTextureCorner = i;
+            }
+        } else {
+            // Editing the mask corners
+            //
+            bool overDot = false;
+            for(int i = 0; i < maskCorners.size(); i++){
+                ofVec3f pos = getSurfaceToScreen( ofPoint(maskCorners[i].x * width, maskCorners[i].y * height));
+                
+                if ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 10 ){
+                    selectedMaskCorner = i;
+                    overDot = true;
+                }
+            }
+            
+            // Add new Dot if it's over the line
+            //
+            if (!overDot){
+                doScreenToSurfaceMatrix();
+                mouse = screenToSurfaceMatrix * mouse;
+                mouse.x = mouse.x / width;
+                mouse.y = mouse.y / height;
+                
+                int addNew = -1;
+                
+                // Search for the right placer to incert the point in the array
+                //
+                for (int i = 0; i < maskCorners.size(); i++){
+                    int next = (i+1)%maskCorners.size();
+                    
+                    ofVec2f AtoM = mouse - maskCorners[i];
+                    ofVec2f AtoB = maskCorners[next] - maskCorners[i];
+                    
+                    float a = atan2f(AtoM.x, AtoM.y);
+                    float b = atan2f(AtoB.x, AtoB.y);
+                    
+                    if ( abs(a - b) < 0.05){
+                        addNew = next;
+                    }
+                }
+                
+                if (addNew >= 0 ){
+                    maskCorners.getVertices().insert( maskCorners.getVertices().begin()+addNew, mouse);
+                    selectedMaskCorner = addNew;
+                }
+                
+            }
+        }
+    }
+    // Is mouse pressing over link dot ?
+    if (bEditMode){
+        
+        bool overDot = false;
+        for (int i = 0; i < outPut.size() and !overDot; i++){
+            
+            for (int j = 0; j < outPut[i].link_vertices.size(); j++){
+                
+                if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
+                    if ((e.button == 2) || (glutGetModifiers() == GLUT_ACTIVE_CTRL)) {
+                        outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
+                    }
+                    else {
+                        selectedLinkPath = j;
+                        selectedLink = i;
+                    }
+                    overDot = true;
+                    ofxPatch::setLinkHit(true);
+                }
+            }
+            
+            if (!overDot and linkType == PATH_LINKS and outPut.size() > 0){
+                vector<ofPoint> link_vertices = outPut[i].link_line.getVertices();
+                
+                if (link_vertices.size()){
+                    int addNew = -1;
+                    int tolerance = 3;
+                    
+                    for (int j = 0; j < link_vertices.size()-1; j++){
+                        int next = (j+1)%link_vertices.size();
+                        
+                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) && is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance))
+                        {
+                            if ((link_vertices[j+1].y - link_vertices[j].y) <= tolerance) // Horizontal line.
+                            {
+                                addNew = j;
+                            }
+                            
+                            const float M = (link_vertices[j+1].y - link_vertices[j].y) / (link_vertices[j+1].x - link_vertices[j].x); // Slope
+                            const float C = -(M * link_vertices[j].x) + link_vertices[j].y; // Y intercept
+                            
+                            // Checking if (x, y) is on the line passing through the end points.
+                            if(std::fabs (mouse.y - (M * mouse.x + C)) <= tolerance) {
+                                addNew = j;
+                            }
+                        }
+                    }
+                    
+                    if (addNew >= 0) {
+                        ofxPatch::setLinkHit(true);
+                        if (outPut[i].link_vertices.size() == 0)
+                            outPut[i].link_vertices.push_back(ofVec3f(mouse.x, mouse.y, 0.0));
+                        else if (addNew == 0)
+                            outPut[i].link_vertices.insert(outPut[i].link_vertices.begin(), ofVec3f(mouse.x, mouse.y, 0.0));
+                        else
+                            outPut[i].link_vertices.insert(outPut[i].link_vertices.begin()+addNew, ofVec3f(mouse.x, mouse.y, 0.0));
+                    }
+                }
             }
         }
     }
 }
 
-// ----------------------------------------------------------------- PUBLIC ACTIONS
-//
+void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
+    
+    if((disabledPatch and !isLinkHit()) or gui->getOtherSelected()){
+        return;
+    }
+    
+    ofVec3f mouse = ofVec3f(e.x, e.y,0);
+    ofVec3f mouseLast = ofVec3f(ofGetPreviousMouseX(),ofGetPreviousMouseY(),0);
+    ofVec3f mouse_transformed = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
+    
+    if (bEditMode){
+        if (!bEditMask){
+            // Drag texture corners
+            //
+            if (( selectedTextureCorner >= 0) && ( selectedTextureCorner < 4) ){
+                
+                if (e.button == 2){
+                    // Deformation
+                    //
+                    textureCorners[selectedTextureCorner].x = mouse_transformed.x;
+                    textureCorners[selectedTextureCorner].y = mouse_transformed.y;
+                    
+                    bUpdateCoord = true;
+                    
+                } else if ( ofGetKeyPressed('r') ){
+                    // Rotation
+                    //
+                    ofVec2f center = getPos();
+                    
+                    ofVec2f fromCenterTo = mouseLast - center;
+                    float prevAngle = -1.0*atan2f(fromCenterTo.x,fromCenterTo.y)+(PI/2);
+                    
+                    fromCenterTo = mouse - center;
+                    float actualAngle = -1.0*atan2f(fromCenterTo.x,fromCenterTo.y)+(PI/2);
+                    
+                    float dif = actualAngle-prevAngle;
+                    
+                    rotate(dif);
+                } else if (( e.button == 1 ) || ofGetKeyPressed('a') ){
+                    // Centered Scale
+                    //
+                    float prevDist = mouseLast.distance(getPos());
+                    float actualDist = mouse.distance(getPos());
+                    
+                    float dif = actualDist/prevDist;
+                    
+                    scale(dif);
+                } else {
+                    // Corner Scale
+                    //
+                    ofVec2f center = getPos();
+                    
+                    int  opositCorner = (selectedTextureCorner - 2 < 0)? (4+selectedTextureCorner-2) : (selectedTextureCorner-2);
+                    ofVec2f toOpositCorner = center - textureCorners[opositCorner];
+                    
+                    float prevDist = mouseLast.distance( textureCorners[opositCorner] );
+                    float actualDist = mouse.distance( textureCorners[opositCorner] );
+                    
+                    float dif = actualDist/prevDist;
+                    
+                    move( textureCorners[opositCorner] + toOpositCorner * dif );
+                    scale(dif);
+                }
+                
+                // Drag all the surface
+                //
+            } else if ( bActive && !isLinkHit() ){
+                for (int i = 0; i < 4; i++){
+                    textureCorners[i] += mouse-mouseLast;
+                }
+                
+                bUpdateCoord = true;
+                mouseLast = mouse;
+            }
+        } else {
+            
+            // Drag mask points
+            //
+            for(int i = 0; i < maskCorners.size(); i++){
+                ofVec3f pos = ofVec3f( maskCorners[i].x * width, maskCorners[i].y * height, 0.0);
+                pos = surfaceToScreenMatrix * pos;
+                
+                if ((selectedMaskCorner >= 0) && (selectedMaskCorner < maskCorners.size() )){
+                    ofVec3f newPos = ofVec3f(mouse_transformed.x, mouse_transformed.y, 0.0);
+                    doScreenToSurfaceMatrix();
+                    
+                    newPos = screenToSurfaceMatrix * mouse_transformed;
+                    newPos.x = ofClamp(newPos.x / width, 0.0, 1.0);
+                    newPos.y = ofClamp(newPos.y / height, 0.0, 1.0);
+                    
+                    maskCorners[selectedMaskCorner] = newPos;
+                    bMasking = true;
+                    
+                    bUpdateMask = true;
+                }
+            }
+        }
+        
+        // Drag link vertices
+        //
+        if (selectedLink >= 0 and selectedLinkPath >= 0) {
+            outPut[selectedLink].link_vertices[selectedLinkPath] = ofVec3f(mouse_transformed.x, mouse_transformed.y, 0.0);
+        }
+
+    }
+}
+
+void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
+    
+    // mouse is not longer pressing the inspector or link
+    gui->setOtherSelected(false);
+    selectedLinkPath = -1;
+    selectedLink     = -1;
+    setLinkHit(false);
+    
+    ofVec3f mouse = ofVec3f(e.x, e.y,0);
+    if (bEditMode || isOver(mouse)){
+        if (!bEditMask){
+            if (( selectedTextureCorner >= 0) && ( selectedTextureCorner < 4) ){
+                selectedTextureCorner = -1;
+            }
+            saveSettings();
+        } else {
+            bUpdateMask = true;
+            saveSettings();
+            selectedMaskCorner = -1;
+        }
+    }
+}
+
+//Key Events
+void ofxPatch::_keyPressed(ofKeyEventArgs &e){
+    
+    if (e.key == OF_KEY_F2){
+        bEditMode = !bEditMode;
+    } else if (e.key == OF_KEY_F3){
+        if ( bActive ){
+            bEditMask = !bEditMask;
+        }
+    } else if (e.key == OF_KEY_F4){
+        if ( bActive ){
+            float offSet = 0.0;
+            
+            if (title != NULL)
+                offSet = 15;
+            
+            if (type == "ofxGLEditor"){
+                textureCorners[0].set(0.0, height + offSet);
+                textureCorners[1].set(width, height + offSet);
+                textureCorners[2].set(width, offSet);
+                textureCorners[3].set(0.0, offSet);
+            } else {
+                textureCorners[0].set(0.0, offSet);
+                textureCorners[1].set(width, offSet);
+                textureCorners[2].set(width, height + offSet);
+                textureCorners[3].set(0.0, height + offSet);
+            }
+        }
+    }
+    
+    if (bActive && bEditMode & bEditMask) {
+        
+        // Delete the selected mask point
+        //
+        if ( (e.key == 'x') &&
+            (selectedMaskCorner >= 0) &&
+            (selectedMaskCorner < maskCorners.size() ) ){
+            maskCorners.getVertices().erase(maskCorners.getVertices().begin()+ selectedMaskCorner );
+            selectedMaskCorner = -1;
+            
+            bUpdateMask = true;
+            saveSettings();
+            
+            bMasking = true;
+        }
+        
+        // Reset all the mask or the texture
+        //
+        if ( (e.key == 'r') ){
+            maskCorners.clear();
+            selectedMaskCorner = -1;
+            maskCorners.addVertex(0.0,0.0);
+            maskCorners.addVertex(1.0,0.0);
+            maskCorners.addVertex(1.0,1.0);
+            maskCorners.addVertex(0.0,1.0);
+            
+            bUpdateMask = true;
+            saveSettings();
+            
+            bMasking = false;
+        }
+    }
+}
+
+void ofxPatch::guiEvent(ofxUIEventArgs &e)
+{
+    string name = e.widget->getName();
+    
+    if (name == "Image src btn" && ((ofxUIButton*)e.widget)->getValue()) {
+        
+        ofFileDialogResult openFileResult = ofSystemLoadDialog("Select an image (.jpg, .jpeg, .png or .bmp)");
+        
+        if (openFileResult.bSuccess){
+            
+            ofFile file (openFileResult.getPath());
+            
+            if (file.exists()){
+                
+                string fileExtension = ofToUpper(file.getExtension());
+                
+                //We only want images
+                if (fileExtension == "JPG"  ||
+                    fileExtension == "PNG"  ||
+                    fileExtension == "JPEG" ||
+                    fileExtension == "GIF"  ||
+                    fileExtension == "BMP"  ) {
+                    imageSrc = openFileResult.getPath();
+                    ((ofxUITextInput*)inspector->getWidget("Image src"))->setTextString(imageSrc);
+                }
+                else return;
+            }
+            file.close();
+        }
+    }
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                     SETTERS                      */
+/* ================================================ */
+
+void ofxPatch::setFrag( string _code){
+    if ( shader != NULL ){
+        if (shader->setFragmentShader( _code )){
+            saveSettings();
+            // Calculate the need dots.
+            //
+            if (shader != NULL){
+                if (shader->getNumberOfTextures() > inPut.size()){
+                    LinkDot p;
+                    bUpdateCoord = true;
+                    inPut.push_back(p);
+                } else if (shader->getNumberOfTextures() < inPut.size()) {
+                    inPut.erase( inPut.end() );
+                    bUpdateCoord = true;
+                }
+            }
+        }
+    }
+}
+
+void ofxPatch::setTexture(ofTexture& tex, int _texNum){
+    if ( shader != NULL ){
+        shader->setTexture(tex, _texNum);
+    } else {
+        texture = &tex;
+    }
+}
+
+void ofxPatch::setCoorners(ofPoint _coorners[4]){
+    for (int i = 0; i < 4; i++){
+        textureCorners[i].set(_coorners[i]);
+    }
+    bUpdateCoord = true;
+    bUpdateMask = true;
+}
+
+void ofxPatch::setLinkType(nodeLinkType type) {
+    linkType = type;
+}
+
+void ofxPatch::setMainCanvas(ofxUISuperCanvas* _gui) {
+    this->gui = _gui;
+    this->setParent(*this->gui);
+}
+
+void ofxPatch::setDisablePatch(bool disable){
+    disabledPatch = disable;
+}
+
+void ofxPatch::setLinkHit(bool linkHit){
+    this->linkHit = linkHit;
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                     GETTERS                      */
+/* ================================================ */
+
+
+string ofxPatch::getFrag(){
+    if ( shader != NULL ){
+        return shader->getFragmentShader();
+    }
+}
+
+ofTexture& ofxPatch::getSrcTexture(){
+    if (image != NULL)
+        return image->getTextureReference();
+    else if (videoPlayer != NULL)
+        return videoPlayer->getTextureReference();
+    else if (videoGrabber != NULL)
+        return videoGrabber->getTextureReference();
+    else if (texture != NULL)
+        return *texture;
+    else if (shader != NULL)
+        return shader->getTextureReference();
+    else if (texture != NULL)
+        return *texture;
+    else
+        return maskFbo.dst->getTextureReference();
+}
+
+ofTexture& ofxPatch::getTextureReference(){
+    if (bMasking)
+        return maskFbo.dst->getTextureReference();
+    else
+        return getSrcTexture();
+}
+
+ofPolyline ofxPatch::getTextureCoorners() {
+    return textureCorners;
+}
+
+float ofxPatch::getHeight() {
+    return height;
+}
+
+float ofxPatch::getWidth(){
+    return width;
+}
+
+float ofxPatch::getHighestYCoord(){
+    int highestCoord = 0;
+    for(int i = 0; i < 4; i++){
+        if(highestCoord < textureCorners[i].y){
+            highestCoord = textureCorners[i].y;
+        }
+    }
+    return highestCoord;
+}
+
+
+float ofxPatch::getLowestYCoord(){
+    int lowestCoord = 10000;
+    for(int i = 0; i < 4; i++){
+        
+        if(lowestCoord > textureCorners[i].y){
+            lowestCoord = textureCorners[i].y;
+        }
+    }
+    return lowestCoord;
+}
+
+float ofxPatch::getHighestXCoord(){
+    int highestCoord = 0;
+    for(int i = 0; i < 4; i++){
+        if(highestCoord < textureCorners[i].x){
+            highestCoord = textureCorners[i].x;
+        }
+    }
+    return highestCoord;
+}
+
+
+float ofxPatch::getLowestXCoord(){
+    int lowestCoord = 10000;
+    for(int i = 0; i < 4; i++){
+        
+        if(lowestCoord > textureCorners[i].x){
+            lowestCoord = textureCorners[i].x;
+        }
+    }
+    return lowestCoord;
+}
+
+bool ofxPatch::isLinkHit(){
+    return linkHit;
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                 OTHER FUNCTIONS                  */
+/* ================================================ */
+
 void ofxPatch::move(ofPoint _pos){
     ofVec2f diff = _pos - getPos();
     
@@ -439,10 +986,49 @@ void ofxPatch::rotate(float _rotAngle){
     bUpdateCoord = true;
 }
 
+bool ofxPatch::isOver(ofPoint _pos){
+    ofRectangle biggerBox = textureCorners.getBoundingBox();
+    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+20);
+    
+    return biggerBox.inside(_pos);
+};
 
-// ----------------------------------------------------------------PRIVATE ACTIONS
-//
+void ofxPatch::moveDiff(ofVec2f diff){
+    for(int i = 0; i < 4; i++){
+        textureCorners[i] += diff;
+    }
+    bUpdateCoord = true;
+}
 
+bool ofxPatch::is_between (float x, float bound1, float bound2, float tolerance) {
+    // Handles cases when 'bound1' is greater than 'bound2' and when
+    // 'bound2' is greater than 'bound1'.
+    return (((x >= (bound1 - tolerance)) && (x <= (bound2 + tolerance))) ||
+            ((x >= (bound2 - tolerance)) && (x <= (bound1 + tolerance))));
+}
+
+void ofxPatch::resetSize(int _width, int _height) {
+    
+    width = _width;
+    height = _height;
+    
+    int offSet;
+    if (title != NULL)
+        offSet = 15;
+    textureCorners[0].set(0.0, offSet);
+    textureCorners[1].set(width, offSet);
+    textureCorners[2].set(width, height + offSet);
+    textureCorners[3].set(0.0, height + offSet);
+    
+    move( ofPoint(x,y) );
+    scale(0.5);
+    setPosition(getGlobalPosition()*((ofCamera*)getParent())->getScale());
+}
+
+
+// -------------------------------------------------------
+// --------------------------------------- TRANSFORMATIONS
+// -------------------------------------------------------
 void ofxPatch::doSurfaceToScreenMatrix(){
     ofPoint src[4];
     
@@ -501,9 +1087,9 @@ void ofxPatch::doSurfaceToScreenMatrix(){
         P[1][8],P[4][8],0,P[7][8], // h12  h22 0 h32
         0      ,      0,0,0,       // 0    0   0 0
         P[2][8],P[5][8],0,1        // h13  h23 0 h33
-    };                          
+    };
     
-    for(int i=0; i<16; i++) 
+    for(int i=0; i<16; i++)
         glMatrix[i] = aux_H[i];
     
     surfaceToScreenMatrix(0,0)=P[0][8];
@@ -576,24 +1162,24 @@ void ofxPatch::doScreenToSurfaceMatrix(){
     doGaussianElimination(&P[0][0],9);
     
     screenToSurfaceMatrix(0,0)=P[0][8];
-	screenToSurfaceMatrix(0,1)=P[1][8];
-	screenToSurfaceMatrix(0,2)=0;
-	screenToSurfaceMatrix(0,3)=P[2][8];
-	
-	screenToSurfaceMatrix(1,0)=P[3][8];
-	screenToSurfaceMatrix(1,1)=P[4][8];
-	screenToSurfaceMatrix(1,2)=0;
-	screenToSurfaceMatrix(1,3)=P[5][8];
-	
-	screenToSurfaceMatrix(2,0)=0;
-	screenToSurfaceMatrix(2,1)=0;
-	screenToSurfaceMatrix(2,2)=0;
-	screenToSurfaceMatrix(2,3)=0;
-	
-	screenToSurfaceMatrix(3,0)=P[6][8];
-	screenToSurfaceMatrix(3,1)=P[7][8];
-	screenToSurfaceMatrix(3,2)=0;
-	screenToSurfaceMatrix(3,3)=1;
+    screenToSurfaceMatrix(0,1)=P[1][8];
+    screenToSurfaceMatrix(0,2)=0;
+    screenToSurfaceMatrix(0,3)=P[2][8];
+    
+    screenToSurfaceMatrix(1,0)=P[3][8];
+    screenToSurfaceMatrix(1,1)=P[4][8];
+    screenToSurfaceMatrix(1,2)=0;
+    screenToSurfaceMatrix(1,3)=P[5][8];
+    
+    screenToSurfaceMatrix(2,0)=0;
+    screenToSurfaceMatrix(2,1)=0;
+    screenToSurfaceMatrix(2,2)=0;
+    screenToSurfaceMatrix(2,3)=0;
+    
+    screenToSurfaceMatrix(3,0)=P[6][8];
+    screenToSurfaceMatrix(3,1)=P[7][8];
+    screenToSurfaceMatrix(3,2)=0;
+    screenToSurfaceMatrix(3,3)=1;
     
 }
 
@@ -661,265 +1247,10 @@ void ofxPatch::doGaussianElimination(float *input, int n){
     }
 }
 
-// -------------------------------------------------------------------- EVENTS
-void ofxPatch::_reMakeFrame( int &_nId ){
-    float offSet = 0.0;
-    
-    if (title != NULL)
-        offSet = 15;
-    
-    if (type == "ofxGLEditor"){
-        textureCorners[0].set(0.0, height + offSet);
-        textureCorners[1].set(width, height + offSet);
-        textureCorners[2].set(width, offSet);
-        textureCorners[3].set(0.0, offSet);
-    } else {
-        textureCorners[0].set(0.0, offSet);
-        textureCorners[1].set(width, offSet);
-        textureCorners[2].set(width, height + offSet);
-        textureCorners[3].set(0.0, height + offSet);
-    }
-    
-    bUpdateCoord = true;
-    saveSettings();
-}
-
-void ofxPatch::_mousePressed(ofMouseEventArgs &e){
-    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
-    
-    if (bEditMode && bActive ){
-        if (!bEditMask){
-            // Editing the texture corners
-            //
-            for(int i = 0; i < 4; i++){
-                if ( ofDist(e.x, e.y, textureCorners[i].x, textureCorners[i].y) <= 10 )
-                    selectedTextureCorner = i;
-            }
-        } else {
-            // Editing the mask corners
-            //
-            bool overDot = false;
-            for(int i = 0; i < maskCorners.size(); i++){
-                ofVec3f pos = getSurfaceToScreen( ofPoint(maskCorners[i].x * width, maskCorners[i].y * height));
-                
-                if ( ofDist(e.x, e.y, pos.x, pos.y) <= 10 ){
-                    selectedMaskCorner = i;
-                    overDot = true;
-                }
-            }
-            
-            // Add new Dot if it's over the line
-            //
-            if (!overDot){
-                doScreenToSurfaceMatrix();
-                mouse = screenToSurfaceMatrix * mouse;
-                mouse.x = mouse.x / width;
-                mouse.y = mouse.y / height;
-                
-                int addNew = -1;
-                
-                // Search for the right placer to incert the point in the array
-                //
-                for (int i = 0; i < maskCorners.size(); i++){
-                    int next = (i+1)%maskCorners.size();
-                    
-                    ofVec2f AtoM = mouse - maskCorners[i];
-                    ofVec2f AtoB = maskCorners[next] - maskCorners[i];
-                    
-                    float a = atan2f(AtoM.x, AtoM.y);
-                    float b = atan2f(AtoB.x, AtoB.y);
-                    
-                    if ( abs(a - b) < 0.05){
-                        addNew = next;
-                    }
-                }
-                
-                if (addNew >= 0 ){
-                    maskCorners.getVertices().insert( maskCorners.getVertices().begin()+addNew, mouse);
-                    selectedMaskCorner = addNew;
-                }
-                
-            }
-        }
-    }
-}
-
-void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
-    ofVec3f mouse = ofVec3f(e.x, e.y,0);
-    ofVec3f mouseLast = ofVec3f(ofGetPreviousMouseX(),ofGetPreviousMouseY(),0);
-    
-    if (bEditMode){
-        if (!bEditMask){
-            // Drag texture corners
-            //
-            if (( selectedTextureCorner >= 0) && ( selectedTextureCorner < 4) ){
-                
-                if (e.button == 2){
-                    // Deformation
-                    //
-                    textureCorners[selectedTextureCorner].x = ofGetMouseX();
-                    textureCorners[selectedTextureCorner].y = ofGetMouseY();
-                    
-                    bUpdateCoord = true;
-                    
-                } else if ( ofGetKeyPressed('r') ){
-                    // Rotation
-                    //
-                    ofVec2f center = getPos();
-                    
-                    ofVec2f fromCenterTo = mouseLast - center;
-                    float prevAngle = -1.0*atan2f(fromCenterTo.x,fromCenterTo.y)+(PI/2);
-                    
-                    fromCenterTo = mouse - center;
-                    float actualAngle = -1.0*atan2f(fromCenterTo.x,fromCenterTo.y)+(PI/2);
-                    
-                    float dif = actualAngle-prevAngle;
-                    
-                    rotate(dif);
-                } else if (( e.button == 1 ) || ofGetKeyPressed('a') ){
-                    // Centered Scale
-                    //
-                    float prevDist = mouseLast.distance(getPos());
-                    float actualDist = mouse.distance(getPos());
-                    
-                    float dif = actualDist/prevDist;
-                    
-                    scale(dif);            
-                } else {
-                    // Corner Scale
-                    //
-                    ofVec2f center = getPos();
-                    
-                    int  opositCorner = (selectedTextureCorner - 2 < 0)? (4+selectedTextureCorner-2) : (selectedTextureCorner-2);
-                    ofVec2f toOpositCorner = center - textureCorners[opositCorner];  
-                    
-                    float prevDist = mouseLast.distance( textureCorners[opositCorner] );
-                    float actualDist = mouse.distance( textureCorners[opositCorner] );
-                    
-                    float dif = actualDist/prevDist;
-                    
-                    move( textureCorners[opositCorner] + toOpositCorner * dif );
-                    scale(dif); 
-                } 
-                
-                // Drag all the surface
-                //
-            } else if ( isOver(mouse) && bActive ){
-                for (int i = 0; i < 4; i++){
-                    textureCorners[i] += mouse-mouseLast;
-                }
-                
-                bUpdateCoord = true;
-                mouseLast = mouse;
-            }
-        } else {
-            
-            // Drag mask points
-            //
-            for(int i = 0; i < maskCorners.size(); i++){
-                ofVec3f pos = ofVec3f( maskCorners[i].x * width, maskCorners[i].y * height, 0.0);
-                pos = surfaceToScreenMatrix * pos;
-                
-                if ((selectedMaskCorner >= 0) && (selectedMaskCorner < maskCorners.size() )){
-                    ofVec3f newPos = ofVec3f(mouse.x, mouse.y, 0.0);
-                    doScreenToSurfaceMatrix();
-                    
-                    newPos = screenToSurfaceMatrix * mouse;
-                    newPos.x = ofClamp(newPos.x / width, 0.0, 1.0);
-                    newPos.y = ofClamp(newPos.y / height, 0.0, 1.0);
-                    
-                    maskCorners[selectedMaskCorner] = newPos;
-                    bMasking = true;
-                    
-                    bUpdateMask = true;
-                }
-            }
-        }
-    }
-}
-
-void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
-    ofVec3f mouse = ofVec3f(e.x, e.y,0);
-    if (bEditMode || isOver(mouse)){
-        if (!bEditMask){
-            if (( selectedTextureCorner >= 0) && ( selectedTextureCorner < 4) ){
-                selectedTextureCorner = -1;
-            } 
-            saveSettings();
-        } else {
-            bUpdateMask = true;
-            saveSettings();
-            selectedMaskCorner = -1;
-        }
-    }
-}
-
-//Key Events
-void ofxPatch::_keyPressed(ofKeyEventArgs &e){
-    
-    if (e.key == OF_KEY_F2){
-        bEditMode = !bEditMode;
-    } else if (e.key == OF_KEY_F3){
-        if ( bActive ){
-            bEditMask = !bEditMask;
-        }
-    } else if (e.key == OF_KEY_F4){
-        if ( bActive ){
-            float offSet = 0.0;
-            
-            if (title != NULL)
-                offSet = 15;
-            
-            if (type == "ofxGLEditor"){
-                textureCorners[0].set(0.0, height + offSet);
-                textureCorners[1].set(width, height + offSet);
-                textureCorners[2].set(width, offSet);
-                textureCorners[3].set(0.0, offSet);
-            } else {
-                textureCorners[0].set(0.0, offSet);
-                textureCorners[1].set(width, offSet);
-                textureCorners[2].set(width, height + offSet);
-                textureCorners[3].set(0.0, height + offSet);
-            }
-        }
-    }
-    
-    if (bActive && bEditMode & bEditMask) {
-        
-        // Delete the selected mask point
-        //
-        if ( (e.key == 'x') && 
-            (selectedMaskCorner >= 0) && 
-            (selectedMaskCorner < maskCorners.size() ) ){
-            maskCorners.getVertices().erase(maskCorners.getVertices().begin()+ selectedMaskCorner );
-            selectedMaskCorner = -1;
-            
-            bUpdateMask = true;
-            saveSettings();
-            
-            bMasking = true;
-        }
-        
-        // Reset all the mask or the texture
-        //
-        if ( (e.key == 'r') ){
-            maskCorners.clear();
-            selectedMaskCorner = -1;
-            maskCorners.addVertex(0.0,0.0);
-            maskCorners.addVertex(1.0,0.0);
-            maskCorners.addVertex(1.0,1.0);
-            maskCorners.addVertex(0.0,1.0);
-            
-            bUpdateMask = true;
-            saveSettings();
-            
-            bMasking = false;
-        }
-    }   
-}
-
-// ------------------------------------------------------------- LOAD & SAVE
-bool ofxPatch::loadFile(string _filePath, string _configFile){ 
+// -----------------------------------------------------------
+// ----------------------------------------------- LOAD & SAVE
+// -----------------------------------------------------------
+bool ofxPatch::loadFile(string _filePath, string _configFile){
     bool loaded = false;
     
     if (_configFile != "none")
@@ -958,6 +1289,22 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         loaded  = image->loadImage( filePath );
         width   = image->getWidth();
         height  = image->getHeight();
+        
+        
+        // Setting Inspector
+        //
+        imageSrc = _filePath;
+        inspector = new ofxUICanvas();
+        inspector->addLabel("INSPECTOR");
+        inspector->addSpacer();
+        inspector->addLabel("Image src:");
+        ofxUITextInput* ti = inspector->addTextInput("Image src", imageSrc);
+        ti->setDraggable(false);
+        inspector->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
+        inspector->addImageButton("Image src btn", "assets/edit.png", false);
+        inspector->autoSizeToFitWidgets();
+        ofAddListener(inspector->newGUIEvent,this,&ofxPatch::guiEvent);
+        inspector->setVisible(false);
         
     } else if ((ext == "mov") || (ext == "MOV") ||
                (ext == "mpg") || (ext == "MPG") ||
@@ -1028,12 +1375,12 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
                     }
                 }
             }
-        }    
+        }
         texture->loadData( pixels, width, height, GL_RGB);
         
-        loaded = (buffer.size() > 0)? true: false; 
+        loaded = (buffer.size() > 0)? true: false;
         
-    } else 
+    } else
         ofLog(OF_LOG_ERROR, "ofxComposer: ofxPatch: can«t load file " + filePath + " Extention " + ext + " not know" );
     
     if ( loaded ){
@@ -1064,7 +1411,7 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
     return loaded;
 }
 
-bool ofxPatch::loadType(string _type, string _configFile){ 
+bool ofxPatch::loadType(string _type, string _configFile){
     bool loaded = false;
     
     if (_configFile != "none")
@@ -1164,7 +1511,7 @@ bool ofxPatch::loadSettings( int _nTag, string _configFile){
         
         if (XML.pushTag("surface", _nTag)){
             
-            // Load the type and do what it have to 
+            // Load the type and do what it have to
             //
             nId = XML.getValue("id", 0);
             type = XML.getValue("type","none");
@@ -1218,7 +1565,7 @@ bool ofxPatch::loadSettings( int _nTag, string _configFile){
             } else {
                 title->setTitle(ofToString(nId) + ":" + type );
                 loaded = true;
-            } 
+            }
             
             if (loaded){
                 // Load the texture coorners
@@ -1265,7 +1612,7 @@ bool ofxPatch::loadSettings( int _nTag, string _configFile){
                 
                 XML.popTag(); // Pop Surface
             }
-        }    
+        }
     } else
         ofLog(OF_LOG_ERROR,"ofxComposer: loading patch n¼ " + ofToString(nId) + " on " + configFile );
     
@@ -1285,7 +1632,7 @@ bool ofxPatch::saveSettings(string _configFile){
     if (XML.loadFile(configFile)){
         
         // If it«s the first time it«s saving the information
-        // the nId it«s going to be -1 and it«s not going to be 
+        // the nId it«s going to be -1 and it«s not going to be
         // a place that holds the information. It«s that the case:
         //
         //  1- Search for the first free ID abailable number
@@ -1323,7 +1670,7 @@ bool ofxPatch::saveSettings(string _configFile){
                     XML.setValue("type", type);
                     XML.addTag("path");
                     XML.setValue("path", filePath);
-                    XML.addTag("visible"); 
+                    XML.addTag("visible");
                     XML.setValue("visible", bVisible);
                     
                     // For the moment the shader string it's the only one
@@ -1510,3 +1857,222 @@ bool ofxPatch::saveSettings(string _configFile){
     
     return saved;
 }
+
+// -----------------------------------------------------------
+// ------------------------------------------------- SNNIPPETS
+// -----------------------------------------------------------
+bool ofxPatch::loadSnippetPatch(string snippetName, int relativeId, int previousPatchesSize) {
+    bool loaded = false;
+    
+    ofxXmlSettings XML;
+    
+    if (XML.loadFile(snippetName)){
+        maskCorners.clear();
+        width = XML.getValue("general:width", 640 );
+        height = XML.getValue("general:height", 480 );
+        
+        if (XML.pushTag("surface", relativeId)){
+            
+            // Load the type and do what it have to
+            //
+            nId = XML.getValue("id", 0) + previousPatchesSize;
+            type = XML.getValue("type","none");
+            bVisible = XML.getValue("visible", true);
+            string path = XML.getValue("path", "none" );
+            filePath = path;
+            
+            //  Except the ofVideoGrabber that it«s a device instead of a file
+            //  and ofShader that it will read the data stored on the XML
+            //  the rest it been load by the loadFile function
+            //
+            if ( type == "ofVideoGrabber" ){
+                videoGrabber = new ofVideoGrabber();
+                videoGrabber->setDeviceID( XML.getValue("path", 0 ) );
+                
+                title->setTitle(ofToString(nId) + ":" + type );
+                loaded = videoGrabber->initGrabber(width, height);
+                
+                if (loaded){
+                    width = videoGrabber->getWidth();
+                    height = videoGrabber->getHeight();
+                }
+            } else if ( type == "ofShader" ){
+                shader = new ofxShaderObj();
+                shader->allocate(width, height, XML.getValue("format", GL_RGBA));
+                shader->setPasses( XML.getValue("passes", 1) );
+                
+                loaded = shader->setFragmentShader( XML.getValue("frag", "Error: data not found...") );
+                
+                if ( loaded ){
+                    inPut.clear();
+                    for ( int i = 0; i < shader->getNumberOfTextures();  i++){
+                        LinkDot p;
+                        inPut.push_back(p);
+                    }
+                    
+                    ofFile file;
+                    file.open(path);
+                    title->setTitle(ofToString(nId) + ":" +  file.getFileName() );
+                }
+            } else if( type == "ofxGLEditor" ){
+                title->setTitle(ofToString(nId) + ":" + type );
+                loaded = true;
+            } else if (( type == "ofImage") || ( type == "ofTexture") || (type == "ofVideoPlayer")){
+                loaded = loadFile( path );
+            } else {
+                title->setTitle(ofToString(nId) + ":" + type );
+                loaded = true;
+            }
+            
+            if (loaded){
+                // Load the texture coorners
+                //
+                if (XML.pushTag("texture")){
+                    for(int i = 0; i < 4; i++){
+                        if (XML.pushTag("point",i)){
+                            textureCorners[i].set(XML.getValue("x", 0.0),XML.getValue("y", 0.0));
+                            XML.popTag();
+                        }
+                    }
+                    XML.popTag();
+                }
+                
+                // Load the mask path
+                if ( XML.pushTag("mask") ){
+                    int totalMaskCorners = XML.getNumTags("point");
+                    if (totalMaskCorners > 0){
+                        maskCorners.clear();
+                    }
+                    
+                    for(int i = 0; i < totalMaskCorners; i++){
+                        XML.pushTag("point",i);
+                        maskCorners.addVertex( XML.getValue("x", 0.0),XML.getValue("y", 0.0));
+                        XML.popTag(); // Pop "point"
+                    }
+                    XML.popTag(); // Pop "mask"
+                    
+                    if ( maskCorners.getVertices().size() == 4 ){
+                        if ((maskCorners.getVertices()[0] == ofPoint(0.0,0.0)) &&
+                            (maskCorners.getVertices()[1] == ofPoint(1.0,0.0)) &&
+                            (maskCorners.getVertices()[2] == ofPoint(1.0,1.0)) &&
+                            (maskCorners.getVertices()[3] == ofPoint(0.0,1.0)) )
+                            bMasking = false;
+                        else
+                            bMasking = true;
+                    } else {
+                        bMasking = true;
+                    }
+                }
+                
+                bUpdateMask = true;
+                bUpdateCoord = true;
+                
+                XML.popTag(); // Pop Surface
+            }
+        }
+    } else
+        ofLog(OF_LOG_ERROR,"ofxComposer: loading patch n¼ " + ofToString(nId) + " on " + snippetName );
+    
+    return loaded;
+}
+
+bool ofxPatch::saveSnippetPatch(string snippetName, map<int, int> idMap, ofxXmlSettings XML) {
+    bool saved = false;
+    
+    if (!bActive) {
+        return;
+    }
+
+    int lastPlace = XML.addTag("surface");
+    if (XML.pushTag("surface", lastPlace)){
+        
+        XML.addTag("id");
+        XML.setValue("id", idMap[nId]);
+        XML.addTag("type");
+        XML.setValue("type", type);
+        XML.addTag("path");
+        XML.setValue("path", filePath);
+        XML.addTag("visible");
+        XML.setValue("visible", bVisible);
+        
+        // For the moment the shader string it's the only one
+        // with an extra parametter.
+        //
+        if ( shader != NULL) {
+            XML.addTag("frag");
+            XML.setValue("frag", shader->getFragmentShader() );
+            XML.addTag("format");
+            XML.setValue("format", shader->getInternalFormat() );
+            XML.addTag("passes");
+            XML.setValue("passes", shader->getPasses() );
+        }
+        
+        // Texture Corners
+        //
+        XML.addTag("texture");
+        if (XML.pushTag("texture")){
+            for(int i = 0; i < 4; i++){
+                
+                XML.addTag("point");
+                
+                XML.setValue("point:x",textureCorners[i].x, i);
+                XML.setValue("point:y",textureCorners[i].y, i);
+            }
+            XML.popTag();// Pop "texture"
+        }
+        
+        // Mask Path
+        //
+        XML.addTag("mask");
+        if (XML.pushTag("mask")){
+            for(int i = 0; i < 4; i++){
+                XML.addTag("point");
+                
+                XML.setValue("point:x",maskCorners[i].x, i);
+                XML.setValue("point:y",maskCorners[i].y, i);
+            }
+            XML.popTag();// Pop "mask"
+        }
+        
+        // Save out linked dots
+        //
+        XML.addTag("out");
+        XML.setValue("out:active",1);
+        if(XML.pushTag("out")){
+            int totalSavedLinks = XML.getNumTags("dot");
+            
+            for(int j = 0; j < outPut.size(); j++){
+                int tagNum = j;
+                
+                // If need more tags
+                // add them
+                //
+                if (j >= totalSavedLinks)
+                    tagNum = XML.addTag("dot");
+                
+                XML.setValue("dot:to", idMap[outPut[j].toId] , tagNum);
+                XML.setValue("dot:tex", idMap[outPut[j].nTex], tagNum);
+            }
+            XML.popTag(); // pop "out"
+            saved = XML.saveFile();
+        }
+        
+        XML.popTag(); // pop "surface"
+    }
+    
+    // This is necesary for making the initial matrix, mask FBO, mask path and texture corners.
+    //
+    if (saved){
+        ofLog(OF_LOG_NOTICE, "The patch have been asigned with ID " + ofToString(idMap[nId]) + " and save the information" );
+    }
+    
+    return saved;
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+
+
+

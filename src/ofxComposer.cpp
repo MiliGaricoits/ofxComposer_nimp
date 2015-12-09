@@ -11,41 +11,45 @@
 //  HELP screen -> F1
 //
 string helpScreen = "\n \
-    | ofxComposer help\n \
-    ---------------------------------------------------\n \
-    \n \
-    - F1:   Turn ON/OFF this help message\n \
-    - F2:   Surface Edit-Mode on/off\n \
-    - F3:   Masking-Mode ON/OFF (need Edit-Mode ) \n \
-    \n \
-            On mask mode on:\n \
-                            - x: delete mask path point\n \
-                            - r: reset mask path\n \
-    \n \
-    - F4:   Reset surface coorners\n \
-    - F5:   Add ofxGLEditor (temporal!!!) and if have it add ofVideoGrabber (temporal!!!)\n \
-    - F6:   Add ofShader (temporal!!!)\n \
-    - F7:   Turn ON/OFF the fullscreen-mode\n \
-    \n \
-    Mouse and Coorners: \n \
-    - Left Button Drag:     coorner proportional scale \n \
-    - Left Button Drag + R: Rotate Patch\n \
-    - Middle Button Drag \n \
-            or \n \
-      Right Drag + A:       centered proportional scale\n \
-    - Right Button Drag:    coorner transformation\n ";
-    
+| ofxComposer help\n \
+---------------------------------------------------\n \
+\n \
+- F1:   Turn ON/OFF this help message\n \
+- F2:   Surface Edit-Mode on/off\n \
+- F3:   Masking-Mode ON/OFF (need Edit-Mode ) \n \
+\n \
+On mask mode on:\n \
+- x: delete mask path point\n \
+- r: reset mask path\n \
+\n \
+- F4:   Reset surface coorners\n \
+- F5:   Add ofxGLEditor (temporal!!!) and if have it add ofVideoGrabber (temporal!!!)\n \
+- F6:   Add ofShader (temporal!!!)\n \
+- F7:   Turn ON/OFF the fullscreen-mode\n \
+\n \
+Mouse and Coorners: \n \
+- Left Button Drag:     coorner proportional scale \n \
+- Left Button Drag + R: Rotate Patch\n \
+- Middle Button Drag \n \
+or \n \
+Right Drag + A:       centered proportional scale\n \
+- Right Button Drag:    coorner transformation\n ";
+
 ofxComposer::ofxComposer(){
     
     //  Event listeners
     //
-    ofAddListener(ofEvents().mouseMoved, this, &ofxComposer::_mouseMoved);
-	ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed);
-	ofAddListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased);
-	ofAddListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed);
-    ofAddListener(ofEvents().windowResized, this, &ofxComposer::_windowResized);
+    ofAddListener(ofEvents().mouseMoved, this, &ofxComposer::_mouseMoved, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().windowResized, this, &ofxComposer::_windowResized, COMPOSER_EVENT_PRIORITY);
     
-#ifdef USE_OFXGLEDITOR       
+    // scrollbar
+    //
+    ofAddListener(ofEvents().mouseDragged, this, &ofxComposer::_mouseDragged, COMPOSER_EVENT_PRIORITY);
+    
+#ifdef USE_OFXGLEDITOR
     editor.setup("menlo.ttf");
     editor.setCurrentEditor(1);
     editorBgColor.set(0,0);
@@ -64,7 +68,514 @@ ofxComposer::ofxComposer(){
     bEditMode = true;
     bGLEditorPatch = false;
     bHelp = false;
+    
+    // zoom & drag
+    //
+    disabledPatches = false;
+    
+    // aligned nodes
+    //
+    verticalAlign1 = 0;
+    verticalAlign2 = 0;
+    horizontalAlign1 = 0;
+    horizontalAlign2 = 0;
+    
+    // multiple select
+    //
+    multipleSelectFromX = 0;
+    multipleSelectFromY = 0;
 }
+
+/* ================================================ */
+/*                      LOOPS                       */
+/* ================================================ */
+
+void ofxComposer::update(){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->update();
+    }
+    
+    if ( (bEditMode) && (selectedID >= 0)){
+#ifdef USE_OFXGLEDITOR
+        if (patches[selectedID]->getType() == "ofShader"){
+            editorBgColor.lerp(ofColor(0,150), 0.01);
+            editorFgColor.lerp(ofColor(255,255), 0.1);
+        } else {
+            editorBgColor.lerp(ofColor(0,0), 0.01);
+            editorFgColor.lerp(ofColor(0,0), 0.05);
+        }
+        
+        editorFbo.begin();
+        //ofEnableAlphaBlending();
+        ofClear(editorBgColor);
+        ofDisableBlendMode();
+        ofRotate(180, 0, 1, 0);
+        ofSetColor(255,255);
+        editor.draw();
+        editorFbo.end();
+#endif
+    }
+}
+
+
+void ofxComposer::customDraw(){
+    ofPushView();
+    ofPushStyle();
+    ofPushMatrix();
+    
+    ofEnableAlphaBlending();
+    
+#ifdef USE_OFXGLEDITOR
+    //  Draw the GLEditor if it«s not inside a Patch
+    //
+    if (bEditMode && !bGLEditorPatch){
+        ofPushMatrix();
+        ofRotate(180, 1, 0, 0);
+        ofTranslate(0, -ofGetWindowHeight());
+        ofSetColor(editorFgColor);
+        editorFbo.draw(0, 0);
+        ofPopMatrix();
+    }
+#endif
+    
+    //  Draw Patches
+    //
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->customDraw();
+    }
+    
+    //  Draw active line
+    //
+    ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
+    if (selectedDot >= 0){
+        ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
+    }
+    
+    // aligned nodes
+    //
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    if (verticalAlign1) {
+        ofSetColor(255, 208, 111);
+        ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
+    }
+    if (verticalAlign2) {
+        ofSetColor(255, 208, 111);
+        ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
+    }
+    if (verticalAlign3) {
+        ofSetColor(255, 208, 111);
+        ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
+    }
+    if (horizontalAlign1) {
+        ofSetColor(255, 208, 111);
+        ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
+    }
+    if (horizontalAlign2) {
+        ofSetColor(255, 208, 111);
+        ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
+    }
+    if (horizontalAlign3) {
+        ofSetColor(255, 208, 111);
+        ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
+    }
+    
+    //  Draw Help screen
+    //
+    if (bHelp){
+        ofSetColor(255);
+        ofDrawBitmapString(helpScreen, 20, ofGetWindowHeight()*0.5- 11.0*15.0);
+    }
+    
+    ofDisableBlendMode();
+    ofEnableAlphaBlending();
+    
+    // multiple select
+    //
+    ofNoFill();
+    ofRect(multipleSelectRectangle);
+    
+    ofPopMatrix();
+    ofPopStyle();
+    ofPopView();
+    
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+
+/* ================================================ */
+/*                      EVENTS                      */
+/* ================================================ */
+
+void ofxComposer::_keyPressed(ofKeyEventArgs &e){
+    if (e.key == OF_KEY_F1 ){
+        bHelp = !bHelp;
+    } else if (e.key == OF_KEY_F2 ){
+        bEditMode = !bEditMode;
+    } else if ((e.key == OF_KEY_F3 ) || (e.key == OF_KEY_F4 ) ){
+        //  Special keys reserved for Patch Events
+        //
+    } else if (e.key == OF_KEY_F5 ){
+        
+        if ( bGLEditorPatch )
+            addPatchWithOutFile("ofVideoGrabber", ofPoint(ofGetMouseX(),ofGetMouseY()));
+        else
+            bGLEditorPatch = addPatchWithOutFile("ofxGLEditor", ofPoint(ofGetMouseX(),ofGetMouseY()));
+        
+    } else if ( e.key == OF_KEY_F6 ){
+        addPatchWithOutFile("ofShader", ofPoint(ofGetMouseX(),ofGetMouseY()));
+        
+    } else if (e.key == OF_KEY_F7){
+        ofToggleFullscreen();
+        
+#ifdef USE_OFXGLEDITOR
+        editor.reShape();
+        editorFbo.allocate(ofGetWindowWidth(),ofGetWindowHeight());
+        editorFbo.begin();
+        ofClear(editorBgColor);
+        editorFbo.end();
+#endif
+    } else if (e.key == 'j') {
+        loadSnippet();
+    } else if (e.key == 'k') {
+        saveSnippet();
+    } else {
+        //  If no special key was pressed and the GLEditor is present pass the key
+        //
+#ifdef USE_OFXGLEDITOR
+        editor.keyPressed(e.key);
+        
+        if (selectedID >= 0){
+            if (patches[selectedID]->getType() == "ofShader"){
+                patches[selectedID]->setFrag(editor.getText(1));
+                patches[selectedID]->saveSettings();
+            }
+        }
+#endif
+        
+    }
+}
+
+void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
+    
+}
+
+void ofxComposer::activePatch( int _nID ){
+    if ( (_nID != -1) && (patches[_nID] != NULL) ){
+        selectedID = _nID;
+        
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            if (it->first == _nID)
+                it->second->bActive = true;
+            else
+                it->second->bActive = false;
+        }
+    }
+}
+
+void ofxComposer::_mousePressed(ofMouseEventArgs &e){
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    
+    // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
+    // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
+    if(!draggingGrip && !draggingHGrip && !gui->getOtherSelected()) {
+        
+        int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
+        
+        // zoom & drag
+        //
+        if(idPatchHit == -1){
+            disabledPatches = true;
+            deactivateAllPatches();
+        } else {
+            disabledPatches = false;
+            for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+                if(!patches.find(idPatchHit)->second->bActive){
+                    activePatch(idPatchHit);
+                    break;
+                }
+            }
+        }
+        
+        selectedDot = -1;
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            if ( (it->second->getOutPutPosition().distance(ofPoint(mouse.x, mouse.y)) < 5) && (it->second->bEditMode) && !(it->second->bEditMask) ){
+                selectedDot = it->first;
+                it->second->bActive = false;
+                selectedID = -1;
+            }
+        }
+        
+        if (selectedDot == -1){
+            for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+                if ((it->second->bActive) && (it->second->bEditMode) && !(it->second->bEditMask)){
+                    selectedID = it->first;
+#ifdef USE_OFXGLEDITOR
+                    //if (bGLEditorPatch
+                    if ((it->second->getType() == "ofShader")){
+                        editor.setText(it->second->getFrag(), 1);
+                    }
+#endif
+                }
+            }
+        }
+        
+        // multiple select
+        if(disabledPatches && e.button == 0 && !gui->getOtherSelected()){
+            multipleSelectFromX = mouse.x;
+            multipleSelectFromY = mouse.y;
+            multipleSelectRectangle.x = mouse.x;
+            multipleSelectRectangle.y = mouse.y;
+        }
+    }
+    
+}
+
+void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
+    
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    
+    // mouse is being drag, and the mouse is not over any patch
+    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) && (!gui->getOtherSelected()) ) {
+        
+        // left button -> multiple select
+        if(e.button == 0){
+            multipleSelectRectangle.width = mouse.x - multipleSelectFromX;
+            multipleSelectRectangle.height = mouse.y - multipleSelectFromY;
+        }
+        
+        // right mouse -> zoom in / out
+        if(e.button == 2){}
+        
+    } else {
+        int activePatch = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
+        
+        // If i'm dragging any patch, see if it is aligned with other patches
+        if (activePatch != -1) {
+            
+            ofxPatch* p = patches[activePatch];
+            verticalAlign1 = 0;
+            verticalAlign2 = 0;
+            verticalAlign3 = 0;
+            horizontalAlign1 = 0;
+            horizontalAlign2 = 0;
+            horizontalAlign3 = 0;
+            
+            for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+                
+                if (it->second != p) {
+                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[0].x or
+                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[0].x) {
+                        verticalAlign1 = p->getTextureCoorners()[0].x ;
+                    }
+                    if ((int)(it->second->getTextureCoorners()[0].x + it->second->getBox().width/2) == (int)(p->getTextureCoorners()[0].x + p->getBox().width/2)) {
+                        verticalAlign2 = (p->getTextureCoorners()[0].x + p->getBox().width/2);
+                    }
+                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[1].x or
+                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[1].x ) {
+                        verticalAlign3 = p->getTextureCoorners()[1].x;
+                    }
+                    
+                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[1].y or
+                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[1].y) {
+                        horizontalAlign1 = p->getTextureCoorners()[1].y ;
+                    }
+                    if ((int)(it->second->getTextureCoorners()[1].y + it->second->getBox().height/2) == (int)(p->getTextureCoorners()[1].y + p->getBox().height/2)) {
+                        horizontalAlign2 = (p->getTextureCoorners()[1].y + p->getBox().height/2);
+                    }
+                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[3].y or
+                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[3].y ) {
+                        horizontalAlign3 = p->getTextureCoorners()[3].y;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    
+    if (selectedDot != -1){
+        
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            
+            if ((selectedDot != it->first) &&            // If not him self
+                (it->second->getType() == "ofShader") && // The target itÂ´s a shader
+                (it->second->bEditMode) &&               // And we are in editMode and not on maskMode
+                !(it->second->bEditMask) ){
+                
+                for (int j = 0; j < it->second->inPut.size(); j++){
+                    
+                    // And after checking in each dot of each shader...
+                    // ... fin the one where the mouse it«s over
+                    //
+                    if ( it->second->inPut[j].pos.distance(ofPoint(mouse.x, mouse.y)) < 5){
+                        
+                        // Once he founds it
+                        // make the link and forget the selection
+                        //
+                        connect( selectedDot , it->first, j );
+                        patches[ selectedDot ]->saveSettings();
+                        selectedDot = -1;
+                    }
+                }
+            }
+            // zoom & drag
+            //
+            it->second->setDisablePatch(false);
+        }
+        
+        // If he release the mouse over nothing it will clear all
+        // the connections of that dot.
+        //
+        if (selectedDot != -1){
+            patches[selectedDot]->outPut.clear();
+            patches[selectedDot]->saveSettings();
+            selectedDot = -1;
+        }
+    }
+    
+    // aligned nodes
+    //
+    verticalAlign1 = 0;
+    verticalAlign2 = 0;
+    verticalAlign3 = 0;
+    horizontalAlign1 = 0;
+    horizontalAlign2 = 0;
+    horizontalAlign3 = 0;
+    
+    // multipleSelect
+    //
+    multipleSelectAndReset();
+    
+    // zoom & drag
+    //
+    disabledPatches = false;
+}
+
+void ofxComposer::_windowResized(ofResizeEventArgs &e){
+#ifdef USE_OFXGLEDITOR
+    editor.reShape();
+    editorFbo.allocate(e.width, e.height);
+    editorFbo.begin();
+    ofClear(editorBgColor);
+    editorFbo.end();
+#endif
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                     SETTERS                      */
+/* ================================================ */
+
+void ofxComposer::setEdit(bool _state){
+    bEditMode = _state;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->bEditMode = bEditMode;
+    }
+}
+void ofxComposer::setLinkType (nodeLinkType type) {
+    for(map<int,ofxPatch*>::iterator it = this->patches.begin(); it != this->patches.end(); it++ ){
+        it->second->setLinkType(type);
+    }
+}
+
+void ofxComposer::setDraggingGrip(bool dragging){
+    draggingGrip = dragging;
+}
+
+bool ofxComposer::isDraggingHGrip(){
+    return draggingHGrip;
+}
+
+void ofxComposer::setDraggingHGrip(bool dragging){
+    draggingHGrip = dragging;
+}
+
+void ofxComposer::setMainCanvas(ofxUISuperCanvas* _gui) {
+    this->gui = _gui;
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                     GETTERS                      */
+/* ================================================ */
+
+bool ofxComposer::getEdit(){
+    return this->bEditMode;
+}
+
+map<int,ofxPatch*> ofxComposer::getPatches() {
+    return patches;
+}
+
+int ofxComposer::getMaxIdPatch(){
+    vector<int> v;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++) {
+        v.push_back(it->first);
+    }
+    
+    return *(std::max_element(v.begin(), v.end()));
+}
+
+int ofxComposer::getPatchesLowestCoord(){
+    int coordMasBaja = 10000;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(coordMasBaja > it->second->getLowestYCoord()){
+            coordMasBaja = it->second->getLowestYCoord();
+        }
+    }
+    return coordMasBaja;
+}
+int ofxComposer::getPatchesHighestCoord(){
+    int coordMasAlta = -1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(coordMasAlta < it->second->getHighestYCoord()){
+            coordMasAlta = it->second->getHighestYCoord();
+        }
+    }
+    return coordMasAlta;
+}
+
+int ofxComposer::getPatchesLeftMostCoord(){
+    int coordMasIzq = 10000;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(coordMasIzq > it->second->getLowestXCoord()){
+            coordMasIzq = it->second->getLowestXCoord();
+        }
+    }
+    return coordMasIzq;
+}
+int ofxComposer::getPatchesRightMostCoord(){
+    int coordMasDer = -1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(coordMasDer < it->second->getHighestXCoord()){
+            coordMasDer = it->second->getHighestXCoord();
+        }
+    }
+    return coordMasDer;
+}
+
+bool ofxComposer::isDraggingGrip(){
+    return draggingGrip;
+}
+
+/* ================================================ */
+/* ================================================ */
+
+
+/* ================================================ */
+/*                  OTHER FUNCTIONS                 */
+/* ================================================ */
 
 void ofxComposer::load(string _fileConfig){
     if (_fileConfig != "default")
@@ -75,11 +586,11 @@ void ofxComposer::load(string _fileConfig){
     patches.clear();
     if (XML.loadFile(_fileConfig)){
         
-#ifdef USE_OFXGLEDITOR       
+#ifdef USE_OFXGLEDITOR
         editor.setup(XML.getValue("general:console:font", "menlo.ttf"));
 #endif
         int totalPatchs = XML.getNumTags("surface");
-                
+        
         // Load each surface present on the xml file
         //
         for(int i = 0; i < totalPatchs ; i++){
@@ -87,7 +598,7 @@ void ofxComposer::load(string _fileConfig){
             bool loaded = nPatch->loadSettings(i, "config.xml");
             
             if (loaded){
-
+                
 #ifdef USE_OFXGLEDITOR
                 if (nPatch->getType() == "ofxGLEditor"){
                     ofLog(OF_LOG_NOTICE,"ofxComposer: ofxGLEditor loaded");
@@ -95,6 +606,10 @@ void ofxComposer::load(string _fileConfig){
                     bGLEditorPatch = true;
                 }
 #endif
+                // Add application main canvas and parent camera
+                nPatch->setMainCanvas(this->gui);
+                nPatch->setParent(*this->getParent());
+                
                 // Listen to close bottom on the titleBar
                 //
                 ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
@@ -102,6 +617,7 @@ void ofxComposer::load(string _fileConfig){
                 // Insert the new patch into the map
                 //
                 patches[nPatch->getId()] = nPatch;
+                
             }
         }
         
@@ -112,7 +628,7 @@ void ofxComposer::load(string _fileConfig){
                 int fromID = XML.getValue("id", -1);
                 
                 if (XML.pushTag("out")){
-    
+                    
                     int totalLinks = XML.getNumTags("dot");
                     for(int j = 0; j < totalLinks ; j++){
                         
@@ -157,6 +673,8 @@ bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
         nPatch->move( _position );
         nPatch->scale(0.5);
         nPatch->saveSettings();
+        nPatch->setMainCanvas(this->gui); // Application main canvas
+        nPatch->setParent(*this->getParent()); // Add camera as parent
         ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
         patches[nPatch->getId()] = nPatch;
     }
@@ -171,9 +689,11 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
     loaded = nPatch->loadType( _type, "config.xml" );
     
     if ( loaded ){
-        nPatch->move( _position );
         nPatch->scale(0.5);
+        nPatch->move( _position );
         nPatch->saveSettings();
+        nPatch->setMainCanvas(this->gui); // Application main canvas
+        nPatch->setParent(*this->getParent()); // Add camera as parent
         ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
 #ifdef USE_OFXGLEDITOR
         if (nPatch->getType() == "ofxGLEditor"){
@@ -190,8 +710,8 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
 bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
     bool connected = false;
     
-    if ((_fromID != -1) && (patches[_fromID] != NULL) && 
-        (_toID != -1) && (patches[_toID] != NULL) && 
+    if ((_fromID != -1) && (patches[_fromID] != NULL) &&
+        (_toID != -1) && (patches[_toID] != NULL) &&
         (patches[ _toID ]->getType() == "ofShader") ) {
         
         LinkDot newDot;
@@ -210,7 +730,7 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
 
 void ofxComposer::closePatch( int &_nID ){
     bool deleted = false;
-         
+    
     if ( (_nID != -1) && (patches[_nID] != NULL) ){
         int targetTag = 0;
         
@@ -228,7 +748,7 @@ void ofxComposer::closePatch( int &_nID ){
             }
         }
         
-        // Delete object from memory and then from vector 
+        // Delete object from memory and then from vector
         //
         selectedID = -1;
         delete &patches[_nID];
@@ -254,226 +774,208 @@ void ofxComposer::closePatch( int &_nID ){
     }
 }
 
-//-------------------------------------------------------------- LOOP
-void ofxComposer::update(){
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        it->second->update();
-    }
-    
-    if ( (bEditMode) && (selectedID >= 0)){
-#ifdef USE_OFXGLEDITOR
-        if (patches[selectedID]->getType() == "ofShader"){
-            editorBgColor.lerp(ofColor(0,150), 0.01);
-            editorFgColor.lerp(ofColor(255,255), 0.1);
-        } else {
-            editorBgColor.lerp(ofColor(0,0), 0.01);
-            editorFgColor.lerp(ofColor(0,0), 0.05);
-        }
-        
-        editorFbo.begin();
-        //ofEnableAlphaBlending();
-        ofClear(editorBgColor);
-        ofDisableBlendMode();
-        ofRotate(180, 0, 1, 0);
-        ofSetColor(255,255);
-        editor.draw();
-        editorFbo.end();
-#endif
-    } 
-}
-
-
-void ofxComposer::draw(){
-    ofPushView();
-    ofPushStyle();
-    ofPushMatrix();
-    
-    ofEnableAlphaBlending();
-    
-#ifdef USE_OFXGLEDITOR
-    //  Draw the GLEditor if it«s not inside a Patch
-    //
-    if (bEditMode && !bGLEditorPatch){
-        ofPushMatrix();
-        ofRotate(180, 1, 0, 0);
-        ofTranslate(0, -ofGetWindowHeight());
-        ofSetColor(editorFgColor);
-        editorFbo.draw(0, 0);
-        ofPopMatrix();
-    }
-#endif
-    
-    //  Draw Patches
-    //
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        it->second->draw();
-    }
-    
-    //  Draw active line
-    //
-    if (selectedDot >= 0){
-        ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(ofGetMouseX(),ofGetMouseY()));
-    }
-    
-    //  Draw Help screen
-    //
-    if (bHelp){
-        ofSetColor(255);
-        ofDrawBitmapString(helpScreen, 20, ofGetWindowHeight()*0.5- 11.0*15.0);
-    }
-    
-    ofDisableBlendMode();
-    ofEnableAlphaBlending();
-    
-    ofPopMatrix();
-    ofPopStyle();
-    ofPopView();
-    
-    
-}
-
-//-------------------------------------------------------------- EVENTS
-void ofxComposer::_keyPressed(ofKeyEventArgs &e){
-    if (e.key == OF_KEY_F1 ){
-        bHelp = !bHelp;
-    } else if (e.key == OF_KEY_F2 ){
-        bEditMode = !bEditMode;
-    } else if ((e.key == OF_KEY_F3 ) || (e.key == OF_KEY_F4 ) ){
-        //  Special keys reserved for Patch Events
-        //
-    } else if (e.key == OF_KEY_F5 ){
-        
-        if ( bGLEditorPatch )
-            addPatchWithOutFile("ofVideoGrabber", ofPoint(ofGetMouseX(),ofGetMouseY()));
-        else
-            bGLEditorPatch = addPatchWithOutFile("ofxGLEditor", ofPoint(ofGetMouseX(),ofGetMouseY()));
-        
-    } else if ( e.key == OF_KEY_F6 ){
-        addPatchWithOutFile("ofShader", ofPoint(ofGetMouseX(),ofGetMouseY()));
-
-    } else if (e.key == OF_KEY_F7){
-        ofToggleFullscreen();
-
-#ifdef USE_OFXGLEDITOR
-        editor.reShape();
-        editorFbo.allocate(ofGetWindowWidth(),ofGetWindowHeight());
-        editorFbo.begin();
-        ofClear(editorBgColor);
-        editorFbo.end();
-#endif
-    } else {
-        //  If no special key was pressed and the GLEditor is present pass the key
-        //
-#ifdef USE_OFXGLEDITOR
-        editor.keyPressed(e.key);
-        
-        if (selectedID >= 0){
-            if (patches[selectedID]->getType() == "ofShader"){
-                patches[selectedID]->setFrag(editor.getText(1));
-                patches[selectedID]->saveSettings();
+// multiple select
+//
+void ofxComposer::multipleSelectAndReset(){
+    if(disabledPatches){
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            ofRectangle aux = multipleSelectRectangle.getIntersection(it->second->getBox());
+            if(aux.getArea() > 0){
+                it->second->bActive = true;
+            } else{
+                it->second->bActive = false;
             }
         }
-#endif
-        
+    }
+    
+    // rectangle reset
+    multipleSelectFromX = 0;
+    multipleSelectFromY = 0;
+    multipleSelectRectangle.x = 0;
+    multipleSelectRectangle.y = 0;
+    multipleSelectRectangle.height = 0;
+    multipleSelectRectangle.width = 0;
+}
+
+void ofxComposer::deactivateAllPatches(){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->bActive = false;
     }
 }
 
-void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
-    ofVec2f mouse = ofVec2f(e.x, e.y);
-    
+void ofxComposer::movePatches(ofVec3f diff){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->moveDiff(diff);
+    }
+}
+
+void ofxComposer::scalePatches(float yDiff){
+    float scale = ZOOM_UNIT + yDiff*ZOOM_SENSITIVITY;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->scale(scale);
+    }
+}
+
+bool ofxComposer::isAnyLinkHit(){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->isLinkHit()){
+            return true;
+        }
+    }
+    return false;
+}
+
+int ofxComposer::isAnyPatchHit(float x, float y, float z){
+    ofPoint *point = new ofPoint(x,y,z);
+    int isAnyHit = -1;
     for(map<int,ofxPatch*>::reverse_iterator rit = patches.rbegin(); rit != patches.rend(); rit++ ){
-        if (rit->second->isOver(mouse)){
-            activePatch( rit->first );
+        if (rit->second->isOver(*point)){
+            isAnyHit = rit->first;
             break;
         }
     }
+    delete point;
+    return isAnyHit;
 }
 
-void ofxComposer::activePatch( int _nID ){
-    if ( (_nID != -1) && (patches[_nID] != NULL) ){
-        selectedID = _nID;
-        
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if (it->first == _nID)
-                it->second->bActive = true;
-            else
-                it->second->bActive = false;
-        }
-    }
-}
 
-void ofxComposer::_mousePressed(ofMouseEventArgs &e){
-    ofVec2f mouse = ofVec2f(e.x, e.y);
-
-    selectedDot = -1;    
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if ( (it->second->getOutPutPosition().distance(mouse) < 5) && (it->second->bEditMode) && !(it->second->bEditMask) ){
-            selectedDot = it->first;
-            it->second->bActive = false;
-            selectedID = -1;
-        }
-    }
+// -----------------------------------------------------------
+// ------------------------------------------------- SNNIPPETS
+// -----------------------------------------------------------
+void ofxComposer::loadSnippet() {
     
-    if (selectedDot == -1){
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if ((it->second->bActive) && (it->second->bEditMode) && !(it->second->bEditMask)){
-                selectedID = it->first;
+    string snippetName = "";
+    
+    ofFileDialogResult openFileResult;
+    openFileResult = ofSystemLoadDialog("Select a snippet (.xml)");
+    
+    if (openFileResult.bSuccess){
+        ofFile file (openFileResult.getPath());
+        if (file.exists()){
+            string fileExtension = ofToUpper(file.getExtension());
+            
+            if(fileExtension == "XML"){
+                snippetName = openFileResult.getPath();
+            } else return;
+        }
+        file.close();
+    }
+    ofxXmlSettings XML;
+    
+    int previousPatchesSize = patches.size();
+    int a = getMaxIdPatch();
+    deactivateAllPatches();
+    
+    if (XML.loadFile(snippetName)){
+        
 #ifdef USE_OFXGLEDITOR
-                //if (bGLEditorPatch
-                if ((it->second->getType() == "ofShader")){ 
-                    editor.setText(it->second->getFrag(), 1);
-                }
+        editor.setup(XML.getValue("general:console:font", "menlo.ttf"));
 #endif
-            }
-        }
-    }
-}
-
-void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
-    ofVec2f mouse = ofVec2f(e.x, e.y);
-    
-    if (selectedDot != -1){
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if ((selectedDot != it->first) &&                   // If not him self
-                (it->second->getType() == "ofShader") &&   // The target itÂ´s a shader
-                (it->second->bEditMode) &&               // And we are in editMode and not on maskMode
-                !(it->second->bEditMask) ){
-                
-                for (int j = 0; j < it->second->inPut.size(); j++){
-                    
-                    // And after checking in each dot of each shader...
-                    // ... fin the one where the mouse itÂ´s over
-                    //
-                    if ( it->second->inPut[j].pos.distance(mouse) < 5){
-                        
-                        // Once he founds it
-                        // make the link and forget the selection
-                        //
-                        connect( selectedDot , it->first, j );
-                        patches[ selectedDot ]->saveSettings();
-                        selectedDot = -1;
-                    }
-                }
-            }
-        }
+        int totalPatchs = XML.getNumTags("surface");
         
-        // If he release the mouse over nothing it will clear all
-        // the connections of that dot.
+        // Load each surface present on the xml file
         //
-        if (selectedDot != -1){
-            patches[selectedDot]->outPut.clear();
-            patches[selectedDot]->saveSettings();
-            selectedDot = -1;
+        for(int i = 0; i < totalPatchs ; i++){
+            ofxPatch* nPatch = new ofxPatch();
+            bool loaded = nPatch->loadSnippetPatch(snippetName, i, previousPatchesSize);
+            if (loaded){
+                
+#ifdef USE_OFXGLEDITOR
+                if (nPatch->getType() == "ofxGLEditor"){
+                    ofLog(OF_LOG_NOTICE,"ofxComposer: ofxGLEditor loaded");
+                    nPatch->setTexture( editorFbo.getTextureReference(), 0);
+                    bGLEditorPatch = true;
+                }
+#endif
+                // Add application main canvas and camera as a parent
+                //
+                nPatch->setMainCanvas(this->gui);
+                nPatch->setParent(*this->getParent());
+                
+                // Listen to close bottom on the titleBar
+                //
+                ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
+                
+                // Insert the new patch into the map
+                //
+                patches[nPatch->getId()] = nPatch;
+                
+                nPatch->bActive = true;
+            }
+        }
+        
+        // Load links between Patchs
+        //
+        for(int i = 0; i < totalPatchs ; i++){
+            if (XML.pushTag("surface", i)){
+                int fromID = XML.getValue("id", -1);
+                
+                if (XML.pushTag("out")){
+                    
+                    int totalLinks = XML.getNumTags("dot");
+                    for(int j = 0; j < totalLinks ; j++){
+                        
+                        if (XML.pushTag("dot",j)){
+                            int toID = XML.getValue("to", 0);
+                            int nTex = XML.getValue("tex", 0);
+                            
+                            // If everything goes ok "i" will match the position of the vector
+                            // with the position on the XML, in the same place of the vector array
+                            // defined on the previus loop
+                            //
+                            connect( fromID + previousPatchesSize, toID + previousPatchesSize, nTex);
+                            
+                            XML.popTag();
+                        }
+                    }
+                    XML.popTag();
+                }
+                XML.popTag();
+            }
         }
     }
 }
 
-void ofxComposer::_windowResized(ofResizeEventArgs &e){
-#ifdef USE_OFXGLEDITOR
-    editor.reShape();
-    editorFbo.allocate(e.width, e.height);
-    editorFbo.begin();
-    ofClear(editorBgColor);
-    editorFbo.end();
-#endif
+
+bool ofxComposer::saveSnippet() {
+    string snippetName = "";
+    ofxXmlSettings XML;
+    
+    ofFileDialogResult openFileResult;
+    openFileResult = ofSystemSaveDialog("snippet.xml", "Save your Snippet");
+    
+    if(openFileResult.bSuccess){
+        snippetName = openFileResult.getPath();
+    }
+    
+    bool saveOk = true;
+    bool a;
+    bool b;
+    // Delete and create xml file
+    if (XML.loadFile(snippetName)) {
+        XML.clear();
+    } else {
+        b = XML.saveFile(snippetName);
+        XML.loadFile(snippetName);
+    }
+    
+    
+    map<int,int> idMap;
+    int idAux = 1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->bActive) {
+            idMap[it->second->getId()] = idAux;
+            idAux++;
+        }
+    }
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        saveOk = saveOk && it->second->saveSnippetPatch(snippetName, idMap, XML);
+    }
+    
+    XML.saveFile(snippetName);
+    
+    return saveOk;
 }
+
+/* ================================================ */
+/* ================================================ */

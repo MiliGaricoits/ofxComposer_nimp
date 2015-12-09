@@ -11,6 +11,7 @@
 
 #include "ofMain.h"
 #include "ofxPatch.h"
+#include "enumerations.h"
 
 //  Comment the "define USE_OFXGLEDITOR" if you don't want to use ofxGLEditor
 //
@@ -19,56 +20,123 @@
 #include "ofxGLEditor.h"
 #endif
 
-class ofxComposer {
+class ofxComposer : public ofNode {
+    
 public:
+    
     ofxComposer();
     
+    //** LOOPS **//
+    //
+    void    update();
+    void    customDraw();
+    
+    
+    //** SETTERS **//
+    //
+    void    setEdit(bool _state);
+    void    setMainCanvas(ofxUISuperCanvas* gui);
+    void    setLinkType (nodeLinkType type);
+    
+    
+    //** GETTERS **//
+    //
+    map<int,ofxPatch*> getPatches();
+    int     getPatchesLowestCoord();
+    int     getPatchesHighestCoord();
+    int     getPatchesLeftMostCoord();
+    int     getPatchesRightMostCoord();
+    bool    getEdit();
+    
+    
+    //** OTHER FUNCTIONS **//
+    //
     void    save(string _fileConfig = "default");
     void    load(string _fileConfig = "default");
     bool    addPatchFromFile(string _filePath, ofPoint _position);
     bool    addPatchWithOutFile(string _type, ofPoint _position);
+    void    addPatch(ofxPatch* p);
     
-    int     size(){return patches.size(); };
     ofxPatch* operator[](int _nID){ if ( (_nID != -1) && (patches[_nID] != NULL) ) return patches[_nID]; };
+    int     size(){return patches.size(); };
     
-    void    update();
-    void    draw();
+    void    movePatches(ofVec3f diff);
+    void    scalePatches(float yDiff);
     
-    void    setEdit(bool _state){
-        bEditMode = _state;
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            it->second->bEditMode = bEditMode;
-        }
-    }
+    // scroll
+    //
+    void    setDraggingGrip(bool dragging);
+    void    setDraggingHGrip(bool dragging);
+    bool    isDraggingGrip();
+    bool    isDraggingHGrip();
     
+    void    deactivateAllPatches();
+    
+    // snippet
+    //
+    void    loadSnippet();
+    bool    saveSnippet();
+    
+
 private:
-    // Events
+    
+    //** EVENTS **//
+    //
     void    _mouseMoved(ofMouseEventArgs &e);
     void    _keyPressed(ofKeyEventArgs &e);
-	void    _mousePressed(ofMouseEventArgs &e);
-	void    _mouseReleased(ofMouseEventArgs &e);
-	void    _windowResized(ofResizeEventArgs &e);
+    void    _mousePressed(ofMouseEventArgs &e);
+    void    _mouseReleased(ofMouseEventArgs &e);
+    void    _windowResized(ofResizeEventArgs &e);
+    void    _mouseDragged(ofMouseEventArgs &e);
     
     void    closePatch( int &_nID );
     void    activePatch( int _nID );
     bool    connect( int _fromID, int _toID, int _nTexture );
-
+    
 #ifdef USE_OFXGLEDITOR
-	ofxGLEditor editor;
+    ofxGLEditor editor;
     ofFbo       editorFbo;
     ofColor     editorBgColor;
     ofColor     editorFgColor;
 #endif
     
+    int    isAnyPatchHit(float x, float y, float z);
+    bool   isAnyLinkHit();
+    
+    ofxUISuperCanvas* gui;
+    
     map<int,ofxPatch*>  patches;
+    bool    disabledPatches;
     
     string  configFile;
     
+    bool    bEditMode;
+    bool    bGLEditorPatch, bHelp;
+    
+    // node select, and link vertex selected
+    //
     int     selectedDot;
     int     selectedID;
     
-    bool    bEditMode;
-    bool    bGLEditorPatch, bHelp;
+    // align nodes
+    //
+    int verticalAlign1, verticalAlign2, verticalAlign3, horizontalAlign1, horizontalAlign2, horizontalAlign3;
+    
+    // snippet
+    //
+    int  getMaxIdPatch();
+    
+    // multiple select
+    //
+    ofRectangle multipleSelectRectangle;
+    int     multipleSelectFromX;
+    int     multipleSelectFromY;
+    void    multipleSelectAndReset();
+    
+    // scroll
+    //
+    bool draggingGrip;
+    bool draggingHGrip;
 };
 
 
