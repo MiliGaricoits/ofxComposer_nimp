@@ -77,7 +77,10 @@ public:
     void    loadSnippet();
     bool    saveSnippet();
     
-
+protected:
+    
+    bool    connect( int _fromID, int _toID, int _nTexture );
+    
 private:
     
     //** EVENTS **//
@@ -91,7 +94,6 @@ private:
     
     void    closePatch( int &_nID );
     void    activePatch( int _nID );
-    bool    connect( int _fromID, int _toID, int _nTexture );
     
 #ifdef USE_OFXGLEDITOR
     ofxGLEditor editor;
@@ -103,7 +105,7 @@ private:
     int    isAnyPatchHit(float x, float y, float z);
     bool   isAnyLinkHit();
     
-    ofxUISuperCanvas* gui;
+    ofxUISuperCanvas* canvas;
     
     map<int,ofxPatch*>  patches;
     bool    disabledPatches;

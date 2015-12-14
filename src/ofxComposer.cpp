@@ -117,7 +117,7 @@ void ofxComposer::update(){
     }
 }
 
-
+//------------------------------------------------------------------
 void ofxComposer::customDraw(){
     ofPushView();
     ofPushStyle();
@@ -144,60 +144,64 @@ void ofxComposer::customDraw(){
         it->second->customDraw();
     }
     
-    //  Draw active line
-    //
-    ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
-    if (selectedDot >= 0){
-        ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
-    }
     
-    // aligned nodes
-    //
-    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-    if (verticalAlign1) {
-        ofSetColor(255, 208, 111);
-        ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
-    }
-    if (verticalAlign2) {
-        ofSetColor(255, 208, 111);
-        ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
-    }
-    if (verticalAlign3) {
-        ofSetColor(255, 208, 111);
-        ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
-    }
-    if (horizontalAlign1) {
-        ofSetColor(255, 208, 111);
-        ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
-    }
-    if (horizontalAlign2) {
-        ofSetColor(255, 208, 111);
-        ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
-    }
-    if (horizontalAlign3) {
-        ofSetColor(255, 208, 111);
-        ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
-    }
-    
-    //  Draw Help screen
-    //
-    if (bHelp){
-        ofSetColor(255);
-        ofDrawBitmapString(helpScreen, 20, ofGetWindowHeight()*0.5- 11.0*15.0);
+    if (bEditMode) {
+        
+        //  Draw active line
+        //
+        ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
+        if (selectedDot >= 0){
+            ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
+        }
+        
+        // aligned nodes
+        //
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        if (verticalAlign1) {
+            ofSetColor(255, 208, 111);
+            ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
+        }
+        if (verticalAlign2) {
+            ofSetColor(255, 208, 111);
+            ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
+        }
+        if (verticalAlign3) {
+            ofSetColor(255, 208, 111);
+            ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
+        }
+        if (horizontalAlign1) {
+            ofSetColor(255, 208, 111);
+            ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
+        }
+        if (horizontalAlign2) {
+            ofSetColor(255, 208, 111);
+            ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
+        }
+        if (horizontalAlign3) {
+            ofSetColor(255, 208, 111);
+            ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
+        }
+        
+        //  Draw Help screen
+        //
+        if (bHelp){
+            ofSetColor(255);
+            ofDrawBitmapString(helpScreen, 20, ofGetWindowHeight()*0.5- 11.0*15.0);
+        }
+        
+        // multiple select
+        //
+        ofNoFill();
+        ofRect(multipleSelectRectangle);
+        
     }
     
     ofDisableBlendMode();
     ofEnableAlphaBlending();
     
-    // multiple select
-    //
-    ofNoFill();
-    ofRect(multipleSelectRectangle);
-    
     ofPopMatrix();
     ofPopStyle();
     ofPopView();
-    
 }
 
 /* ================================================ */
@@ -258,10 +262,12 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
     
 }
 
+//------------------------------------------------------------------
 void ofxComposer::activePatch( int _nID ){
     if ( (_nID != -1) && (patches[_nID] != NULL) ){
         selectedID = _nID;
@@ -275,12 +281,13 @@ void ofxComposer::activePatch( int _nID ){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
-    if(!draggingGrip && !draggingHGrip && !gui->getOtherSelected()) {
+    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected()) {
         
         int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
@@ -323,7 +330,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         }
         
         // multiple select
-        if(disabledPatches && e.button == 0 && !gui->getOtherSelected()){
+        if(disabledPatches && e.button == 0 && !canvas->getOtherSelected()){
             multipleSelectFromX = mouse.x;
             multipleSelectFromY = mouse.y;
             multipleSelectRectangle.x = mouse.x;
@@ -333,12 +340,13 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
 }
 
+//------------------------------------------------------------------
 void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     // mouse is being drag, and the mouse is not over any patch
-    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) && (!gui->getOtherSelected()) ) {
+    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) && (!canvas->getOtherSelected()) ) {
         
         // left button -> multiple select
         if(e.button == 0){
@@ -395,6 +403,7 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
@@ -456,6 +465,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
     disabledPatches = false;
 }
 
+//------------------------------------------------------------------
 void ofxComposer::_windowResized(ofResizeEventArgs &e){
 #ifdef USE_OFXGLEDITOR
     editor.reShape();
@@ -480,26 +490,32 @@ void ofxComposer::setEdit(bool _state){
         it->second->bEditMode = bEditMode;
     }
 }
+
+//------------------------------------------------------------------
 void ofxComposer::setLinkType (nodeLinkType type) {
     for(map<int,ofxPatch*>::iterator it = this->patches.begin(); it != this->patches.end(); it++ ){
         it->second->setLinkType(type);
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::setDraggingGrip(bool dragging){
     draggingGrip = dragging;
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::isDraggingHGrip(){
     return draggingHGrip;
 }
 
+//------------------------------------------------------------------
 void ofxComposer::setDraggingHGrip(bool dragging){
     draggingHGrip = dragging;
 }
 
-void ofxComposer::setMainCanvas(ofxUISuperCanvas* _gui) {
-    this->gui = _gui;
+//------------------------------------------------------------------
+void ofxComposer::setMainCanvas(ofxUISuperCanvas* _canvas) {
+    this->canvas = _canvas;
 }
 
 /* ================================================ */
@@ -514,10 +530,12 @@ bool ofxComposer::getEdit(){
     return this->bEditMode;
 }
 
+//------------------------------------------------------------------
 map<int,ofxPatch*> ofxComposer::getPatches() {
     return patches;
 }
 
+//------------------------------------------------------------------
 int ofxComposer::getMaxIdPatch(){
     vector<int> v;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++) {
@@ -527,6 +545,7 @@ int ofxComposer::getMaxIdPatch(){
     return *(std::max_element(v.begin(), v.end()));
 }
 
+//------------------------------------------------------------------
 int ofxComposer::getPatchesLowestCoord(){
     int coordMasBaja = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -536,6 +555,8 @@ int ofxComposer::getPatchesLowestCoord(){
     }
     return coordMasBaja;
 }
+
+//------------------------------------------------------------------
 int ofxComposer::getPatchesHighestCoord(){
     int coordMasAlta = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -546,6 +567,7 @@ int ofxComposer::getPatchesHighestCoord(){
     return coordMasAlta;
 }
 
+//------------------------------------------------------------------
 int ofxComposer::getPatchesLeftMostCoord(){
     int coordMasIzq = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -555,6 +577,8 @@ int ofxComposer::getPatchesLeftMostCoord(){
     }
     return coordMasIzq;
 }
+
+//------------------------------------------------------------------
 int ofxComposer::getPatchesRightMostCoord(){
     int coordMasDer = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -565,6 +589,7 @@ int ofxComposer::getPatchesRightMostCoord(){
     return coordMasDer;
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::isDraggingGrip(){
     return draggingGrip;
 }
@@ -607,7 +632,7 @@ void ofxComposer::load(string _fileConfig){
                 }
 #endif
                 // Add application main canvas and parent camera
-                nPatch->setMainCanvas(this->gui);
+                nPatch->setMainCanvas(this->canvas);
                 nPatch->setParent(*this->getParent());
                 
                 // Listen to close bottom on the titleBar
@@ -653,6 +678,7 @@ void ofxComposer::load(string _fileConfig){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::save(string _fileConfig ){
     if (_fileConfig != "default"){
         configFile = _fileConfig;
@@ -663,6 +689,7 @@ void ofxComposer::save(string _fileConfig ){
     }
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
     bool loaded = false;
     
@@ -673,7 +700,7 @@ bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
         nPatch->move( _position );
         nPatch->scale(0.5);
         nPatch->saveSettings();
-        nPatch->setMainCanvas(this->gui); // Application main canvas
+        nPatch->setMainCanvas(this->canvas); // Application main canvas
         nPatch->setParent(*this->getParent()); // Add camera as parent
         ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
         patches[nPatch->getId()] = nPatch;
@@ -682,6 +709,7 @@ bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
     return loaded;
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
     bool loaded = false;
     
@@ -692,7 +720,7 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
         nPatch->scale(0.5);
         nPatch->move( _position );
         nPatch->saveSettings();
-        nPatch->setMainCanvas(this->gui); // Application main canvas
+        nPatch->setMainCanvas(this->canvas); // Application main canvas
         nPatch->setParent(*this->getParent()); // Add camera as parent
         ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
 #ifdef USE_OFXGLEDITOR
@@ -707,12 +735,24 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
     return loaded;
 }
 
+//------------------------------------------------------------------
+void ofxComposer::addPatch(ofxPatch *p){
+    
+    patches[p->getId()] = p;
+    
+    ofAddListener( p->title->close , this, &ofxComposer::closePatch);
+    
+    p->setMainCanvas(this->canvas);
+    p->setParent(*this->getParent());
+}
+
+//------------------------------------------------------------------
 bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
     bool connected = false;
     
     if ((_fromID != -1) && (patches[_fromID] != NULL) &&
-        (_toID != -1) && (patches[_toID] != NULL) &&
-        (patches[ _toID ]->getType() == "ofShader") ) {
+        (_toID != -1) && (patches[_toID] != NULL) /*&&
+        (patches[ _toID ]->getType() == "ofShader") */) {
         
         LinkDot newDot;
         newDot.pos = patches[ _fromID ]->getOutPutPosition();
@@ -728,6 +768,7 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
     return connected;
 }
 
+//------------------------------------------------------------------
 void ofxComposer::closePatch( int &_nID ){
     bool deleted = false;
     
@@ -774,8 +815,9 @@ void ofxComposer::closePatch( int &_nID ){
     }
 }
 
-// multiple select
-//
+// -----------------------------------------------------------
+// ------------------------------------------- MULTIPLE SELECT
+// -----------------------------------------------------------
 void ofxComposer::multipleSelectAndReset(){
     if(disabledPatches){
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -797,18 +839,21 @@ void ofxComposer::multipleSelectAndReset(){
     multipleSelectRectangle.width = 0;
 }
 
+//------------------------------------------------------------------
 void ofxComposer::deactivateAllPatches(){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->bActive = false;
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::movePatches(ofVec3f diff){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->moveDiff(diff);
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::scalePatches(float yDiff){
     float scale = ZOOM_UNIT + yDiff*ZOOM_SENSITIVITY;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
@@ -816,6 +861,7 @@ void ofxComposer::scalePatches(float yDiff){
     }
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::isAnyLinkHit(){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->isLinkHit()){
@@ -825,6 +871,7 @@ bool ofxComposer::isAnyLinkHit(){
     return false;
 }
 
+//------------------------------------------------------------------
 int ofxComposer::isAnyPatchHit(float x, float y, float z){
     ofPoint *point = new ofPoint(x,y,z);
     int isAnyHit = -1;
@@ -889,7 +936,7 @@ void ofxComposer::loadSnippet() {
 #endif
                 // Add application main canvas and camera as a parent
                 //
-                nPatch->setMainCanvas(this->gui);
+                nPatch->setMainCanvas(this->canvas);
                 nPatch->setParent(*this->getParent());
                 
                 // Listen to close bottom on the titleBar
@@ -936,7 +983,7 @@ void ofxComposer::loadSnippet() {
     }
 }
 
-
+//------------------------------------------------------------------
 bool ofxComposer::saveSnippet() {
     string snippetName = "";
     ofxXmlSettings XML;

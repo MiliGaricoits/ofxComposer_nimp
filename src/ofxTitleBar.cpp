@@ -13,7 +13,7 @@ ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
     
     windowsBox = wBox;
     windowsId = _windowsId;
-    height = 15;
+    height = 19;
     letterWidth = 10;
     letterHeight = 12;
     offSetWidth = 5;

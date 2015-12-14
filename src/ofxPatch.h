@@ -18,6 +18,7 @@
 #include "ofxPingPong.h"
 #include "enumerations.h"
 #include "ofxUISuperCanvas.h"
+#include "ofxPanel.h"
 
 struct LinkDot{
     LinkDot(){
@@ -60,11 +61,13 @@ public:
     //void          setVert( string _code);
     void            setMask(ofPolyline& _polyLine){ maskCorners = _polyLine; bMasking = true; bUpdateMask = true; };
     void            setCoorners(ofPoint _coorners[4]);
+    void            setCoorners(vector<ofPoint> _coorners);
     void            setTexture(ofTexture& tex, int _texNum = 0);
     void            setDisablePatch(bool disable);
     void            setLinkHit(bool linkHit);
     void            setLinkType(nodeLinkType type);
     void            setMainCanvas(ofxUISuperCanvas* gui);
+    void            setDrawInspector(bool draw_);
     
     
     //** GETTERS **//
@@ -84,6 +87,7 @@ public:
     ofRectangle     getBox() { return box; };
     float           getHeight();
     float           getWidth();
+    bool            drawInspector();
     
     // when dragging nodes
     //
@@ -109,6 +113,7 @@ public:
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
     bool            isLinkHit(); // is node link hit my mouse click ?
     void            resetSize(int _width, int _height);
+    void            addInputDot();
     
     // Snippets
     //
@@ -131,27 +136,10 @@ public:
     bool            disabledPatch; // disable patches when zooming & scrolling
     
     
-private:
+protected:
     
-    void            doSurfaceToScreenMatrix();      // Update the SurfaceToScreen transformation matrix
-    void            doScreenToSurfaceMatrix();      // Update the ScreenToSurface transformation matrix
-    void            doGaussianElimination(float *input, int n); // This is used making the matrix
-    
-    // Mouse & Key Events ( it´s not better if is centralized on the composer )
+    // 5 Sources Objects and one interface to rule them all (ofTexture& getSrcTexture())
     //
-    void            _mousePressed(ofMouseEventArgs &e);
-    void            _mouseDragged(ofMouseEventArgs &e);
-    void            _mouseReleased(ofMouseEventArgs &e);
-    void            _keyPressed(ofKeyEventArgs &e);
-    void            _reMakeFrame( int &_nId );
-    
-    
-    bool            is_between (float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?
-    
-    // 5 Sources Objects and one interface to rule them all
-    //
-    ofTexture&      getSrcTexture();
-    
     ofImage         *image;
     ofVideoPlayer   *videoPlayer;
     ofVideoGrabber  *videoGrabber;
@@ -171,11 +159,6 @@ private:
     int             selectedTextureCorner;
     int             textureWidth, textureHeight;
     
-    ofPoint         src[4];
-    ofMatrix4x4     surfaceToScreenMatrix;
-    ofMatrix4x4     screenToSurfaceMatrix;
-    GLfloat         glMatrix[16];
-    
     // General Variables
     //
     ofRectangle     box;
@@ -193,7 +176,39 @@ private:
     bool            bUpdateMask;
     bool            bUpdateCoord;
     
-    ofxUISuperCanvas* gui; // application main canvas
+    GLfloat         glMatrix[16];
+    
+    // Inspector
+    //
+    ofxPanel        panel;
+    ofxGuiGroup     gui;
+    //ofxUICanvas*    inspector = NULL;
+    bool            bInspector;
+    string          imageSrc;
+    
+private:
+    
+    void            doSurfaceToScreenMatrix();      // Update the SurfaceToScreen transformation matrix
+    void            doScreenToSurfaceMatrix();      // Update the ScreenToSurface transformation matrix
+    void            doGaussianElimination(float *input, int n); // This is used making the matrix
+    
+    // Mouse & Key Events ( it´s not better if is centralized on the composer )
+    //
+    void            _mousePressed(ofMouseEventArgs &e);
+    void            _mouseDragged(ofMouseEventArgs &e);
+    void            _mouseReleased(ofMouseEventArgs &e);
+    void            _keyPressed(ofKeyEventArgs &e);
+    void            _reMakeFrame( int &_nId );
+    
+    ofTexture&      getSrcTexture();
+    
+    bool            is_between (float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?
+
+    ofPoint         src[4];
+    ofMatrix4x4     surfaceToScreenMatrix;
+    ofMatrix4x4     screenToSurfaceMatrix;
+    
+    ofxUISuperCanvas* canvas; // application main canvas
     
     // Node links Variables
     //
@@ -202,11 +217,6 @@ private:
     nodeLinkType    linkType;
     bool            linkHit;
     
-    // Inspector
-    //
-    ofxUICanvas*    inspector = NULL;
-    bool            bInspector;
-    string          imageSrc;
 };
 
 #endif

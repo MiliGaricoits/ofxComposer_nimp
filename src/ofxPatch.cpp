@@ -34,8 +34,9 @@ ofxPatch::ofxPatch(){
     videoGrabber        = NULL;
     texture             = NULL;
     
-    width               = 640;
-    height              = 480;
+    width               = NODE_WIDTH;
+    height              = NODE_HEIGHT;
+    
     texOpacity          = 1.0;
     maskOpacity         = 1.0;
     
@@ -121,7 +122,7 @@ void ofxPatch::update(){
     
     // for Base Nodes, always loads the image
     //
-    if (imageSrc != "") {
+    /*if (imageSrc != "") {
         delete image;
         image   = new ofImage();
         image->loadImage( imageSrc );
@@ -129,7 +130,7 @@ void ofxPatch::update(){
         if (width != image->getWidth() || height != image->getHeight()) {
             this->resetSize(image->getWidth(), image->getHeight());
         }
-    }
+    }*/
     
     if ((width != getSrcTexture().getWidth()) ||
         (height != getSrcTexture().getHeight()) ){
@@ -216,23 +217,24 @@ void ofxPatch::update(){
     if (videoPlayer != NULL){
         videoPlayer->update();
     } else if (videoGrabber != NULL){
-        videoGrabber->update();
+        //videoGrabber->update();
     } else if (shader != NULL){
         shader->update();
     }
     
     // Send the texture to the linked Patches
     //
-    for ( int i = 0; i < outPut.size(); i++ ){
-        if (outPut[i].toShader != NULL){
-            outPut[i].toShader->setTexture( getTextureReference(), outPut[i].nTex );
-        }
-    }
+//    for ( int i = 0; i < outPut.size(); i++ ){
+//        if (outPut[i].toShader != NULL){
+//            outPut[i].toShader->setTexture( getTextureReference(), outPut[i].nTex );
+//        }
+//    }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::customDraw(){
     
-    if ( bEditMode || bVisible ) {
+    /*if ( bEditMode || bVisible ) {
         
         if (bActive || !bEditMode || (type == "ofxGLEditor"))
             color.lerp(ofColor(255,255), 0.1);
@@ -245,14 +247,24 @@ void ofxPatch::customDraw(){
         ofSetColor(color);
         getTextureReference().draw(0,0);
         ofPopMatrix();
-    }
+    }*/
     
     if (bEditMode) {
         
         ofPushStyle();
         
+        // Draw de title
+        //
         if (title != NULL)
             title->draw();
+        
+        // Draw the inspector
+        //
+        if (bInspector) {
+            ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+            panel.setPosition(textureCorners[1].x/scale.x+2, textureCorners[1].y/scale.y - 42);
+            panel.draw();
+        }
         
         if ( !bEditMask ){
             ofFill();
@@ -315,24 +327,15 @@ void ofxPatch::customDraw(){
                     ofNoFill();
                     ofRect(box);
                 }
-                
-                // Draw the linking dots
-                //
-                for(int i = 0; i < inPut.size(); i++){
-                    ofSetColor(255, 150);
-                    ofNoFill();
-                    ofCircle(inPut[i].pos, 5);
-                }
             }
         }
-        
-        if (type.compare("ofImage") == 0) {
-            if (bInspector) {
-                ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-                inspector->setPosition(textureCorners[1].x/scale.x+2, textureCorners[1].y/scale.y);
-                inspector->setVisible(true);
-            }
-            else inspector->setVisible(false);
+
+        // Draw the input linking dots
+        //
+        for(int i = 0; i < inPut.size(); i++){
+            ofSetColor(255, 150);
+            ofNoFill();
+            ofCircle(inPut[i].pos, 5);
         }
         
         // Draw the output linking dot
@@ -377,11 +380,6 @@ void ofxPatch::customDraw(){
             }
         }
     }
-    else {
-        if (bInspector) {
-            inspector->setVisible(false);
-        }
-    }
 }
 
 /* ================================================ */
@@ -414,16 +412,17 @@ void ofxPatch::_reMakeFrame( int &_nId ){
     saveSettings();
 }
 
+//------------------------------------------------------------------
 void ofxPatch::_mousePressed(ofMouseEventArgs &e){
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     if (bEditMode){
         
         // check is mouse is pressing over the inspector
-        if (inspector != NULL and inspector->isVisible() and inspector->isHit(mouse.x, mouse.y)) {
-            gui->setOtherSelected(true);
-            return;
-        }
+//        if (inspector != NULL and inspector->isVisible() and inspector->isHit(mouse.x, mouse.y)) {
+//            canvas->setOtherSelected(true);
+//            return;
+//        }
     }
     
     if (bEditMode && bActive ){
@@ -544,9 +543,10 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
     }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
     
-    if((disabledPatch and !isLinkHit()) or gui->getOtherSelected()){
+    if((disabledPatch and !isLinkHit()) or canvas->getOtherSelected()){
         return;
     }
     
@@ -651,10 +651,11 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
     }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     
     // mouse is not longer pressing the inspector or link
-    gui->setOtherSelected(false);
+    canvas->setOtherSelected(false);
     selectedLinkPath = -1;
     selectedLink     = -1;
     setLinkHit(false);
@@ -674,7 +675,7 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     }
 }
 
-//Key Events
+//------------------------------------------------------------------
 void ofxPatch::_keyPressed(ofKeyEventArgs &e){
     
     if (e.key == OF_KEY_F2){
@@ -738,6 +739,7 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
     }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::guiEvent(ofxUIEventArgs &e)
 {
     string name = e.widget->getName();
@@ -761,7 +763,7 @@ void ofxPatch::guiEvent(ofxUIEventArgs &e)
                     fileExtension == "GIF"  ||
                     fileExtension == "BMP"  ) {
                     imageSrc = openFileResult.getPath();
-                    ((ofxUITextInput*)inspector->getWidget("Image src"))->setTextString(imageSrc);
+                    //((ofxUITextInput*)inspector->getWidget("Image src"))->setTextString(imageSrc);
                 }
                 else return;
             }
@@ -798,6 +800,7 @@ void ofxPatch::setFrag( string _code){
     }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::setTexture(ofTexture& tex, int _texNum){
     if ( shader != NULL ){
         shader->setTexture(tex, _texNum);
@@ -806,6 +809,7 @@ void ofxPatch::setTexture(ofTexture& tex, int _texNum){
     }
 }
 
+//------------------------------------------------------------------
 void ofxPatch::setCoorners(ofPoint _coorners[4]){
     for (int i = 0; i < 4; i++){
         textureCorners[i].set(_coorners[i]);
@@ -814,21 +818,38 @@ void ofxPatch::setCoorners(ofPoint _coorners[4]){
     bUpdateMask = true;
 }
 
+//------------------------------------------------------------------
+void ofxPatch::setCoorners(vector<ofPoint> _coorners){
+    for (int i = 0; i < 4; i++){
+        textureCorners[i].set(_coorners[i]);
+    }
+    bUpdateCoord = true;
+    bUpdateMask = true;
+}
+
+//------------------------------------------------------------------
 void ofxPatch::setLinkType(nodeLinkType type) {
     linkType = type;
 }
 
-void ofxPatch::setMainCanvas(ofxUISuperCanvas* _gui) {
-    this->gui = _gui;
-    this->setParent(*this->gui);
+//------------------------------------------------------------------
+void ofxPatch::setMainCanvas(ofxUISuperCanvas* _canvas) {
+    this->canvas = _canvas;
 }
 
+//------------------------------------------------------------------
 void ofxPatch::setDisablePatch(bool disable){
     disabledPatch = disable;
 }
 
+//------------------------------------------------------------------
 void ofxPatch::setLinkHit(bool linkHit){
     this->linkHit = linkHit;
+}
+
+//------------------------------------------------------------------
+void ofxPatch::setDrawInspector(bool draw_){
+    this->bInspector = draw_;
 }
 
 /* ================================================ */
@@ -846,6 +867,7 @@ string ofxPatch::getFrag(){
     }
 }
 
+//------------------------------------------------------------------
 ofTexture& ofxPatch::getSrcTexture(){
     if (image != NULL)
         return image->getTextureReference();
@@ -857,12 +879,11 @@ ofTexture& ofxPatch::getSrcTexture(){
         return *texture;
     else if (shader != NULL)
         return shader->getTextureReference();
-    else if (texture != NULL)
-        return *texture;
     else
         return maskFbo.dst->getTextureReference();
 }
 
+//------------------------------------------------------------------
 ofTexture& ofxPatch::getTextureReference(){
     if (bMasking)
         return maskFbo.dst->getTextureReference();
@@ -870,18 +891,22 @@ ofTexture& ofxPatch::getTextureReference(){
         return getSrcTexture();
 }
 
+//------------------------------------------------------------------
 ofPolyline ofxPatch::getTextureCoorners() {
     return textureCorners;
 }
 
+//------------------------------------------------------------------
 float ofxPatch::getHeight() {
     return height;
 }
 
+//------------------------------------------------------------------
 float ofxPatch::getWidth(){
     return width;
 }
 
+//------------------------------------------------------------------
 float ofxPatch::getHighestYCoord(){
     int highestCoord = 0;
     for(int i = 0; i < 4; i++){
@@ -892,7 +917,7 @@ float ofxPatch::getHighestYCoord(){
     return highestCoord;
 }
 
-
+//------------------------------------------------------------------
 float ofxPatch::getLowestYCoord(){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
@@ -904,6 +929,7 @@ float ofxPatch::getLowestYCoord(){
     return lowestCoord;
 }
 
+//------------------------------------------------------------------
 float ofxPatch::getHighestXCoord(){
     int highestCoord = 0;
     for(int i = 0; i < 4; i++){
@@ -914,7 +940,7 @@ float ofxPatch::getHighestXCoord(){
     return highestCoord;
 }
 
-
+//------------------------------------------------------------------
 float ofxPatch::getLowestXCoord(){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
@@ -926,8 +952,14 @@ float ofxPatch::getLowestXCoord(){
     return lowestCoord;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::isLinkHit(){
     return linkHit;
+}
+
+//------------------------------------------------------------------
+bool ofxPatch::drawInspector(){
+    return bInspector;
 }
 
 /* ================================================ */
@@ -950,6 +982,7 @@ void ofxPatch::move(ofPoint _pos){
     bUpdateCoord = true;
 }
 
+//------------------------------------------------------------------
 void ofxPatch::scale(float _scale){
     for(int i = 0; i < 4; i++){
         ofVec2f center = getPos();
@@ -968,6 +1001,7 @@ void ofxPatch::scale(float _scale){
     bUpdateCoord = true;
 }
 
+//------------------------------------------------------------------
 void ofxPatch::rotate(float _rotAngle){
     for(int i = 0; i < 4; i++){
         ofVec2f center = getPos();
@@ -986,6 +1020,7 @@ void ofxPatch::rotate(float _rotAngle){
     bUpdateCoord = true;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::isOver(ofPoint _pos){
     ofRectangle biggerBox = textureCorners.getBoundingBox();
     biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+20);
@@ -993,6 +1028,7 @@ bool ofxPatch::isOver(ofPoint _pos){
     return biggerBox.inside(_pos);
 };
 
+//------------------------------------------------------------------
 void ofxPatch::moveDiff(ofVec2f diff){
     for(int i = 0; i < 4; i++){
         textureCorners[i] += diff;
@@ -1000,6 +1036,7 @@ void ofxPatch::moveDiff(ofVec2f diff){
     bUpdateCoord = true;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::is_between (float x, float bound1, float bound2, float tolerance) {
     // Handles cases when 'bound1' is greater than 'bound2' and when
     // 'bound2' is greater than 'bound1'.
@@ -1007,6 +1044,7 @@ bool ofxPatch::is_between (float x, float bound1, float bound2, float tolerance)
             ((x >= (bound2 - tolerance)) && (x <= (bound1 + tolerance))));
 }
 
+//------------------------------------------------------------------
 void ofxPatch::resetSize(int _width, int _height) {
     
     width = _width;
@@ -1023,6 +1061,11 @@ void ofxPatch::resetSize(int _width, int _height) {
     move( ofPoint(x,y) );
     scale(0.5);
     setPosition(getGlobalPosition()*((ofCamera*)getParent())->getScale());
+}
+
+void ofxPatch::addInputDot() {
+    LinkDot p;
+    inPut.push_back(p);
 }
 
 
@@ -1113,6 +1156,7 @@ void ofxPatch::doSurfaceToScreenMatrix(){
     surfaceToScreenMatrix(3,3)=1;
 }
 
+//------------------------------------------------------------------
 void ofxPatch::doScreenToSurfaceMatrix(){
     ofPoint dst[4];
     
@@ -1183,6 +1227,7 @@ void ofxPatch::doScreenToSurfaceMatrix(){
     
 }
 
+//------------------------------------------------------------------
 void ofxPatch::doGaussianElimination(float *input, int n){
     // ported to c from pseudocode in
     // http://en.wikipedia.org/wiki/Gaussian_elimination
@@ -1293,18 +1338,18 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         
         // Setting Inspector
         //
-        imageSrc = _filePath;
-        inspector = new ofxUICanvas();
-        inspector->addLabel("INSPECTOR");
-        inspector->addSpacer();
-        inspector->addLabel("Image src:");
-        ofxUITextInput* ti = inspector->addTextInput("Image src", imageSrc);
-        ti->setDraggable(false);
-        inspector->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-        inspector->addImageButton("Image src btn", "assets/edit.png", false);
-        inspector->autoSizeToFitWidgets();
-        ofAddListener(inspector->newGUIEvent,this,&ofxPatch::guiEvent);
-        inspector->setVisible(false);
+//        imageSrc = _filePath;
+//        inspector = new ofxUICanvas();
+//        inspector->addLabel("INSPECTOR");
+//        inspector->addSpacer();
+//        inspector->addLabel("Image src:");
+//        ofxUITextInput* ti = inspector->addTextInput("Image src", imageSrc);
+//        ti->setDraggable(false);
+//        inspector->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
+//        inspector->addImageButton("Image src btn", "assets/edit.png", false);
+//        inspector->autoSizeToFitWidgets();
+//        ofAddListener(inspector->newGUIEvent,this,&ofxPatch::guiEvent);
+//        inspector->setVisible(false);
         
     } else if ((ext == "mov") || (ext == "MOV") ||
                (ext == "mpg") || (ext == "MPG") ||
@@ -1411,6 +1456,7 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
     return loaded;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::loadType(string _type, string _configFile){
     bool loaded = false;
     
@@ -1490,6 +1536,7 @@ bool ofxPatch::loadType(string _type, string _configFile){
     return loaded;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::loadSettings( int _nTag, string _configFile){
     bool loaded = false;
     
@@ -1619,6 +1666,7 @@ bool ofxPatch::loadSettings( int _nTag, string _configFile){
     return loaded;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::saveSettings(string _configFile){
     bool saved = false;
     
@@ -1976,6 +2024,7 @@ bool ofxPatch::loadSnippetPatch(string snippetName, int relativeId, int previous
     return loaded;
 }
 
+//------------------------------------------------------------------
 bool ofxPatch::saveSnippetPatch(string snippetName, map<int, int> idMap, ofxXmlSettings XML) {
     bool saved = false;
     
