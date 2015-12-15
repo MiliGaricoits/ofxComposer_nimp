@@ -43,7 +43,7 @@ ofxPatch::ofxPatch(){
     disabledPatch       = false;
     
     selectedLink        = -1;
-    selectedLinkPath    = -1;
+    selectedLinkVertex    = -1;
     
     bInspector          = false;
     
@@ -481,7 +481,7 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
         }
     }
     // Is mouse pressing over link dot ?
-    if (bEditMode){
+    if (bEditMode and linkType == PATH_LINKS){
         
         bool overDot = false;
         for (int i = 0; i < outPut.size() and !overDot; i++){
@@ -493,15 +493,15 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                         outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
                     }
                     else {
-                        selectedLinkPath = j;
+                        selectedLinkVertex = j;
                         selectedLink = i;
                     }
                     overDot = true;
-                    ofxPatch::setLinkHit(true);
+                    setLinkHit(true);
                 }
             }
             
-            if (!overDot and linkType == PATH_LINKS and outPut.size() > 0){
+            if (!overDot and outPut.size() > 0){
                 vector<ofPoint> link_vertices = outPut[i].link_line.getVertices();
                 
                 if (link_vertices.size()){
@@ -513,7 +513,7 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                         
                         if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) && is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance))
                         {
-                            if ((link_vertices[j+1].y - link_vertices[j].y) <= tolerance) // Horizontal line.
+                            if (std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance) // Horizontal line.
                             {
                                 addNew = j;
                             }
@@ -529,7 +529,12 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                     }
                     
                     if (addNew >= 0) {
-                        ofxPatch::setLinkHit(true);
+                        
+                        setLinkHit(true);
+                        overDot = true;
+                        selectedLinkVertex = addNew;
+                        selectedLink = i;
+                        
                         if (outPut[i].link_vertices.size() == 0)
                             outPut[i].link_vertices.push_back(ofVec3f(mouse.x, mouse.y, 0.0));
                         else if (addNew == 0)
@@ -644,8 +649,8 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
         
         // Drag link vertices
         //
-        if (selectedLink >= 0 and selectedLinkPath >= 0) {
-            outPut[selectedLink].link_vertices[selectedLinkPath] = ofVec3f(mouse_transformed.x, mouse_transformed.y, 0.0);
+        if (selectedLink >= 0 and selectedLinkVertex >= 0) {
+            outPut[selectedLink].link_vertices[selectedLinkVertex] = ofVec3f(mouse_transformed.x, mouse_transformed.y, 0.0);
         }
 
     }
@@ -656,7 +661,7 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     
     // mouse is not longer pressing the inspector or link
     canvas->setOtherSelected(false);
-    selectedLinkPath = -1;
+    selectedLinkVertex = -1;
     selectedLink     = -1;
     setLinkHit(false);
     

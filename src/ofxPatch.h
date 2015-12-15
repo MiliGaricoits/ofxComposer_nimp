@@ -212,7 +212,7 @@ private:
     
     // Node links Variables
     //
-    int             selectedLinkPath;
+    int             selectedLinkVertex;
     int             selectedLink;
     nodeLinkType    linkType;
     bool            linkHit;
