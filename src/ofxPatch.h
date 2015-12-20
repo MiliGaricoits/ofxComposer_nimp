@@ -108,6 +108,7 @@ public:
     
     bool            loadSettings(int _nTag, string _configFile = "none");
     bool            saveSettings(string _configFile = "none");
+    bool            saveSettings(ofxXmlSettings &XML, bool _new, int _nTag);
     
     bool            isOver(ofPoint _pos); // is mouse over patch ?
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
@@ -144,7 +145,17 @@ protected:
     ofVideoPlayer   *videoPlayer;
     ofVideoGrabber  *videoGrabber;
     ofxShaderObj    *shader;
-    ofTexture       *texture;
+    //ofTexture       *texture;
+    ofTexture       tex;
+    ofFbo           fbo;
+    
+    // Drawing variables
+    //
+    bool            drawImage;
+    bool            drawVideo;
+    bool            drawCamera;
+    bool            drawTexture;
+    bool            drawFbo;
     
     // Mask variables
     //
@@ -177,6 +188,8 @@ protected:
     bool            bUpdateCoord;
     
     GLfloat         glMatrix[16];
+    
+    nodeType        nodeType;
     
     // Inspector
     //

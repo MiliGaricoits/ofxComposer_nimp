@@ -47,6 +47,7 @@ public:
     int     getPatchesLeftMostCoord();
     int     getPatchesRightMostCoord();
     bool    getEdit();
+    nodeLinkType getLinkType();
     
     
     //** OTHER FUNCTIONS **//
@@ -119,6 +120,9 @@ private:
     //
     int     selectedDot;
     int     selectedID;
+    
+    // node link type
+    nodeLinkType nodeLinkType;
     
     // align nodes
     //

@@ -13,7 +13,7 @@ ofxPatch::ofxPatch(){
     nId                 = -1;
     type                = "none";
     filePath            = "none";
-    configFile          = "config.xml";
+    configFile          = "appSettings.xml";
     
     selectedMaskCorner  = -1;
     selectedTextureCorner = -1;
@@ -32,7 +32,13 @@ ofxPatch::ofxPatch(){
     shader              = NULL;
     videoPlayer         = NULL;
     videoGrabber        = NULL;
-    texture             = NULL;
+    //texture             = NULL;
+    
+    drawImage           = false;
+    drawVideo           = false;
+    drawCamera          = false;
+    drawTexture         = false;
+    drawFbo             = false;
     
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
@@ -106,8 +112,8 @@ ofxPatch::~ofxPatch(){
     if ( videoGrabber != NULL )
         delete videoGrabber;
     
-    if ( texture != NULL )
-        delete texture;
+//    if ( texture != NULL )
+//        delete texture;
     
     inPut.clear();
     outPut.clear();
@@ -120,18 +126,6 @@ ofxPatch::~ofxPatch(){
 /* ================================================ */
 void ofxPatch::update(){
     
-    // for Base Nodes, always loads the image
-    //
-    /*if (imageSrc != "") {
-        delete image;
-        image   = new ofImage();
-        image->loadImage( imageSrc );
-        
-        if (width != image->getWidth() || height != image->getHeight()) {
-            this->resetSize(image->getWidth(), image->getHeight());
-        }
-    }*/
-    
     if ((width != getSrcTexture().getWidth()) ||
         (height != getSrcTexture().getHeight()) ){
         width = getSrcTexture().getWidth();
@@ -143,7 +137,7 @@ void ofxPatch::update(){
     
     if (bUpdateMask){
         // If the texture change or it's new it will update some parameters
-        // like the size of the FBO, de mask and the matrix
+        // like the size of the FBO, the mask and the matrix
         //
         if ((maskFbo.src->getWidth() != getSrcTexture().getWidth()) ||
             (maskFbo.src->getHeight() != getSrcTexture().getHeight()) ){
@@ -229,12 +223,13 @@ void ofxPatch::update(){
 //            outPut[i].toShader->setTexture( getTextureReference(), outPut[i].nTex );
 //        }
 //    }
+
 }
 
 //------------------------------------------------------------------
 void ofxPatch::customDraw(){
     
-    /*if ( bEditMode || bVisible ) {
+    if ( bEditMode || bVisible ) {
         
         if (bActive || !bEditMode || (type == "ofxGLEditor"))
             color.lerp(ofColor(255,255), 0.1);
@@ -247,7 +242,7 @@ void ofxPatch::customDraw(){
         ofSetColor(color);
         getTextureReference().draw(0,0);
         ofPopMatrix();
-    }*/
+    }
     
     if (bEditMode) {
         
@@ -806,11 +801,11 @@ void ofxPatch::setFrag( string _code){
 }
 
 //------------------------------------------------------------------
-void ofxPatch::setTexture(ofTexture& tex, int _texNum){
+void ofxPatch::setTexture(ofTexture& _tex, int _texNum){
     if ( shader != NULL ){
         shader->setTexture(tex, _texNum);
     } else {
-        texture = &tex;
+        tex = _tex;
     }
 }
 
@@ -874,22 +869,27 @@ string ofxPatch::getFrag(){
 
 //------------------------------------------------------------------
 ofTexture& ofxPatch::getSrcTexture(){
-    if (image != NULL)
+    if (drawImage)
         return image->getTextureReference();
-    else if (videoPlayer != NULL)
+    else if (drawVideo)
         return videoPlayer->getTextureReference();
-    else if (videoGrabber != NULL)
+    else if (drawCamera)
         return videoGrabber->getTextureReference();
-    else if (texture != NULL)
-        return *texture;
+    else if (drawFbo)
+        return fbo.getTextureReference();
     else if (shader != NULL)
         return shader->getTextureReference();
+    else if (drawTexture)
+        return tex;
     else
         return maskFbo.dst->getTextureReference();
 }
 
 //------------------------------------------------------------------
 ofTexture& ofxPatch::getTextureReference(){
+    
+    // If masking available, draw the mask. If not, draw texture reference (image, video, camera, fbo, texture)
+    //
     if (bMasking)
         return maskFbo.dst->getTextureReference();
     else
@@ -1397,8 +1397,8 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         
         type = "ofTexture";
         
-        if ( texture != NULL )
-            delete texture;
+//        if ( texture != NULL )
+//            delete texture;
         
         ofBuffer buffer = ofBufferFromFile( filePath );
         
@@ -1408,8 +1408,8 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         
         float * pixels = new float[mapSize * mapSize * mapSize * 3];
         
-        texture = new ofTexture();
-        texture->allocate( width, height, GL_RGB32F);
+//        texture = new ofTexture();
+        tex.allocate( width, height, GL_RGB32F);
         for(int z=0; z<mapSize ; z++){
             for(int y=0; y<mapSize; y++){
                 for(int x=0; x<mapSize; x++){
@@ -1426,7 +1426,7 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
                 }
             }
         }
-        texture->loadData( pixels, width, height, GL_RGB);
+        tex.loadData( pixels, width, height, GL_RGB);
         
         loaded = (buffer.size() > 0)? true: false;
         
@@ -1907,6 +1907,190 @@ bool ofxPatch::saveSettings(string _configFile){
         }
     } else
         ofLog(OF_LOG_ERROR, "Couldn't save the patch ID " + ofToString(nId) + ", the file " + configFile + " was not found");
+    
+    return saved;
+
+}
+
+//------------------------------------------------------------------
+bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
+    bool saved = false;
+                
+    // If is not new node ...
+    // I need to update my information in the .xml
+    //
+    if (!_new){
+        
+        // General information
+        //
+        XML.setValue("path", filePath );
+        XML.setValue("visible", bVisible);
+        
+        if (  shader != NULL ){
+            // Shader specific
+            //
+            XML.setValue("frag", shader->getFragmentShader() );
+            XML.setValue("format", shader->getInternalFormat() );
+            XML.setValue("passes", shader->getPasses() );
+        }
+        
+        // Position of the texture coorners
+        //
+        if (XML.pushTag("texture")){
+            for(int i = 0; i < 4; i++){
+                XML.setValue("point:x",textureCorners[i].x, i);
+                XML.setValue("point:y",textureCorners[i].y, i);
+            }
+            XML.popTag(); // pop "texture"
+        }
+        
+        // Mask path
+        //
+        if (XML.pushTag("mask")){
+            int totalSavedPoints = XML.getNumTags("point");
+            
+            for(int j = 0; j < maskCorners.size(); j++){
+                int tagNum = j;
+                
+                if (j >= totalSavedPoints)
+                    tagNum = XML.addTag("point");
+                
+                XML.setValue("point:x",maskCorners[j].x, tagNum);
+                XML.setValue("point:y",maskCorners[j].y, tagNum);
+            }
+            
+            int totalCorners = maskCorners.size();
+            totalSavedPoints = XML.getNumTags("point");
+            
+            if ( totalCorners < totalSavedPoints){
+                for(int j = totalSavedPoints; j > totalCorners; j--){
+                    XML.removeTag("point",j-1);
+                }
+            }
+            XML.popTag(); // pop "mask"
+        }
+        
+        // Save out linked dots
+        //
+        if(XML.pushTag("out")){
+            int totalSavedLinks = XML.getNumTags("dot");
+            
+            for(int j = 0; j < outPut.size(); j++){
+                int tagNum = j;
+                
+                // If need more tags
+                // add them
+                //
+                if (j >= totalSavedLinks)
+                    tagNum = XML.addTag("dot");
+                
+                XML.setValue("dot:to", outPut[j].toId , tagNum);
+                XML.setValue("dot:tex", outPut[j].nTex, tagNum);
+            }
+            
+            // If there are too much tags
+            // delete them
+            //
+            int totalOutPuts = outPut.size();
+            if ( totalOutPuts < totalSavedLinks){
+                for(int j = totalSavedLinks; j > totalOutPuts; j--){
+                    XML.removeTag("dot",j-1);
+                }
+            }
+            XML.popTag(); // pop "out"
+        }
+        
+        // Once it finish save
+        //
+        saved = XML.saveFile();
+    }
+
+    // If it was the last node in the XML and it wasn't me..
+    // I need to add myself in the .xml file
+    //
+    else {
+        
+        // Insert a new NODE tag at the end
+        // and fill it with the proper structure
+        //
+            
+        XML.addTag("id");
+        XML.setValue("id", nId);
+        XML.addTag("type");
+        XML.setValue("type", type);
+        XML.addTag("path");
+        XML.setValue("path", filePath);
+        XML.addTag("visible");
+        XML.setValue("visible", bVisible);
+        
+        // For the moment the shader string it's the only one
+        // with an extra parametter.
+        //
+        if ( shader != NULL) {
+            XML.addTag("frag");
+            XML.setValue("frag", shader->getFragmentShader() );
+            XML.addTag("format");
+            XML.setValue("format", shader->getInternalFormat() );
+            XML.addTag("passes");
+            XML.setValue("passes", shader->getPasses() );
+        }
+        
+        // Texture Corners
+        //
+        XML.addTag("texture");
+        if (XML.pushTag("texture")){
+            for(int i = 0; i < 4; i++){
+                
+                XML.addTag("point");
+                
+                XML.setValue("point:x",textureCorners[i].x, i);
+                XML.setValue("point:y",textureCorners[i].y, i);
+            }
+            XML.popTag();// Pop "texture"
+        }
+        
+        // Mask Path
+        //
+        XML.addTag("mask");
+        if (XML.pushTag("mask")){
+            for(int i = 0; i < 4; i++){
+                XML.addTag("point");
+                
+                XML.setValue("point:x",maskCorners[i].x, i);
+                XML.setValue("point:y",maskCorners[i].y, i);
+            }
+            XML.popTag();// Pop "mask"
+        }
+        
+        // Save out linked dots
+        //
+        XML.addTag("out");
+        XML.setValue("out:active",1);
+        if(XML.pushTag("out")){
+            int totalSavedLinks = XML.getNumTags("dot");
+            
+            for(int j = 0; j < outPut.size(); j++){
+                int tagNum = j;
+                
+                // If need more tags
+                // add them
+                //
+                if (j >= totalSavedLinks)
+                    tagNum = XML.addTag("dot");
+                
+                XML.setValue("dot:to", outPut[j].toId , tagNum);
+                XML.setValue("dot:tex", outPut[j].nTex, tagNum);
+            }
+            XML.popTag();// pop "out"
+            saved = XML.saveFile();
+        }
+    }
+    
+    // This is necesary for making the initial matrix, mask FBO, mask path and texture corners.
+    //
+    if (saved){
+        ofLog(OF_LOG_NOTICE, "The patch have been asigned with ID " + ofToString(nId) + " and save the information" );
+    }
     
     return saved;
 }

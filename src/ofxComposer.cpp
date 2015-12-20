@@ -492,10 +492,11 @@ void ofxComposer::setEdit(bool _state){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::setLinkType (nodeLinkType type) {
+void ofxComposer::setLinkType (enum nodeLinkType type) {
     for(map<int,ofxPatch*>::iterator it = this->patches.begin(); it != this->patches.end(); it++ ){
         it->second->setLinkType(type);
     }
+    this->nodeLinkType = type;
 }
 
 //------------------------------------------------------------------
@@ -533,6 +534,11 @@ bool ofxComposer::getEdit(){
 //------------------------------------------------------------------
 map<int,ofxPatch*> ofxComposer::getPatches() {
     return patches;
+}
+
+//------------------------------------------------------------------
+nodeLinkType ofxComposer::getLinkType(){
+    return this->nodeLinkType;
 }
 
 //------------------------------------------------------------------
