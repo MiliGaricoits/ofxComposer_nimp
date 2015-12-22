@@ -236,7 +236,6 @@ void ofxPatch::customDraw(){
         else
             color.lerp(ofColor(200,200), 0.1);
         
-        
         ofPushMatrix();
         glMultMatrixf(glMatrix);
         ofSetColor(color);
@@ -257,7 +256,7 @@ void ofxPatch::customDraw(){
         //
         if (bInspector) {
             ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-            panel.setPosition(textureCorners[1].x/scale.x+2, textureCorners[1].y/scale.y - 42);
+            panel.setPosition(ofVec3f((textureCorners[1].x + 2), (textureCorners[1].y - 42), scale.z));
             panel.draw();
         }
         
@@ -2014,8 +2013,6 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         // and fill it with the proper structure
         //
             
-        XML.addTag("id");
-        XML.setValue("id", nId);
         XML.addTag("type");
         XML.setValue("type", type);
         XML.addTag("path");
