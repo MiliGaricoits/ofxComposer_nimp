@@ -252,14 +252,6 @@ void ofxPatch::customDraw(){
         if (title != NULL)
             title->draw();
         
-        // Draw the inspector
-        //
-        if (bInspector) {
-            ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-            panel.setPosition(ofVec3f((textureCorners[1].x + 2), (textureCorners[1].y - 42), scale.z));
-            panel.draw();
-        }
-        
         if ( !bEditMask ){
             ofFill();
             // Draw dragables texture corners
@@ -373,6 +365,18 @@ void ofxPatch::customDraw(){
                 ofCircle(outPut[i].to->pos, 3);
             }
         }
+    }
+}
+
+//------------------------------------------------------------------
+void ofxPatch::drawInspectorGUI() {
+    
+    // Draw the inspector
+    //
+    if (bInspector) {
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        panel.setPosition(ofVec3f((textureCorners[1].x/scale.x + 2), (textureCorners[1].y/scale.y - 42), scale.z));
+        panel.draw();
     }
 }
 

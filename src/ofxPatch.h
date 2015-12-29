@@ -48,6 +48,7 @@ public:
     //
     void            update();
     void            customDraw();
+    void            drawInspectorGUI();
     
     
     //** EVENTS **//
@@ -114,7 +115,11 @@ public:
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
     bool            isLinkHit(); // is node link hit my mouse click ?
     void            resetSize(int _width, int _height);
+    
+    //methods for adding input//
     void            addInputDot();
+    virtual void    addInput(ofxPatch* layer_){};
+    virtual void    removeInput(string inputId_){};
     
     // Snippets
     //

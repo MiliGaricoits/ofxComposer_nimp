@@ -204,6 +204,17 @@ void ofxComposer::customDraw(){
     ofPopView();
 }
 
+//------------------------------------------------------------------
+void ofxComposer::drawInspectorGUIs() {
+    
+    if (bEditMode) {
+
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            it->second->drawInspectorGUI();
+        }
+    }
+}
+
 /* ================================================ */
 /* ================================================ */
 
@@ -412,7 +423,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             
             if ((selectedDot != it->first) &&            // If not him self
-                (it->second->getType() == "ofShader") && // The target it´s a shader
+                //(it->second->getType() == "ofShader") && // The target it´s a shader
                 (it->second->bEditMode) &&               // And we are in editMode and not on maskMode
                 !(it->second->bEditMask) ){
                 
@@ -441,9 +452,14 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         // the connections of that dot.
         //
         if (selectedDot != -1){
+            
+            for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
+                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getName());
+            }
             patches[selectedDot]->outPut.clear();
             patches[selectedDot]->saveSettings();
             selectedDot = -1;
+            
         }
     }
     
@@ -768,6 +784,7 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
         newDot.nTex = nTexture;
         
         patches[ _fromID ]->outPut.push_back( newDot );
+        patches[ _toID ]->addInput(patches[ _fromID ]);
         connected = true;
     }
     

@@ -30,6 +30,7 @@ public:
     //
     void    update();
     void    customDraw();
+    void    drawInspectorGUIs();
     
     
     //** SETTERS **//
