@@ -38,6 +38,7 @@ public:
     void    setEdit(bool _state);
     void    setMainCanvas(ofxUISuperCanvas* gui);
     void    setLinkType (nodeLinkType type);
+    void    setNodesCount(int count);
     
     
     //** GETTERS **//
@@ -49,6 +50,7 @@ public:
     int     getPatchesRightMostCoord();
     bool    getEdit();
     nodeLinkType getLinkType();
+    int     getNodesCount();
     
     
     //** OTHER FUNCTIONS **//
@@ -81,7 +83,7 @@ public:
     
 protected:
     
-    bool    connect( int _fromID, int _toID, int _nTexture );
+    bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
     
 private:
     
@@ -122,7 +124,12 @@ private:
     int     selectedDot;
     int     selectedID;
     
+    // nodes count
+    //
+    int nodesCount;
+    
     // node link type
+    //
     nodeLinkType nodeLinkType;
     
     // align nodes

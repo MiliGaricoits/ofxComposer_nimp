@@ -49,7 +49,7 @@ ofxPatch::ofxPatch(){
     disabledPatch       = false;
     
     selectedLink        = -1;
-    selectedLinkVertex    = -1;
+    selectedLinkVertex  = -1;
     
     bInspector          = false;
     

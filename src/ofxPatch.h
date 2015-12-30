@@ -58,8 +58,9 @@ public:
     
     //** SETTERS **//
     //
-    void            setFrag( string _code);
-    //void          setVert( string _code);
+    void            setId(int id_) { nId = id_; };
+    void            setFrag(string _code);
+    //void          setVert(string _code);
     void            setMask(ofPolyline& _polyLine){ maskCorners = _polyLine; bMasking = true; bUpdateMask = true; };
     void            setCoorners(ofPoint _coorners[4]);
     void            setCoorners(vector<ofPoint> _coorners);

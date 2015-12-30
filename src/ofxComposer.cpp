@@ -7,6 +7,7 @@
 //
 
 #include "ofxComposer.h"
+#include "ImageOutput.h"
 
 //  HELP screen -> F1
 //
@@ -437,7 +438,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                         // Once he founds it
                         // make the link and forget the selection
                         //
-                        connect( selectedDot , it->first, j );
+                        connect( selectedDot , it->first, j, true);
                         patches[ selectedDot ]->saveSettings();
                         selectedDot = -1;
                     }
@@ -516,6 +517,11 @@ void ofxComposer::setLinkType (enum nodeLinkType type) {
 }
 
 //------------------------------------------------------------------
+void ofxComposer::setNodesCount(int count) {
+    this->nodesCount = count;
+}
+
+//------------------------------------------------------------------
 void ofxComposer::setDraggingGrip(bool dragging){
     draggingGrip = dragging;
 }
@@ -555,6 +561,11 @@ map<int,ofxPatch*> ofxComposer::getPatches() {
 //------------------------------------------------------------------
 nodeLinkType ofxComposer::getLinkType(){
     return this->nodeLinkType;
+}
+
+//------------------------------------------------------------------
+int ofxComposer::getNodesCount() {
+    return this->nodesCount;
 }
 
 //------------------------------------------------------------------
@@ -687,7 +698,7 @@ void ofxComposer::load(string _fileConfig){
                             // with the position on the XML, in the same place of the vector array
                             // defined on the previus loop
                             //
-                            connect( fromID, toID, nTex);
+                            connect( fromID, toID, nTex, true);
                             
                             XML.popTag();
                         }
@@ -760,6 +771,10 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
 //------------------------------------------------------------------
 void ofxComposer::addPatch(ofxPatch *p){
     
+    if (p->getId() == -1) {
+        nodesCount++;
+        p->setId(nodesCount);
+    }
     patches[p->getId()] = p;
     
     ofAddListener( p->title->close , this, &ofxComposer::closePatch);
@@ -769,7 +784,7 @@ void ofxComposer::addPatch(ofxPatch *p){
 }
 
 //------------------------------------------------------------------
-bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
+bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_){
     bool connected = false;
     
     if ((_fromID != -1) && (patches[_fromID] != NULL) &&
@@ -784,7 +799,10 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture ){
         newDot.nTex = nTexture;
         
         patches[ _fromID ]->outPut.push_back( newDot );
-        patches[ _toID ]->addInput(patches[ _fromID ]);
+            
+        if (addInput_)
+            patches[ _toID ]->addInput(patches[ _fromID ]);
+            
         connected = true;
     }
     
@@ -993,7 +1011,7 @@ void ofxComposer::loadSnippet() {
                             // with the position on the XML, in the same place of the vector array
                             // defined on the previus loop
                             //
-                            connect( fromID + previousPatchesSize, toID + previousPatchesSize, nTex);
+                            connect( fromID + previousPatchesSize, toID + previousPatchesSize, nTex, true);
                             
                             XML.popTag();
                         }
