@@ -769,11 +769,13 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::addPatch(ofxPatch *p){
+void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
     
     if (p->getId() == -1) {
         nodesCount++;
         p->setId(nodesCount);
+        p->scale(0.4);
+        p->move( _position );
     }
     patches[p->getId()] = p;
     
@@ -802,6 +804,8 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
             
         if (addInput_)
             patches[ _toID ]->addInput(patches[ _fromID ]);
+            
+        patches[ _toID ]->setup();
             
         connected = true;
     }

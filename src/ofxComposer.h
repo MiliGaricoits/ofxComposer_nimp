@@ -59,7 +59,7 @@ public:
     void    load(string _fileConfig = "default");
     bool    addPatchFromFile(string _filePath, ofPoint _position);
     bool    addPatchWithOutFile(string _type, ofPoint _position);
-    void    addPatch(ofxPatch* p);
+    void    addPatch(ofxPatch* p, ofPoint _position);
     
     ofxPatch* operator[](int _nID){ if ( (_nID != -1) && (patches[_nID] != NULL) ) return patches[_nID]; };
     int     size(){return patches.size(); };

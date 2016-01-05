@@ -43,6 +43,7 @@ public:
     ofxPatch();
     ~ofxPatch();
     
+    virtual void    setup(){};
     
     //** LOOPS **//
     //
