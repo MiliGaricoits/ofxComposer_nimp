@@ -917,9 +917,14 @@ float ofxPatch::getWidth(){
 //------------------------------------------------------------------
 float ofxPatch::getHighestYCoord(){
     int highestCoord = 0;
+    float offSet = 0.0;
+    
+    if (title != NULL)
+        offSet = 15;
+    
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].y){
-            highestCoord = textureCorners[i].y;
+        if(highestCoord < textureCorners[i].y+offSet){
+            highestCoord = textureCorners[i].y+offSet;
         }
     }
     return highestCoord;
@@ -940,9 +945,14 @@ float ofxPatch::getLowestYCoord(){
 //------------------------------------------------------------------
 float ofxPatch::getHighestXCoord(){
     int highestCoord = 0;
+    float offSet = 0.0;
+    
+    if (title != NULL)
+        offSet = 15;
+    
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].x){
-            highestCoord = textureCorners[i].x;
+        if(highestCoord < textureCorners[i].x+offSet){
+            highestCoord = textureCorners[i].x+offSet;
         }
     }
     return highestCoord;
@@ -1058,17 +1068,13 @@ void ofxPatch::resetSize(int _width, int _height) {
     width = _width;
     height = _height;
     
-    int offSet;
-    if (title != NULL)
-        offSet = 15;
-    textureCorners[0].set(0.0, offSet);
-    textureCorners[1].set(width, offSet);
-    textureCorners[2].set(width, height + offSet);
-    textureCorners[3].set(0.0, height + offSet);
+    x = textureCorners[0].x*((ofCamera*)getParent())->getScale().x;
+    y = textureCorners[0].y*((ofCamera*)getParent())->getScale().y;
     
-    move( ofPoint(x,y) );
-    scale(0.5);
-    setPosition(getGlobalPosition()*((ofCamera*)getParent())->getScale());
+    textureCorners[0].set(x, y);
+    textureCorners[1].set(x + (width*SCALE_RATIO), y);
+    textureCorners[2].set(x + (width*SCALE_RATIO), y + (height*SCALE_RATIO));
+    textureCorners[3].set(x, y + (height*SCALE_RATIO));
 }
 
 void ofxPatch::addInputDot() {

@@ -423,9 +423,9 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             
-            if ((selectedDot != it->first) &&            // If not him self
-                //(it->second->getType() == "ofShader") && // The target it´s a shader
-                (it->second->bEditMode) &&               // And we are in editMode and not on maskMode
+            if ((selectedDot != it->first) &&              // If not him self
+                //(it->second->getType() == "ofShader") && // The target it's a shader
+                (it->second->bEditMode) &&                 // And we are in editMode and not on maskMode
                 !(it->second->bEditMask) ){
                 
                 for (int j = 0; j < it->second->inPut.size(); j++){
@@ -731,7 +731,7 @@ bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
     
     if ( loaded ){
         nPatch->move( _position );
-        nPatch->scale(0.5);
+        nPatch->scale(SCALE_RATIO);
         nPatch->saveSettings();
         nPatch->setMainCanvas(this->canvas); // Application main canvas
         nPatch->setParent(*this->getParent()); // Add camera as parent
@@ -750,7 +750,7 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
     loaded = nPatch->loadType( _type, "config.xml" );
     
     if ( loaded ){
-        nPatch->scale(0.5);
+        nPatch->scale(SCALE_RATIO);
         nPatch->move( _position );
         nPatch->saveSettings();
         nPatch->setMainCanvas(this->canvas); // Application main canvas
@@ -774,7 +774,7 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
     if (p->getId() == -1) {
         nodesCount++;
         p->setId(nodesCount);
-        p->scale(0.4);
+        p->scale(SCALE_RATIO);
         p->move( _position );
     }
     patches[p->getId()] = p;
