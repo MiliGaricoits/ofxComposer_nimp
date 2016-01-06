@@ -1065,9 +1065,13 @@ bool ofxPatch::is_between (float x, float bound1, float bound2, float tolerance)
 //------------------------------------------------------------------
 void ofxPatch::resetSize(int _width, int _height) {
     
-    width = _width;
-    height = _height;
-    
+    if (_width != 0) {
+        width = _width;
+    }
+    if (_height != 0) {
+        height = _height;
+    }
+
     x = textureCorners[0].x*((ofCamera*)getParent())->getScale().x;
     y = textureCorners[0].y*((ofCamera*)getParent())->getScale().y;
     

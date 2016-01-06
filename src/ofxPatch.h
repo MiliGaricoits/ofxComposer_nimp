@@ -116,7 +116,7 @@ public:
     bool            isOver(ofPoint _pos); // is mouse over patch ?
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
     bool            isLinkHit(); // is node link hit my mouse click ?
-    void            resetSize(int _width, int _height);
+    void            resetSize(int _width = 0, int _height = 0);
     
     //methods for adding input//
     void            addInputDot();
