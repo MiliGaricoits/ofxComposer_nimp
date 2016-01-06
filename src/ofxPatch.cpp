@@ -56,24 +56,25 @@ ofxPatch::ofxPatch(){
     
     bInspector          = false;
     
-    string shaderProgram = "#version 120\n\
-    #extension GL_ARB_texture_rectangle : enable\n\
-    \n\
-    uniform sampler2DRect tex0;\n\
-    uniform sampler2DRect maskTex;\n\
-    uniform float texOpacity;\n\
-    uniform float maskOpacity;\n\
-    \n\
-    void main (void){\n\
-    vec2 pos = gl_TexCoord[0].st;\n\
-    \n\
-    vec4 src = texture2DRect(tex0, pos);\n\
-    float mask = texture2DRect(maskTex, pos).r;\n\
-    \n\
-    gl_FragColor = vec4( src.rgb * texOpacity , clamp( min(src.a,mask) , maskOpacity, 1.0));\n\
-    }\n";
-    maskShader.setupShaderFromSource(GL_FRAGMENT_SHADER, shaderProgram);
-    maskShader.linkProgram();
+//    string shaderProgram = "#version 120\n\
+//    #extension GL_ARB_texture_rectangle : enable\n\
+//    \n\
+//    uniform sampler2DRect tex0;\n\
+//    uniform sampler2DRect maskTex;\n\
+//    uniform float texOpacity;\n\
+//    uniform float maskOpacity;\n\
+//    \n\
+//    void main (void){\n\
+//    vec2 pos = gl_TexCoord[0].st;\n\
+//    \n\
+//    vec4 src = texture2DRect(tex0, pos);\n\
+//    float mask = texture2DRect(maskTex, pos).r;\n\
+//    \n\
+//    gl_FragColor = vec4( src.rgb * texOpacity , clamp( min(src.a,mask) , maskOpacity, 1.0));\n\
+//    }\n";
+//    maskShader.setupShaderFromSource(GL_FRAGMENT_SHADER, shaderProgram);
+//    maskShader.linkProgram();
+    maskShader.load("Shaders/myShader");
     maskFbo.allocate(width, height);
     
     color.set(200,255);
@@ -248,7 +249,7 @@ void ofxPatch::customDraw(){
             color.lerp(ofColor(200,200), 0.1);
         
         ofPushMatrix();
-        glMultMatrixf(glMatrix);
+        ofMultMatrix(glMatrix);
         ofSetColor(color);
         getTextureReference().draw(0,0);
         ofPopMatrix();

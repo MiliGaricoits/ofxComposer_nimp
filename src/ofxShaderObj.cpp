@@ -270,8 +270,9 @@ bool ofxShaderObj::doFragmentShader(){
     //bool loaded;
     // Compile the shader and loadit to the GPU
     shader.unload();
-    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShader);
-    bFine = shader.linkProgram();
+//    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShader);
+//    bFine = shader.linkProgram();
+    shader.load("Shaders/shaderObj");
     return bFine;
 }
 
