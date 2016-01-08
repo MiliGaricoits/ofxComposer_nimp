@@ -253,10 +253,6 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         ofClear(editorBgColor);
         editorFbo.end();
 #endif
-    } else if (e.key == 'j') {
-        loadSnippet();
-    } else if (e.key == 'k') {
-        saveSnippet();
     } else {
         //  If no special key was pressed and the GLEditor is present pass the key
         //
@@ -776,6 +772,7 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
         p->setId(nodesCount);
         p->scale(SCALE_RATIO);
         p->move( _position );
+        p->setLinkType(nodeLinkType);
     }
     patches[p->getId()] = p;
     

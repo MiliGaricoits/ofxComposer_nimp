@@ -43,6 +43,9 @@ ofxPatch::ofxPatch(){
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
     
+    x                   = RIGHT_MENU_WIDTH + 10;
+    y                   = MENU_HEIGHT + 10;
+    
     texOpacity          = 1.0;
     maskOpacity         = 1.0;
     
