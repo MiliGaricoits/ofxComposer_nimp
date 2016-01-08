@@ -55,36 +55,36 @@ ofxShaderObj::ofxShaderObj():nTextures(0){
     // http://mrdoob.com/projects/glsl_sandbox/
     //
     
-    fragmentShader = "\n\
-// \n\
-// Empty Shader Patch for ofxComposer \n\
-// by http://PatricioGonzalezVivo.com \n\
+//    fragmentShader = "\n\
+//// \n\
+//// Empty Shader Patch for ofxComposer \n\
+//// by http://PatricioGonzalezVivo.com \n\
+////\n\
+//// For quick GLSL prototyping this Patch have the next native variables\n\
+////\n\
+//uniform sampler2DRect backbuffer;  // Previus frameBuffer \n\
+//uniform sampler2DRect tex0;        // Input texture number 0 \n\
+//                                   // You can add as many as you want\n\
+//                                   // just type name them 'tex'+ N\n\
 //\n\
-// For quick GLSL prototyping this Patch have the next native variables\n\
+//uniform vec2  size0;               // tex0 resolution\n\
+//uniform vec2  resolution;          // Patch resolution\n\
+//uniform vec2  window;              // Window resolution\n\
+//uniform vec2  screen;              // Screen resolution\n\
+//uniform vec2  mouse;               // Mouse position on the screen\n\
+//uniform float time;                // seconds \n\
 //\n\
-uniform sampler2DRect backbuffer;  // Previus frameBuffer \n\
-uniform sampler2DRect tex0;        // Input texture number 0 \n\
-                                   // You can add as many as you want\n\
-                                   // just type name them 'tex'+ N\n\
-\n\
-uniform vec2  size0;               // tex0 resolution\n\
-uniform vec2  resolution;          // Patch resolution\n\
-uniform vec2  window;              // Window resolution\n\
-uniform vec2  screen;              // Screen resolution\n\
-uniform vec2  mouse;               // Mouse position on the screen\n\
-uniform float time;                // seconds \n\
-\n\
-void main( void ){\n\
-    vec2 st = gl_TexCoord[0].st;    // gl_FragCoord.st;\n\
-    vec4 color = texture2DRect(tex0, st);\n\
-    \n\
-    gl_FragColor = vec4( color.rgb, color.a );\n\
-}\n";
-    
-    vertexShader = "void main(){\n\
-\n\
-gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
-}\n";
+//void main( void ){\n\
+//    vec2 st = gl_TexCoord[0].st;    // gl_FragCoord.st;\n\
+//    vec4 color = texture2DRect(tex0, st);\n\
+//    \n\
+//    gl_FragColor = vec4( color.rgb, color.a );\n\
+//}\n";
+//    
+//    vertexShader = "void main(){\n\
+//\n\
+//gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
+//}\n";
 }
 
 ofxShaderObj::~ofxShaderObj(){
@@ -273,6 +273,7 @@ bool ofxShaderObj::doFragmentShader(){
 //    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShader);
 //    bFine = shader.linkProgram();
     shader.load("Shaders/shaderObj");
+    bFine = true;
     return bFine;
 }
 

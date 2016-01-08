@@ -250,6 +250,7 @@ void ofxPatch::customDraw(){
         
         ofPushMatrix();
         ofMultMatrix(glMatrix);
+//        glMultMatrixf(glMatrix);
         ofSetColor(color);
         getTextureReference().draw(0,0);
         ofPopMatrix();
