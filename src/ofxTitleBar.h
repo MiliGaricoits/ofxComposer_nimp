@@ -26,6 +26,7 @@ class ofxTitleBar : public ofNode {
 public:
     
     ofxTitleBar( ofRectangle* wBox, int* _windowsId );
+    ~ofxTitleBar();
     
     void setTitle(string _title){ title = _title; };
     

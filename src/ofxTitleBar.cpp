@@ -22,6 +22,11 @@ ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
     addButton( 'r', NULL, PUSH_BUTTON);
 };
 
+ofxTitleBar::~ofxTitleBar(){
+    
+    ofRemoveListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed);
+}
+
 void ofxTitleBar::addButton( char letter, bool *variableToControl, ButtonType _type){
     ofxTitleBarButton newButton;
     newButton.letter = letter;
@@ -73,7 +78,7 @@ void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
     
     if ( tittleBox.inside(mouse_transformed)){
         bool hit = false;
-        for (int i = 0; i < buttons.size(); i++){
+        for (int i = 0; i < buttons.size() && !hit; i++){
             if (((mouse_transformed.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
                 ((mouse_transformed.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
                 if ( i == 0){

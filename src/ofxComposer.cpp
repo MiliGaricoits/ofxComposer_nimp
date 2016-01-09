@@ -145,7 +145,6 @@ void ofxComposer::customDraw(){
         it->second->customDraw();
     }
     
-    
     if (bEditMode) {
         
         //  Draw active line
@@ -664,10 +663,6 @@ void ofxComposer::load(string _fileConfig){
                 nPatch->setMainCanvas(this->canvas);
                 nPatch->setParent(*this->getParent());
                 
-                // Listen to close bottom on the titleBar
-                //
-                ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
-                
                 // Insert the new patch into the map
                 //
                 patches[nPatch->getId()] = nPatch;
@@ -731,7 +726,6 @@ bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
         nPatch->saveSettings();
         nPatch->setMainCanvas(this->canvas); // Application main canvas
         nPatch->setParent(*this->getParent()); // Add camera as parent
-        ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
         patches[nPatch->getId()] = nPatch;
     }
     
@@ -751,7 +745,6 @@ bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
         nPatch->saveSettings();
         nPatch->setMainCanvas(this->canvas); // Application main canvas
         nPatch->setParent(*this->getParent()); // Add camera as parent
-        ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
 #ifdef USE_OFXGLEDITOR
         if (nPatch->getType() == "ofxGLEditor"){
             nPatch->setTexture( editorFbo.getTextureReference(), 0);
@@ -775,8 +768,6 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
         p->setLinkType(nodeLinkType);
     }
     patches[p->getId()] = p;
-    
-    ofAddListener( p->title->close , this, &ofxComposer::closePatch);
     
     p->setMainCanvas(this->canvas);
     p->setParent(*this->getParent());
@@ -808,53 +799,6 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
     }
     
     return connected;
-}
-
-//------------------------------------------------------------------
-void ofxComposer::closePatch( int &_nID ){
-    bool deleted = false;
-    
-    if ( (_nID != -1) && (patches[_nID] != NULL) ){
-        int targetTag = 0;
-        
-        if (patches[_nID]->getType() == "ofxGLEditor")
-            bGLEditorPatch = false;
-        
-        // Delete links Dependences
-        //
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            for (int j = it->second->outPut.size()-1; j >= 0 ; j--){
-                if ( it->second->outPut[j].toId == _nID){
-                    it->second->outPut.erase( it->second->outPut.begin() + j );
-                    it->second->saveSettings();
-                }
-            }
-        }
-        
-        // Delete object from memory and then from vector
-        //
-        selectedID = -1;
-        delete &patches[_nID];
-        patches.erase(_nID);
-        
-        // Delete XML Data
-        //
-        ofxXmlSettings XML;
-        if ( XML.loadFile( configFile ) ){
-            int totalSurfaces = XML.getNumTags("surface");
-            for (int i = 0; i < totalSurfaces; i++){
-                if (XML.pushTag("surface", i)){
-                    if ( XML.getValue("id", -1) == _nID){
-                        targetTag = i;
-                    }
-                    XML.popTag();
-                }
-            }
-            
-            XML.removeTag("surface", targetTag);
-            XML.saveFile();
-        }
-    }
 }
 
 // -----------------------------------------------------------
@@ -980,10 +924,6 @@ void ofxComposer::loadSnippet() {
                 //
                 nPatch->setMainCanvas(this->canvas);
                 nPatch->setParent(*this->getParent());
-                
-                // Listen to close bottom on the titleBar
-                //
-                ofAddListener( nPatch->title->close , this, &ofxComposer::closePatch);
                 
                 // Insert the new patch into the map
                 //

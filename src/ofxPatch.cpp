@@ -122,6 +122,14 @@ ofxPatch::~ofxPatch(){
     outPut.clear();
     textureCorners.clear();
     maskCorners.clear();
+    
+    ofRemoveListener( title->reset , this, &ofxPatch::_reMakeFrame);
+    ofRemoveListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
+    
+    delete title;
 }
 
 /* ================================================ */

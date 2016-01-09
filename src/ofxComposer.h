@@ -85,6 +85,8 @@ protected:
     
     bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
     
+    map<int,ofxPatch*>  patches;
+    
 private:
     
     //** EVENTS **//
@@ -96,7 +98,6 @@ private:
     void    _windowResized(ofResizeEventArgs &e);
     void    _mouseDragged(ofMouseEventArgs &e);
     
-    void    closePatch( int &_nID );
     void    activePatch( int _nID );
     
 #ifdef USE_OFXGLEDITOR
@@ -111,7 +112,6 @@ private:
     
     ofxUISuperCanvas* canvas;
     
-    map<int,ofxPatch*>  patches;
     bool    disabledPatches;
     
     string  configFile;
