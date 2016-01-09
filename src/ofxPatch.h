@@ -121,7 +121,7 @@ public:
     //methods for adding input//
     void            addInputDot();
     virtual void    addInput(ofxPatch* layer_){};
-    virtual void    removeInput(string inputId_){};
+    virtual void    removeInput(int inputId_){};
     
     // Snippets
     //

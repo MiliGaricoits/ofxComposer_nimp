@@ -451,7 +451,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         if (selectedDot != -1){
             
             for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
-                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getName());
+                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getId());
             }
             patches[selectedDot]->outPut.clear();
             patches[selectedDot]->saveSettings();
