@@ -940,7 +940,12 @@ float ofxPatch::getHighestYCoord(){
             highestCoord = textureCorners[i].y+offSet;
         }
     }
-    return highestCoord;
+    
+    if(bInspector && panel.getPosition().y + panel.getHeight() > highestCoord){
+        return panel.getPosition().y + panel.getHeight();
+    } else{
+        return highestCoord;
+    }
 }
 
 //------------------------------------------------------------------
@@ -952,6 +957,7 @@ float ofxPatch::getLowestYCoord(){
             lowestCoord = textureCorners[i].y;
         }
     }
+    
     return lowestCoord;
 }
 
@@ -968,7 +974,12 @@ float ofxPatch::getHighestXCoord(){
             highestCoord = textureCorners[i].x+offSet;
         }
     }
-    return highestCoord;
+    
+    if(bInspector && panel.getPosition().x + panel.getWidth() > highestCoord){
+        return panel.getPosition().x + panel.getWidth();
+    } else{
+        return highestCoord;
+    }
 }
 
 //------------------------------------------------------------------
