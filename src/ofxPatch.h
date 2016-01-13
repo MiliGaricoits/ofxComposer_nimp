@@ -222,7 +222,7 @@ private:
     
     ofTexture&      getSrcTexture();
     
-    bool            is_between (float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?
+    bool            is_between(float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?
 
     ofPoint         src[4];
     ofMatrix4x4     surfaceToScreenMatrix;

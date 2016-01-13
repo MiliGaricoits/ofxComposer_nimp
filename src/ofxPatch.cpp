@@ -529,6 +529,11 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                                 addNew = j;
                             }
                             
+                            if (std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10) // Vertical line.
+                            {
+                                addNew = j;
+                            }
+                            
                             const float M = (link_vertices[j+1].y - link_vertices[j].y) / (link_vertices[j+1].x - link_vertices[j].x); // Slope
                             const float C = -(M * link_vertices[j].x) + link_vertices[j].y; // Y intercept
                             
