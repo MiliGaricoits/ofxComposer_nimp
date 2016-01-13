@@ -2022,7 +2022,20 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
                     tagNum = XML.addTag("dot");
                 
                 XML.setValue("dot:to", outPut[j].toId , tagNum);
-                XML.setValue("dot:tex", outPut[j].nTex, tagNum);
+                XML.pushTag("dot");
+                XML.removeTag("vertices");
+                
+                if (outPut[j].link_vertices.size()) {
+                    
+                    XML.addTag("vertices");
+                    XML.pushTag("vertices");
+                    for (int v = 0; v < outPut[j].link_vertices.size(); v++) {
+                        XML.addTag("vertex");
+                        XML.setValue("vertex", ofToString(outPut[j].link_vertices[v].x) + "|" + ofToString(outPut[j].link_vertices[v].y), v);
+                    }
+                    XML.popTag();// pop "vertices"
+                }
+                XML.popTag();// pop "dot"
             }
             
             // If there are too much tags
@@ -2114,7 +2127,18 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
                     tagNum = XML.addTag("dot");
                 
                 XML.setValue("dot:to", outPut[j].toId , tagNum);
-                XML.setValue("dot:tex", outPut[j].nTex, tagNum);
+                if (outPut[j].link_vertices.size()) {
+                    
+                    XML.pushTag("dot");
+                    XML.addTag("vertices");
+                    XML.pushTag("vertices");
+                    for (int v = 0; v < outPut[j].link_vertices.size(); v++) {
+                        XML.addTag("vertex");
+                        XML.setValue("vertex", ofToString(outPut[j].link_vertices[v].x) + "|" + ofToString(outPut[j].link_vertices[v].y), v);
+                    }
+                    XML.popTag();// pop "vertices"
+                    XML.popTag();// pop "dot"
+                }
             }
             XML.popTag();// pop "out"
             saved = XML.saveFile();
