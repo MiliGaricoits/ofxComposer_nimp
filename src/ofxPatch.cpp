@@ -2031,7 +2031,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
                     XML.pushTag("vertices");
                     for (int v = 0; v < outPut[j].link_vertices.size(); v++) {
                         XML.addTag("vertex");
-                        XML.setValue("vertex", ofToString(outPut[j].link_vertices[v].x) + "|" + ofToString(outPut[j].link_vertices[v].y), v);
+                        XML.setAttribute("vertex", "x", outPut[j].link_vertices[v].x, v);
+                        XML.setAttribute("vertex", "y", outPut[j].link_vertices[v].y, v);
                     }
                     XML.popTag();// pop "vertices"
                 }
@@ -2134,7 +2135,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
                     XML.pushTag("vertices");
                     for (int v = 0; v < outPut[j].link_vertices.size(); v++) {
                         XML.addTag("vertex");
-                        XML.setValue("vertex", ofToString(outPut[j].link_vertices[v].x) + "|" + ofToString(outPut[j].link_vertices[v].y), v);
+                        XML.setAttribute("vertex", "x", outPut[j].link_vertices[v].x, v);
+                        XML.setAttribute("vertex", "y", outPut[j].link_vertices[v].y, v);
                     }
                     XML.popTag();// pop "vertices"
                     XML.popTag();// pop "dot"

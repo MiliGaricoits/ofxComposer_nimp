@@ -781,14 +781,32 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
         (_toID != -1) && (patches[_toID] != NULL) /*&&
         (patches[ _toID ]->getType() == "ofShader") */) {
         
-        LinkDot newDot;
-        newDot.pos = patches[ _fromID ]->getOutPutPosition();
-        newDot.toId = patches[ _toID ]->getId();
-        newDot.to = &(patches[ _toID ]->inPut[ nTexture ]);
-        newDot.toShader = patches[ _toID ]->getShader();
-        newDot.nTex = nTexture;
-        
-        patches[ _fromID ]->outPut.push_back( newDot );
+        bool exists = false;
+        int i = 0;
+            
+        while (!exists && i < patches[ _fromID ]->outPut.size()) {
+            
+            if (patches[ _fromID ]->outPut[i].toId == _toID) {
+                
+                exists = true;
+                patches[ _fromID ]->outPut[i].pos = patches[ _fromID ]->getOutPutPosition();
+                patches[ _fromID ]->outPut[i].to = &(patches[ _toID ]->inPut[ nTexture ]);
+                patches[ _fromID ]->outPut[i].toShader = patches[ _toID ]->getShader();
+                patches[ _fromID ]->outPut[i].nTex = nTexture;
+            }
+            i++;
+        }
+            
+        if (!exists) {
+            LinkDot newDot;
+            newDot.pos = patches[ _fromID ]->getOutPutPosition();
+            newDot.toId = patches[ _toID ]->getId();
+            newDot.to = &(patches[ _toID ]->inPut[ nTexture ]);
+            newDot.toShader = patches[ _toID ]->getShader();
+            newDot.nTex = nTexture;
+            
+            patches[ _fromID ]->outPut.push_back( newDot );
+        }
             
         if (addInput_)
             patches[ _toID ]->addInput(patches[ _fromID ]);
