@@ -155,6 +155,7 @@ protected:
     //ofTexture       *texture;
     ofTexture       tex;
     ofFbo           fbo;
+    ofImage         noInputs;
     
     // Drawing variables
     //
@@ -163,6 +164,7 @@ protected:
     bool            drawCamera;
     bool            drawTexture;
     bool            drawFbo;
+    bool            drawNoInputs;
     
     // Mask variables
     //

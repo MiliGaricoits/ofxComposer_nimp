@@ -39,6 +39,7 @@ ofxPatch::ofxPatch(){
     drawCamera          = false;
     drawTexture         = false;
     drawFbo             = false;
+    drawNoInputs        = false;
     
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
@@ -101,6 +102,7 @@ ofxPatch::ofxPatch(){
     ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     
+    noInputs.loadImage("assets/no_inputs.png");
 };
 
 ofxPatch::~ofxPatch(){
@@ -522,15 +524,12 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                     for (int j = 0; j < link_vertices.size()-1; j++){
                         int next = (j+1)%link_vertices.size();
                         
-                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) && is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance))
-                        {
-                            if (std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance) // Horizontal line.
-                            {
+                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) && is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance)) {
+                            if (std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance) { // Horizontal line.
                                 addNew = j;
                             }
                             
-                            if (std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10) // Vertical line.
-                            {
+                            if (std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10) { // Vertical line.
                                 addNew = j;
                             }
                             
@@ -890,7 +889,9 @@ string ofxPatch::getFrag(){
 
 //------------------------------------------------------------------
 ofTexture& ofxPatch::getSrcTexture(){
-    if (drawImage)
+    if (drawNoInputs)
+        return noInputs.getTextureReference();
+    else if (drawImage)
         return image->getTextureReference();
     else if (drawVideo)
         return videoPlayer->getTextureReference();
