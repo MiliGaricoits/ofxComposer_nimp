@@ -296,7 +296,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
-    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected()) {
+    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() && (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)) {
         
         int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
@@ -319,7 +319,9 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         
         selectedDot = -1;
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if ( (it->second->getOutPutPosition().distance(ofPoint(mouse.x, mouse.y)) < 5) && (it->second->bEditMode) && !(it->second->bEditMask) ){
+            if ( (it->second->getOutPutPosition().distance(ofPoint(mouse.x, mouse.y)) < 5)
+                && (it->second->bEditMode) && !(it->second->bEditMask) ){
+                
                 selectedDot = it->first;
                 it->second->bActive = false;
                 selectedID = -1;
@@ -357,7 +359,8 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     // mouse is being drag, and the mouse is not over any patch
-    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) && (!canvas->getOtherSelected()) ) {
+    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit())
+        && (!canvas->getOtherSelected() && (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)) ) {
         
         // left button -> multiple select
         if(e.button == 0){
