@@ -107,8 +107,9 @@ private:
     ofColor     editorFgColor;
 #endif
     
-    int    isAnyPatchHit(float x, float y, float z);
-    bool   isAnyLinkHit();
+    int     isAnyPatchHit(float x, float y, float z);
+    bool    isAnyLinkHit();
+    bool    isAnyPatchSelected;
     
     ofxUISuperCanvas* canvas;
     

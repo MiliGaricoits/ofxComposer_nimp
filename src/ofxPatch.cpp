@@ -938,12 +938,9 @@ float ofxPatch::getHighestYCoord(){
     int highestCoord = 0;
     float offSet = 0.0;
     
-    if (title != NULL)
-        offSet = 15;
-    
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].y+offSet){
-            highestCoord = textureCorners[i].y+offSet;
+        if(highestCoord < textureCorners[i].y){
+            highestCoord = textureCorners[i].y;
         }
     }
     
@@ -972,12 +969,9 @@ float ofxPatch::getHighestXCoord(){
     int highestCoord = 0;
     float offSet = 0.0;
     
-    if (title != NULL)
-        offSet = 15;
-    
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].x+offSet){
-            highestCoord = textureCorners[i].x+offSet;
+        if(highestCoord < textureCorners[i].x){
+            highestCoord = textureCorners[i].x;
         }
     }
     

@@ -156,30 +156,32 @@ void ofxComposer::customDraw(){
         
         // aligned nodes
         //
-        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-        if (verticalAlign1) {
-            ofSetColor(255, 208, 111);
-            ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
-        }
-        if (verticalAlign2) {
-            ofSetColor(255, 208, 111);
-            ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
-        }
-        if (verticalAlign3) {
-            ofSetColor(255, 208, 111);
-            ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
-        }
-        if (horizontalAlign1) {
-            ofSetColor(255, 208, 111);
-            ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
-        }
-        if (horizontalAlign2) {
-            ofSetColor(255, 208, 111);
-            ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
-        }
-        if (horizontalAlign3) {
-            ofSetColor(255, 208, 111);
-            ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
+        if (isAnyPatchSelected) {
+            ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+            if (verticalAlign1) {
+                ofSetColor(255, 208, 111);
+                ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
+            }
+            if (verticalAlign2) {
+                ofSetColor(255, 208, 111);
+                ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
+            }
+            if (verticalAlign3) {
+                ofSetColor(255, 208, 111);
+                ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
+            }
+            if (horizontalAlign1) {
+                ofSetColor(255, 208, 111);
+                ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
+            }
+            if (horizontalAlign2) {
+                ofSetColor(255, 208, 111);
+                ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
+            }
+            if (horizontalAlign3) {
+                ofSetColor(255, 208, 111);
+                ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
+            }
         }
         
         //  Draw Help screen
@@ -302,12 +304,14 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         //
         if(idPatchHit == -1){
             disabledPatches = true;
+            isAnyPatchSelected = false;
             deactivateAllPatches();
         } else {
             disabledPatches = false;
             for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
                 if(!patches.find(idPatchHit)->second->bActive){
                     activePatch(idPatchHit);
+                    isAnyPatchSelected = true;
                     break;
                 }
             }
@@ -467,6 +471,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
     horizontalAlign1 = 0;
     horizontalAlign2 = 0;
     horizontalAlign3 = 0;
+    isAnyPatchSelected = false;
     
     // multipleSelect
     //
@@ -581,7 +586,7 @@ int ofxComposer::getPatchesLowestCoord(){
             coordMasBaja = it->second->getLowestYCoord();
         }
     }
-    return coordMasBaja;
+    return coordMasBaja - 20;
 }
 
 //------------------------------------------------------------------
