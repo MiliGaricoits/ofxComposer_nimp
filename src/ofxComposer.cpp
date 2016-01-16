@@ -856,6 +856,11 @@ void ofxComposer::deactivateAllPatches(){
 }
 
 //------------------------------------------------------------------
+bool ofxComposer::arePatchesDeactivated(){
+    return disabledPatches;
+}
+
+//------------------------------------------------------------------
 void ofxComposer::movePatches(ofVec3f diff){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->moveDiff(diff);

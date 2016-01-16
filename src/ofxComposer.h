@@ -75,6 +75,7 @@ public:
     bool    isDraggingHGrip();
     
     void    deactivateAllPatches();
+    bool    arePatchesDeactivated();
     
     // snippet
     //
