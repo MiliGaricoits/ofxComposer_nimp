@@ -636,6 +636,12 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                     textureCorners[i] += mouse-mouseLast;
                 }
                 
+                for (int i = 0; i < outPut.size(); i++) {
+                    for(int j = 0; j < outPut[i].link_vertices.size(); j++){
+                        outPut[i].link_vertices[j] += mouse-mouseLast;
+                    }
+                }
+                
                 bUpdateCoord = true;
                 mouseLast = mouse;
             }
