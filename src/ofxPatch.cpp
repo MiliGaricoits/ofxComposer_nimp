@@ -500,6 +500,11 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
         bool overDot = false;
         for (int i = 0; i < outPut.size() and !overDot; i++){
             
+            if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) ||
+                ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10 )) {
+                overDot = true;
+            }
+            
             for (int j = 0; j < outPut[i].link_vertices.size(); j++){
                 
                 if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
@@ -525,12 +530,12 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                     for (int j = 0; j < link_vertices.size()-1; j++){
                         int next = (j+1)%link_vertices.size();
                         
-                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) && is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance)) {
-                            if (std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance) { // Horizontal line.
-                                addNew = j;
-                            }
+                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) &&
+                            is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance)) {
                             
-                            if (std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10) { // Vertical line.
+                            if (( std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance ) ||    // Horizontal line.
+                                ( std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10 )) { // Vertical line.
+                                
                                 addNew = j;
                             }
                             
