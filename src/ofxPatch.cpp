@@ -390,7 +390,8 @@ void ofxPatch::drawInspectorGUI() {
     //
     if (bInspector) {
         ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-        panel.setPosition(ofVec3f((textureCorners[1].x/scale.x + 2), (textureCorners[1].y/scale.y - 42), scale.z));
+        ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
+        panel.setPosition( ofVec3f( ((textureCorners[1].x  - cam_pos.x)/scale.x) + 2, ((textureCorners[1].y - cam_pos.y)/scale.y) - 42, cam_pos.z/scale.z));
         panel.draw();
     }
 }

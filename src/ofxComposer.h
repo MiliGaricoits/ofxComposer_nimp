@@ -128,7 +128,7 @@ private:
     
     // nodes count
     //
-    int nodesCount;
+    int     nodesCount;
     
     // node link type
     //
@@ -136,11 +136,11 @@ private:
     
     // align nodes
     //
-    int verticalAlign1, verticalAlign2, verticalAlign3, horizontalAlign1, horizontalAlign2, horizontalAlign3;
+    int     verticalAlign1, verticalAlign2, verticalAlign3, horizontalAlign1, horizontalAlign2, horizontalAlign3;
     
     // snippet
     //
-    int  getMaxIdPatch();
+    int     getMaxIdPatch();
     
     // multiple select
     //
