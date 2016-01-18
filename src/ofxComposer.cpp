@@ -309,9 +309,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         } else {
             disabledPatches = false;
             for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-                if( !patches.find(idPatchHit)->second->bActive
-                    && !patches.find(idPatchHit)->second->isOverOutput(ofPoint(mouse.x, mouse.y, mouse.z)) ){
-                       
+                if(!patches.find(idPatchHit)->second->bActive){
                     activePatch(idPatchHit);
                     isAnyPatchSelected = true;
                     break;

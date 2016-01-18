@@ -114,7 +114,6 @@ public:
     bool            saveSettings(ofxXmlSettings &XML, bool _new, int _nTag);
     
     bool            isOver(ofPoint _pos); // is mouse over patch ?
-    bool            isOverOutput(ofPoint _pos); // is mouse over patch output dot ?
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
     bool            isLinkHit(); // is node link hit my mouse click ?
     void            resetSize(int _width = 0, int _height = 0);
@@ -239,7 +238,6 @@ private:
     int             selectedLink;
     nodeLinkType    linkType;
     bool            linkHit;
-    bool            overOutput;
     
 };
 

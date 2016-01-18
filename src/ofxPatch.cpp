@@ -450,19 +450,19 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
         } else {
             // Editing the mask corners
             //
-            bool overMaskDot = false;
+            bool overDot = false;
             for(int i = 0; i < maskCorners.size(); i++){
                 ofVec3f pos = getSurfaceToScreen( ofPoint(maskCorners[i].x * width, maskCorners[i].y * height));
                 
                 if ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 10 ){
                     selectedMaskCorner = i;
-                    overMaskDot = true;
+                    overDot = true;
                 }
             }
             
             // Add new Dot if it's over the line
             //
-            if (!overMaskDot){
+            if (!overDot){
                 doScreenToSurfaceMatrix();
                 mouse = screenToSurfaceMatrix * mouse;
                 mouse.x = mouse.x / width;
@@ -502,69 +502,66 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
             
             if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) ||
                 ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10 )) {
-                overOutput = true;
+                overDot = true;
             }
             
-            if (!overOutput) {
+            for (int j = 0; j < outPut[i].link_vertices.size(); j++){
                 
-                for (int j = 0; j < outPut[i].link_vertices.size(); j++){
-                    
-                    if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
-                        if ((e.button == 2) || (glutGetModifiers() == GLUT_ACTIVE_CTRL)) {
-                            outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
-                        }
-                        else {
-                            selectedLinkVertex = j;
-                            selectedLink = i;
-                        }
-                        overDot = true;
-                        setLinkHit(true);
+                if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
+                    if ((e.button == 2) || (glutGetModifiers() == GLUT_ACTIVE_CTRL)) {
+                        outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
                     }
+                    else {
+                        selectedLinkVertex = j;
+                        selectedLink = i;
+                    }
+                    overDot = true;
+                    setLinkHit(true);
                 }
+            }
+            
+            if (!overDot and outPut.size() > 0){
+                vector<ofPoint> link_vertices = outPut[i].link_line.getVertices();
                 
-                if (!overDot and outPut.size() > 0){
-                    vector<ofPoint> link_vertices = outPut[i].link_line.getVertices();
+                if (link_vertices.size()){
+                    int addNew = -1;
+                    int tolerance = 3;
                     
-                    if (link_vertices.size()){
-                        int addNew = -1;
-                        int tolerance = 3;
+                    for (int j = 0; j < link_vertices.size()-1; j++){
+                        int next = (j+1)%link_vertices.size();
                         
-                        for (int j = 0; j < link_vertices.size()-1; j++){
-                            int next = (j+1)%link_vertices.size();
+                        if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) &&
+                            is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance)) {
                             
-                            if (is_between (mouse.x, link_vertices[j].x, link_vertices[j+1].x, tolerance) &&
-                                is_between (mouse.y, link_vertices[j].y, link_vertices[j+1].y, tolerance)) {
+                            if (( std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance ) ||    // Horizontal line.
+                                ( std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10 )) { // Vertical line.
                                 
-                                if (( std::abs(link_vertices[j+1].y - link_vertices[j].y) <= tolerance ) ||    // Horizontal line.
-                                    ( std::abs(link_vertices[j+1].x - link_vertices[j].x) <= tolerance*10 )) { // Vertical line.
-                                    
-                                    addNew = j;
-                                }
-                                
-                                const float M = (link_vertices[j+1].y - link_vertices[j].y) / (link_vertices[j+1].x - link_vertices[j].x); // Slope
-                                const float C = -(M * link_vertices[j].x) + link_vertices[j].y; // Y intercept
-                                
-                                // Checking if (x, y) is on the line passing through the end points.
-                                if(std::fabs (mouse.y - (M * mouse.x + C)) <= tolerance) {
-                                    addNew = j;
-                                }
+                                addNew = j;
+                            }
+                            
+                            const float M = (link_vertices[j+1].y - link_vertices[j].y) / (link_vertices[j+1].x - link_vertices[j].x); // Slope
+                            const float C = -(M * link_vertices[j].x) + link_vertices[j].y; // Y intercept
+                            
+                            // Checking if (x, y) is on the line passing through the end points.
+                            if(std::fabs (mouse.y - (M * mouse.x + C)) <= tolerance) {
+                                addNew = j;
                             }
                         }
+                    }
+                    
+                    if (addNew >= 0) {
                         
-                        if (addNew >= 0) {
-                            
-                            setLinkHit(true);
-                            overDot = true;
-                            selectedLinkVertex = addNew;
-                            selectedLink = i;
-                            
-                            if (outPut[i].link_vertices.size() == 0)
-                                outPut[i].link_vertices.push_back(ofVec3f(mouse.x, mouse.y, 0.0));
-                            else if (addNew == 0)
-                                outPut[i].link_vertices.insert(outPut[i].link_vertices.begin(), ofVec3f(mouse.x, mouse.y, 0.0));
-                            else
-                                outPut[i].link_vertices.insert(outPut[i].link_vertices.begin()+addNew, ofVec3f(mouse.x, mouse.y, 0.0));
-                        }
+                        setLinkHit(true);
+                        overDot = true;
+                        selectedLinkVertex = addNew;
+                        selectedLink = i;
+                        
+                        if (outPut[i].link_vertices.size() == 0)
+                            outPut[i].link_vertices.push_back(ofVec3f(mouse.x, mouse.y, 0.0));
+                        else if (addNew == 0)
+                            outPut[i].link_vertices.insert(outPut[i].link_vertices.begin(), ofVec3f(mouse.x, mouse.y, 0.0));
+                        else
+                            outPut[i].link_vertices.insert(outPut[i].link_vertices.begin()+addNew, ofVec3f(mouse.x, mouse.y, 0.0));
                     }
                 }
             }
@@ -692,8 +689,7 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     // mouse is not longer pressing the inspector or link
     canvas->setOtherSelected(false);
     selectedLinkVertex = -1;
-    selectedLink       = -1;
-    overOutput         = false;
+    selectedLink     = -1;
     setLinkHit(false);
     
     ofVec3f mouse = ofVec3f(e.x, e.y,0);
@@ -1084,29 +1080,6 @@ bool ofxPatch::isOver(ofPoint _pos){
     biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+20);
     
     return biggerBox.inside(_pos);
-};
-
-//------------------------------------------------------------------
-bool ofxPatch::isOverOutput(ofPoint _pos){
-    
-    if (overOutput) return true;
-    
-    else {
-        
-        overOutput  = false;
-        int i       = 0;
-        
-        while (i < outPut.size() && !overOutput) {
-            
-            if ( ofDist(_pos.x, _pos.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) {
-                
-                overOutput = true;
-            }
-            i++;
-        }
-        return overOutput;
-    }
-    
 };
 
 //------------------------------------------------------------------
