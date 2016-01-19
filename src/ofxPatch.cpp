@@ -446,7 +446,7 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
 //        }
     }
     
-    if ( bEditMode && bActive && (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)){
+    if ( bEditMode && bActive ){
         if (!bEditMask){
             // Editing the texture corners
             //
@@ -587,7 +587,7 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
     ofVec3f mouseLast = ofVec3f(ofGetPreviousMouseX(),ofGetPreviousMouseY(),0);
     ofVec3f mouse_transformed = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
     
-    if (bEditMode && (mouse_transformed.x > RIGHT_MENU_WIDTH) && (mouse_transformed.y > MENU_HEIGHT)){
+    if (bEditMode){
         if (!bEditMask){
             // Drag texture corners
             //
