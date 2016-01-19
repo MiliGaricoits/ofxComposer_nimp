@@ -148,8 +148,8 @@ protected:
     
     // 5 Sources Objects and one interface to rule them all (ofTexture& getSrcTexture())
     //
-    ofImage         *image;
-    ofVideoPlayer   *videoPlayer;
+//    ofImage         *image;
+//    ofVideoPlayer   *videoPlayer;
     ofVideoGrabber  *videoGrabber;
     ofxShaderObj    *shader;
     //ofTexture       *texture;
@@ -159,11 +159,11 @@ protected:
     
     // Drawing variables
     //
-    bool            drawImage;
-    bool            drawVideo;
-    bool            drawCamera;
-    bool            drawTexture;
-    bool            drawFbo;
+//    bool            drawImage;
+//    bool            drawVideo;
+//    bool            drawCamera;
+//    bool            drawTexture;
+//    bool            drawFbo;
     bool            drawNoInputs;
     
     // Mask variables
@@ -222,7 +222,8 @@ private:
     void            _keyPressed(ofKeyEventArgs &e);
     void            _reMakeFrame( int &_nId );
     
-    ofTexture&      getSrcTexture();
+    //ofTexture&      getSrcTexture();
+    virtual ofTexture* getTexture(){};
     
     bool            is_between(float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?
 

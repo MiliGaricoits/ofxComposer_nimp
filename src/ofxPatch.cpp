@@ -28,17 +28,17 @@ ofxPatch::ofxPatch(){
     bUpdateMask         = true;
     bUpdateCoord        = true;
     
-    image               = NULL;
+//    image               = NULL;
     shader              = NULL;
-    videoPlayer         = NULL;
+//    videoPlayer         = NULL;
     videoGrabber        = NULL;
-    //texture             = NULL;
+//    texture             = NULL;
     
-    drawImage           = false;
-    drawVideo           = false;
-    drawCamera          = false;
-    drawTexture         = false;
-    drawFbo             = false;
+//    drawImage           = false;
+//    drawVideo           = false;
+//    drawCamera          = false;
+//    drawTexture         = false;
+//    drawFbo             = false;
     drawNoInputs        = false;
     
     width               = NODE_WIDTH;
@@ -106,17 +106,17 @@ ofxPatch::ofxPatch(){
 };
 
 ofxPatch::~ofxPatch(){
-    if ( image != NULL )
-        delete image;
+//    if ( image != NULL )
+//        delete image;
     
     if ( shader != NULL )
         delete shader;
     
-    if ( videoPlayer != NULL )
-        delete videoPlayer;
-    
-    if ( videoGrabber != NULL )
-        delete videoGrabber;
+//    if ( videoPlayer != NULL )
+//        delete videoPlayer;
+//    
+//    if ( videoGrabber != NULL )
+//        delete videoGrabber;
     
 //    if ( texture != NULL )
 //        delete texture;
@@ -140,11 +140,16 @@ ofxPatch::~ofxPatch(){
 /* ================================================ */
 void ofxPatch::update(){
     
-    if ((width != getSrcTexture().getWidth()) ||
-        (height != getSrcTexture().getHeight()) ){
-        width = getSrcTexture().getWidth();
-        height = getSrcTexture().getHeight();
-        
+//    if ((width != getSrcTexture().getWidth()) ||
+//        (height != getSrcTexture().getHeight()) ){
+//        width = getSrcTexture().getWidth();
+//        height = getSrcTexture().getHeight();
+
+    if ((width != getTexture()->getWidth()) ||
+        (height != getTexture()->getHeight()) ){
+        width = getTexture()->getWidth();
+        height = getTexture()->getHeight();
+
         bUpdateCoord = true;
         bUpdateMask = true;
     }
@@ -153,10 +158,10 @@ void ofxPatch::update(){
         // If the texture change or it's new it will update some parameters
         // like the size of the FBO, the mask and the matrix
         //
-        if ((maskFbo.src->getWidth() != getSrcTexture().getWidth()) ||
-            (maskFbo.src->getHeight() != getSrcTexture().getHeight()) ){
-            width = getSrcTexture().getWidth();
-            height = getSrcTexture().getHeight();
+        if ((maskFbo.src->getWidth() != getTexture()->getWidth()) ||
+            (maskFbo.src->getHeight() != getTexture()->getHeight()) ){
+            width = getTexture()->getWidth();
+            height = getTexture()->getHeight();
             
             maskFbo.allocate(width,height);
         }
@@ -181,14 +186,14 @@ void ofxPatch::update(){
         //
         
         if ( textureCorners.inside(ofGetMouseX(), ofGetMouseY()) && (bEditMode)){
-            texOpacity = ofLerp(texOpacity,1.0, 0.01);
-            maskOpacity = ofLerp(maskOpacity,0.8, 0.01);
+            texOpacity = ofLerp(texOpacity,1.0, 0.05);
+            maskOpacity = ofLerp(maskOpacity,0.8, 0.05);
         } else if (!bEditMode){
-            texOpacity = ofLerp(texOpacity, 1.0, 0.01);
-            maskOpacity = ofLerp(maskOpacity, 0.0, 0.01);
+            texOpacity = ofLerp(texOpacity, 1.0, 0.05);
+            maskOpacity = ofLerp(maskOpacity, 0.0, 0.05);
         } else {
-            texOpacity = ofLerp(texOpacity, 0.8, 0.01);
-            maskOpacity = ofLerp(maskOpacity, 0.0, 0.01);
+            texOpacity = ofLerp(texOpacity, 0.8, 0.05);
+            maskOpacity = ofLerp(maskOpacity, 0.0, 0.05);
         }
         
         maskFbo.dst->begin();
@@ -198,7 +203,8 @@ void ofxPatch::update(){
         maskShader.setUniform1f("texOpacity", texOpacity);
         maskShader.setUniform1f("maskOpacity", maskOpacity);
         
-        getSrcTexture().draw(0,0);
+        //getSrcTexture().draw(0,0);
+        getTexture()->draw(0,0);
         
         maskShader.end();
         maskFbo.dst->end();
@@ -222,11 +228,12 @@ void ofxPatch::update(){
     
     // Update shader or video content
     //
-    if (videoPlayer != NULL){
-        videoPlayer->update();
-    } else if (videoGrabber != NULL){
-        //videoGrabber->update();
-    } else if (shader != NULL){
+//    if (videoPlayer != NULL){
+//        videoPlayer->update();
+//    } else if (videoGrabber != NULL){
+//        //videoGrabber->update();
+//    } else
+    if (shader != NULL){
         shader->update();
     }
     
@@ -900,24 +907,24 @@ string ofxPatch::getFrag(){
 }
 
 //------------------------------------------------------------------
-ofTexture& ofxPatch::getSrcTexture(){
-    if (drawNoInputs)
-        return noInputs.getTextureReference();
-    else if (drawImage)
-        return image->getTextureReference();
-    else if (drawVideo)
-        return videoPlayer->getTextureReference();
-    else if (drawCamera)
-        return videoGrabber->getTextureReference();
-    else if (drawFbo)
-        return fbo.getTextureReference();
-    else if (shader != NULL)
-        return shader->getTextureReference();
-    else if (drawTexture)
-        return tex;
-    else
-        return maskFbo.dst->getTextureReference();
-}
+//ofTexture& ofxPatch::getSrcTexture(){
+//    if (drawNoInputs)
+//        return noInputs.getTextureReference();
+//    else if (drawImage)
+//        return image->getTextureReference();
+//    else if (drawVideo)
+//        return videoPlayer->getTextureReference();
+//    else if (drawCamera)
+//        return videoGrabber->getTextureReference();
+//    else if (drawFbo)
+//        return fbo.getTextureReference();
+//    else if (shader != NULL)
+//        return shader->getTextureReference();
+//    else if (drawTexture)
+//        return tex;
+//    else
+//        return maskFbo.dst->getTextureReference();
+//}
 
 //------------------------------------------------------------------
 ofTexture& ofxPatch::getTextureReference(){
@@ -927,7 +934,8 @@ ofTexture& ofxPatch::getTextureReference(){
     if (bMasking)
         return maskFbo.dst->getTextureReference();
     else
-        return getSrcTexture();
+        //return getSrcTexture();
+        return *getTexture();
 }
 
 //------------------------------------------------------------------
@@ -1108,8 +1116,8 @@ void ofxPatch::resetSize(int _width, int _height) {
         height = _height;
     }
 
-    x = textureCorners[0].x*((ofCamera*)getParent())->getScale().x;
-    y = textureCorners[0].y*((ofCamera*)getParent())->getScale().y;
+    x = textureCorners[0].x; //*((ofCamera*)getParent())->getScale().x;
+    y = textureCorners[0].y; //*((ofCamera*)getParent())->getScale().y;
     
     textureCorners[0].set(x, y);
     textureCorners[1].set(x + (width*SCALE_RATIO), y);
@@ -1381,14 +1389,14 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         
         type    = "ofImage";
         
-        if ( image != NULL )
-            delete image;
-        
-        image   = new ofImage();
-        loaded  = image->loadImage( filePath );
-        width   = image->getWidth();
-        height  = image->getHeight();
-        
+//        if ( image != NULL )
+//            delete image;
+//        
+//        image   = new ofImage();
+//        loaded  = image->loadImage( filePath );
+//        width   = image->getWidth();
+//        height  = image->getHeight();
+//        
         
         // Setting Inspector
         //
@@ -1412,14 +1420,14 @@ bool ofxPatch::loadFile(string _filePath, string _configFile){
         
         type    = "ofVideoPlayer";
         
-        if ( videoPlayer != NULL )
-            delete videoPlayer;
-        
-        videoPlayer   = new ofVideoPlayer();
-        loaded  = videoPlayer->loadMovie( filePath );
-        videoPlayer->play();
-        width   = videoPlayer->getWidth();
-        height  = videoPlayer->getHeight();
+//        if ( videoPlayer != NULL )
+//            delete videoPlayer;
+//        
+//        videoPlayer   = new ofVideoPlayer();
+//        loaded  = videoPlayer->loadMovie( filePath );
+//        videoPlayer->play();
+//        width   = videoPlayer->getWidth();
+//        height  = videoPlayer->getHeight();
         
     } else if ((ext == "frag") || (ext == "FRAG") ||
                (ext == "fs") || (ext == "FS") ){
@@ -1536,16 +1544,16 @@ bool ofxPatch::loadType(string _type, string _configFile){
         loaded = true;
     } else if ( _type == "ofVideoGrabber"){
         type = _type;
-        videoGrabber = new ofVideoGrabber();
-        videoGrabber->setDeviceID( 0 );
-        
-        title->setTitle(ofToString(nId) + ":" + type );
-        loaded = videoGrabber->initGrabber(width, height);
-        
-        if (loaded){
-            width = videoGrabber->getWidth();
-            height = videoGrabber->getHeight();
-        }
+//        videoGrabber = new ofVideoGrabber();
+//        videoGrabber->setDeviceID( 0 );
+//        
+//        title->setTitle(ofToString(nId) + ":" + type );
+//        loaded = videoGrabber->initGrabber(width, height);
+//        
+//        if (loaded){
+//            width = videoGrabber->getWidth();
+//            height = videoGrabber->getHeight();
+//        }
     } else if (_type == "ofShader"){
         type  = _type;
         
@@ -1625,19 +1633,19 @@ bool ofxPatch::loadSettings( int _nTag, string _configFile){
             //  the rest it been load by the loadFile function
             //
             if ( type == "ofVideoGrabber" ){
-                videoGrabber = new ofVideoGrabber();
-                videoGrabber->setDeviceID( XML.getValue("path", 0 ) );
-                
-                width = XML.getValue("width", width);
-                height = XML.getValue("height", height);
-                
-                title->setTitle(ofToString(nId) + ":" + type );
-                loaded = videoGrabber->initGrabber(width, height);
-                
-                if (loaded){
-                    width = videoGrabber->getWidth();
-                    height = videoGrabber->getHeight();
-                }
+//                videoGrabber = new ofVideoGrabber();
+//                videoGrabber->setDeviceID( XML.getValue("path", 0 ) );
+//                
+//                width = XML.getValue("width", width);
+//                height = XML.getValue("height", height);
+//                
+//                title->setTitle(ofToString(nId) + ":" + type );
+//                loaded = videoGrabber->initGrabber(width, height);
+//                
+//                if (loaded){
+//                    width = videoGrabber->getWidth();
+//                    height = videoGrabber->getHeight();
+//                }
             } else if ( type == "ofShader" ){
                 shader = new ofxShaderObj();
                 width = XML.getValue("width", width);
@@ -2196,16 +2204,16 @@ bool ofxPatch::loadSnippetPatch(string snippetName, int relativeId, int previous
             //  the rest it been load by the loadFile function
             //
             if ( type == "ofVideoGrabber" ){
-                videoGrabber = new ofVideoGrabber();
-                videoGrabber->setDeviceID( XML.getValue("path", 0 ) );
-                
-                title->setTitle(ofToString(nId) + ":" + type );
-                loaded = videoGrabber->initGrabber(width, height);
-                
-                if (loaded){
-                    width = videoGrabber->getWidth();
-                    height = videoGrabber->getHeight();
-                }
+//                videoGrabber = new ofVideoGrabber();
+//                videoGrabber->setDeviceID( XML.getValue("path", 0 ) );
+//                
+//                title->setTitle(ofToString(nId) + ":" + type );
+//                loaded = videoGrabber->initGrabber(width, height);
+//                
+//                if (loaded){
+//                    width = videoGrabber->getWidth();
+//                    height = videoGrabber->getHeight();
+//                }
             } else if ( type == "ofShader" ){
                 shader = new ofxShaderObj();
                 shader->allocate(width, height, XML.getValue("format", GL_RGBA));
