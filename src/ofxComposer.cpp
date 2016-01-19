@@ -296,7 +296,9 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
-    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() && (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)) {
+    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() &&
+       (mouse.x - this->getParent()->getPosition().x > RIGHT_MENU_WIDTH) &&
+       (mouse.y - this->getParent()->getPosition().y > MENU_HEIGHT)) {
         
         int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
@@ -940,8 +942,9 @@ void ofxComposer::loadSnippet() {
         // Load each surface present on the xml file
         //
         for(int i = 0; i < totalPatchs ; i++){
-            ofxPatch* nPatch = new ofxPatch();
-            bool loaded = nPatch->loadSnippetPatch(snippetName, i, previousPatchesSize);
+            ofxPatch *nPatch = new ofxPatch();
+            bool loaded = nPatch->loadSettings(i, "config.xml");
+            
             if (loaded){
                 
 #ifdef USE_OFXGLEDITOR
@@ -951,8 +954,7 @@ void ofxComposer::loadSnippet() {
                     bGLEditorPatch = true;
                 }
 #endif
-                // Add application main canvas and camera as a parent
-                //
+                // Add application main canvas and parent camera
                 nPatch->setMainCanvas(this->canvas);
                 nPatch->setParent(*this->getParent());
                 
@@ -960,7 +962,6 @@ void ofxComposer::loadSnippet() {
                 //
                 patches[nPatch->getId()] = nPatch;
                 
-                nPatch->bActive = true;
             }
         }
         
@@ -983,7 +984,7 @@ void ofxComposer::loadSnippet() {
                             // with the position on the XML, in the same place of the vector array
                             // defined on the previus loop
                             //
-                            connect( fromID + previousPatchesSize, toID + previousPatchesSize, nTex, true);
+                            connect( fromID, toID, nTex, true);
                             
                             XML.popTag();
                         }
