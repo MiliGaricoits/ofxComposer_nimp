@@ -85,6 +85,7 @@ public:
 protected:
     
     bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
+    void    updateConnectionsSize(ofxPatch* patch);
     
     map<int,ofxPatch*>  patches;
     

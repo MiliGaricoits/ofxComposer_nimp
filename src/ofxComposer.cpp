@@ -818,8 +818,11 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
             patches[ _fromID ]->outPut.push_back( newDot );
         }
             
-        if (addInput_)
+        if (addInput_) {
             patches[ _toID ]->addInput(patches[ _fromID ]);
+            
+            this->updateConnectionsSize(patches[ _toID ]);
+        }
             
         patches[ _toID ]->setup();
             
@@ -827,6 +830,14 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
     }
     
     return connected;
+}
+
+void ofxComposer::updateConnectionsSize(ofxPatch* patch){
+    
+    for(int j = 0; j < patch->outPut.size(); j++){
+        patches[ patch->outPut[j].toId ]->resetSizeBasedOnInput(patch);
+        updateConnectionsSize(patches[ patch->outPut[j].toId ]);
+    }
 }
 
 // -----------------------------------------------------------
