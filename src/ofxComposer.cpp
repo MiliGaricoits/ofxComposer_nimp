@@ -460,6 +460,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
             
             for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
                 patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getId());
+                this->updateConnectionsSize(patches[patches[selectedDot]->outPut[i].toId]);
             }
             patches[selectedDot]->outPut.clear();
             patches[selectedDot]->saveSettings();
