@@ -114,7 +114,7 @@ public:
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
     bool            isLinkHit(); // is node link hit my mouse click ?
     void            resetSize(int _width = 0, int _height = 0);
-    void            resetSizeBasedOnInput(ofxPatch* input_);
+    virtual void    resetSizeBasedOnInput(ofxPatch* input_);
     
     //methods for adding input//
     void            addInputDot();

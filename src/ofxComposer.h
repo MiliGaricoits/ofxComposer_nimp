@@ -61,6 +61,7 @@ public:
     int     size(){return patches.size(); };
     void    movePatches(ofVec3f diff);
     void    scalePatches(float yDiff);
+    void    updateConnectionsSize(ofxPatch* patch);
     
     // scroll
     //
@@ -75,7 +76,6 @@ public:
 protected:
     
     bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
-    void    updateConnectionsSize(ofxPatch* patch);
     
     map<int,ofxPatch*>  patches;
     

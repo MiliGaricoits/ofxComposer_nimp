@@ -106,6 +106,7 @@ void ofxPatch::update(){
 
     if ((width != getTexture()->getWidth()) ||
         (height != getTexture()->getHeight()) ){
+        
         width = getTexture()->getWidth();
         height = getTexture()->getHeight();
 
@@ -119,6 +120,7 @@ void ofxPatch::update(){
         //
         if ((maskFbo.src->getWidth() != getTexture()->getWidth()) ||
             (maskFbo.src->getHeight() != getTexture()->getHeight()) ){
+            
             width = getTexture()->getWidth();
             height = getTexture()->getHeight();
             
