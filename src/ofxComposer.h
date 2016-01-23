@@ -44,6 +44,7 @@ public:
     //** GETTERS **//
     //
     map<int,ofxPatch*> getPatches();
+    map<int,ofxPatch*> getActivePatches();
     int     getPatchesLowestCoord();
     int     getPatchesHighestCoord();
     int     getPatchesLeftMostCoord();
@@ -55,15 +56,9 @@ public:
     
     //** OTHER FUNCTIONS **//
     //
-    void    save(string _fileConfig = "default");
-    void    load(string _fileConfig = "default");
-    bool    addPatchFromFile(string _filePath, ofPoint _position);
-    bool    addPatchWithOutFile(string _type, ofPoint _position);
     void    addPatch(ofxPatch* p, ofPoint _position);
-    
     ofxPatch* operator[](int _nID){ if ( (_nID != -1) && (patches[_nID] != NULL) ) return patches[_nID]; };
     int     size(){return patches.size(); };
-    
     void    movePatches(ofVec3f diff);
     void    scalePatches(float yDiff);
     
@@ -76,11 +71,6 @@ public:
     
     void    deactivateAllPatches();
     bool    arePatchesDeactivated();
-    
-    // snippet
-    //
-    void    loadSnippet();
-    bool    saveSnippet();
     
 protected:
     
@@ -138,10 +128,6 @@ private:
     // align nodes
     //
     int     verticalAlign1, verticalAlign2, verticalAlign3, horizontalAlign1, horizontalAlign2, horizontalAlign3;
-    
-    // snippet
-    //
-    int     getMaxIdPatch();
     
     // multiple select
     //

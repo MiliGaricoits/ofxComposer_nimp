@@ -54,7 +54,7 @@ public:
     
     //** EVENTS **//
     //
-    void            guiEvent(ofxUIEventArgs &e);
+    //void            guiEvent(ofxUIEventArgs &e);
     
     
     //** SETTERS **//
@@ -105,13 +105,10 @@ public:
     void            move(ofPoint _pos);
     void            scale(float _scale);
     void            rotate(float _angle);
-    
-    bool            loadFile(string _filePath, string _configFile = "none");
-    bool            loadType(string _type, string _configFile = "none");
-    
-    bool            loadSettings(int _nTag, string _configFile = "none");
-    bool            saveSettings(string _configFile = "none");
+
+    bool            loadSettings(ofxXmlSettings &XML, int nTag_, int nodesCount_ = 0);
     bool            saveSettings(ofxXmlSettings &XML, bool _new, int _nTag);
+    bool            saveSettingsToSnippet(ofxXmlSettings &XML, int _nTag, map<int,int> newIdsMap);
     
     bool            isOver(ofPoint _pos); // is mouse over patch ?
     void            moveDiff(ofVec2f diff); // move [diff] when scrolling
@@ -123,11 +120,6 @@ public:
     void            addInputDot();
     virtual bool    addInput(ofxPatch* layer_){};
     virtual void    removeInput(int inputId_){};
-    
-    // Snippets
-    //
-    bool            loadSnippetPatch(string snippetName, int relativeId, int cantPatchesOriginal);
-    bool            saveSnippetPatch(string snippetName, map<int, int> idMap, ofxXmlSettings xml);
     
     
     //** PUBLIC ATTRIBUTES **//
@@ -147,24 +139,12 @@ public:
     
 protected:
     
-    // 5 Sources Objects and one interface to rule them all (ofTexture& getSrcTexture())
-    //
-//    ofImage         *image;
-//    ofVideoPlayer   *videoPlayer;
     ofVideoGrabber  *videoGrabber;
     ofxShaderObj    *shader;
-    //ofTexture       *texture;
     ofTexture       tex;
     ofFbo           fbo;
     ofImage         noInputs;
     
-    // Drawing variables
-    //
-//    bool            drawImage;
-//    bool            drawVideo;
-//    bool            drawCamera;
-//    bool            drawTexture;
-//    bool            drawFbo;
     bool            drawNoInputs;
     
     // Mask variables
@@ -223,7 +203,6 @@ private:
     void            _keyPressed(ofKeyEventArgs &e);
     void            _reMakeFrame( int &_nId );
     
-    //ofTexture&      getSrcTexture();
     virtual ofTexture* getTexture(){};
     
     bool            is_between(float x, float bound1, float bound2, float tolerance); // Is mouse click between link vertices ?

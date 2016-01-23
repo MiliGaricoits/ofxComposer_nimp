@@ -233,17 +233,7 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         bEditMode = !bEditMode;
     } else if ((e.key == OF_KEY_F3 ) || (e.key == OF_KEY_F4 ) ){
         //  Special keys reserved for Patch Events
-        //
-    } else if (e.key == OF_KEY_F5 ){
-        
-        if ( bGLEditorPatch )
-            addPatchWithOutFile("ofVideoGrabber", ofPoint(ofGetMouseX(),ofGetMouseY()));
-        else
-            bGLEditorPatch = addPatchWithOutFile("ofxGLEditor", ofPoint(ofGetMouseX(),ofGetMouseY()));
-        
-    } else if ( e.key == OF_KEY_F6 ){
-        addPatchWithOutFile("ofShader", ofPoint(ofGetMouseX(),ofGetMouseY()));
-        
+        //        
     } else if (e.key == OF_KEY_F7){
         ofToggleFullscreen();
         
@@ -443,7 +433,6 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                         // make the link and forget the selection
                         //
                         connect( selectedDot , it->first, j, true);
-                        patches[ selectedDot ]->saveSettings();
                         selectedDot = -1;
                     }
                 }
@@ -463,7 +452,6 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                 this->updateConnectionsSize(patches[patches[selectedDot]->outPut[i].toId]);
             }
             patches[selectedDot]->outPut.clear();
-            patches[selectedDot]->saveSettings();
             selectedDot = -1;
             
         }
@@ -565,6 +553,17 @@ map<int,ofxPatch*> ofxComposer::getPatches() {
 }
 
 //------------------------------------------------------------------
+map<int,ofxPatch*> ofxComposer::getActivePatches() {
+    map<int,ofxPatch*> actives;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->bActive) {
+            actives[it->second->getId()] = it->second;
+        }
+    }
+    return actives;
+}
+
+//------------------------------------------------------------------
 nodeLinkType ofxComposer::getLinkType(){
     return this->nodeLinkType;
 }
@@ -572,16 +571,6 @@ nodeLinkType ofxComposer::getLinkType(){
 //------------------------------------------------------------------
 int ofxComposer::getNodesCount() {
     return this->nodesCount;
-}
-
-//------------------------------------------------------------------
-int ofxComposer::getMaxIdPatch(){
-    vector<int> v;
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++) {
-        v.push_back(it->first);
-    }
-    
-    return *(std::max_element(v.begin(), v.end()));
 }
 
 //------------------------------------------------------------------
@@ -640,133 +629,6 @@ bool ofxComposer::isDraggingGrip(){
 /* ================================================ */
 /*                  OTHER FUNCTIONS                 */
 /* ================================================ */
-
-void ofxComposer::load(string _fileConfig){
-    if (_fileConfig != "default")
-        configFile = _fileConfig;
-    
-    ofxXmlSettings XML;
-    
-    patches.clear();
-    if (XML.loadFile(_fileConfig)){
-        
-#ifdef USE_OFXGLEDITOR
-        editor.setup(XML.getValue("general:console:font", "menlo.ttf"));
-#endif
-        int totalPatchs = XML.getNumTags("surface");
-        
-        // Load each surface present on the xml file
-        //
-        for(int i = 0; i < totalPatchs ; i++){
-            ofxPatch *nPatch = new ofxPatch();
-            bool loaded = nPatch->loadSettings(i, "config.xml");
-            
-            if (loaded){
-                
-#ifdef USE_OFXGLEDITOR
-                if (nPatch->getType() == "ofxGLEditor"){
-                    ofLog(OF_LOG_NOTICE,"ofxComposer: ofxGLEditor loaded");
-                    nPatch->setTexture( editorFbo.getTextureReference(), 0);
-                    bGLEditorPatch = true;
-                }
-#endif
-                // Add application main canvas and parent camera
-                nPatch->setMainCanvas(this->canvas);
-                nPatch->setParent(*this->getParent());
-                
-                // Insert the new patch into the map
-                //
-                patches[nPatch->getId()] = nPatch;
-                
-            }
-        }
-        
-        // Load links between Patchs
-        //
-        for(int i = 0; i < totalPatchs ; i++){
-            if (XML.pushTag("surface", i)){
-                int fromID = XML.getValue("id", -1);
-                
-                if (XML.pushTag("out")){
-                    
-                    int totalLinks = XML.getNumTags("dot");
-                    for(int j = 0; j < totalLinks ; j++){
-                        
-                        if (XML.pushTag("dot",j)){
-                            int toID = XML.getValue("to", 0);
-                            int nTex = XML.getValue("tex", 0);
-                            
-                            // If everything goes ok "i" will match the position of the vector
-                            // with the position on the XML, in the same place of the vector array
-                            // defined on the previus loop
-                            //
-                            connect( fromID, toID, nTex, true);
-                            
-                            XML.popTag();
-                        }
-                    }
-                    XML.popTag();
-                }
-                XML.popTag();
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------
-void ofxComposer::save(string _fileConfig ){
-    if (_fileConfig != "default"){
-        configFile = _fileConfig;
-    }
-    
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        it->second->saveSettings(configFile);
-    }
-}
-
-//------------------------------------------------------------------
-bool ofxComposer::addPatchFromFile(string _filePath, ofPoint _position){
-    bool loaded = false;
-    
-    ofxPatch *nPatch = new ofxPatch();
-    loaded = nPatch->loadFile( _filePath, "config.xml" );
-    
-    if ( loaded ){
-        nPatch->move( _position );
-        nPatch->scale(SCALE_RATIO);
-        nPatch->saveSettings();
-        nPatch->setMainCanvas(this->canvas); // Application main canvas
-        nPatch->setParent(*this->getParent()); // Add camera as parent
-        patches[nPatch->getId()] = nPatch;
-    }
-    
-    return loaded;
-}
-
-//------------------------------------------------------------------
-bool ofxComposer::addPatchWithOutFile(string _type, ofPoint _position){
-    bool loaded = false;
-    
-    ofxPatch *nPatch = new ofxPatch();
-    loaded = nPatch->loadType( _type, "config.xml" );
-    
-    if ( loaded ){
-        nPatch->scale(SCALE_RATIO);
-        nPatch->move( _position );
-        nPatch->saveSettings();
-        nPatch->setMainCanvas(this->canvas); // Application main canvas
-        nPatch->setParent(*this->getParent()); // Add camera as parent
-#ifdef USE_OFXGLEDITOR
-        if (nPatch->getType() == "ofxGLEditor"){
-            nPatch->setTexture( editorFbo.getTextureReference(), 0);
-        }
-#endif
-        
-        patches[nPatch->getId()] = nPatch;
-    }
-    
-    return loaded;
-}
 
 //------------------------------------------------------------------
 void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
@@ -915,140 +777,3 @@ int ofxComposer::isAnyPatchHit(float x, float y, float z){
     delete point;
     return isAnyHit;
 }
-
-
-// -----------------------------------------------------------
-// ------------------------------------------------- SNNIPPETS
-// -----------------------------------------------------------
-void ofxComposer::loadSnippet() {
-    
-    string snippetName = "";
-    
-    ofFileDialogResult openFileResult;
-    openFileResult = ofSystemLoadDialog("Select a snippet (.xml)");
-    
-    if (openFileResult.bSuccess){
-        ofFile file (openFileResult.getPath());
-        if (file.exists()){
-            string fileExtension = ofToUpper(file.getExtension());
-            
-            if(fileExtension == "XML"){
-                snippetName = openFileResult.getPath();
-            } else return;
-        }
-        file.close();
-    }
-    ofxXmlSettings XML;
-    
-    int previousPatchesSize = patches.size();
-    int a = getMaxIdPatch();
-    deactivateAllPatches();
-    
-    if (XML.loadFile(snippetName)){
-        
-#ifdef USE_OFXGLEDITOR
-        editor.setup(XML.getValue("general:console:font", "menlo.ttf"));
-#endif
-        int totalPatchs = XML.getNumTags("surface");
-        
-        // Load each surface present on the xml file
-        //
-        for(int i = 0; i < totalPatchs ; i++){
-            ofxPatch *nPatch = new ofxPatch();
-            bool loaded = nPatch->loadSettings(i, "config.xml");
-            
-            if (loaded){
-                
-#ifdef USE_OFXGLEDITOR
-                if (nPatch->getType() == "ofxGLEditor"){
-                    ofLog(OF_LOG_NOTICE,"ofxComposer: ofxGLEditor loaded");
-                    nPatch->setTexture( editorFbo.getTextureReference(), 0);
-                    bGLEditorPatch = true;
-                }
-#endif
-                // Add application main canvas and parent camera
-                nPatch->setMainCanvas(this->canvas);
-                nPatch->setParent(*this->getParent());
-                
-                // Insert the new patch into the map
-                //
-                patches[nPatch->getId()] = nPatch;
-                
-            }
-        }
-        
-        // Load links between Patchs
-        //
-        for(int i = 0; i < totalPatchs ; i++){
-            if (XML.pushTag("surface", i)){
-                int fromID = XML.getValue("id", -1);
-                
-                if (XML.pushTag("out")){
-                    
-                    int totalLinks = XML.getNumTags("dot");
-                    for(int j = 0; j < totalLinks ; j++){
-                        
-                        if (XML.pushTag("dot",j)){
-                            int toID = XML.getValue("to", 0);
-                            int nTex = XML.getValue("tex", 0);
-                            
-                            // If everything goes ok "i" will match the position of the vector
-                            // with the position on the XML, in the same place of the vector array
-                            // defined on the previus loop
-                            //
-                            connect( fromID, toID, nTex, true);
-                            
-                            XML.popTag();
-                        }
-                    }
-                    XML.popTag();
-                }
-                XML.popTag();
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------
-bool ofxComposer::saveSnippet() {
-    string snippetName = "";
-    ofxXmlSettings XML;
-    
-    ofFileDialogResult openFileResult;
-    openFileResult = ofSystemSaveDialog("snippet.xml", "Save your Snippet");
-    
-    if(openFileResult.bSuccess){
-        snippetName = openFileResult.getPath();
-    }
-    
-    bool saveOk = true;
-    bool a;
-    bool b;
-    // Delete and create xml file
-    if (XML.loadFile(snippetName)) {
-        XML.clear();
-    } else {
-        b = XML.saveFile(snippetName);
-        XML.loadFile(snippetName);
-    }
-    
-    
-    map<int,int> idMap;
-    int idAux = 1;
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(it->second->bActive) {
-            idMap[it->second->getId()] = idAux;
-            idAux++;
-        }
-    }
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        saveOk = saveOk && it->second->saveSnippetPatch(snippetName, idMap, XML);
-    }
-    
-    XML.saveFile(snippetName);
-    
-    return saveOk;
-}
-
-/* ================================================ */
-/* ================================================ */
