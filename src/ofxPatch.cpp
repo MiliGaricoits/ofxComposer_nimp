@@ -319,44 +319,46 @@ void ofxPatch::customDraw(){
         
         // Draw the links between nodes
         //
-        for (int i = 0; i < outPut.size(); i++){
-            if (outPut[i].to != NULL){
-                ofFill();
-                ofCircle(outPut[i].pos, 3);
-                
-                // set dstOutput to the encapsulated patch, or the regular exit
-                ofPoint dstOutput;
-                if(outPut[i].toEncapsulatedId > 0){
-                    dstOutput = outPut[i].toPosEncapsulated;
-                }else{
-                    dstOutput = outPut[i].to->pos;
-                }
-                if (linkType == STRAIGHT_LINKS)
-                    ofLine(outPut[i].pos, dstOutput);
-                else if (linkType == CURVE_LINKS) {
-                    ofNoFill();
-                    ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+        if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
+            for (int i = 0; i < outPut.size(); i++){
+                if (outPut[i].to != NULL){
                     ofFill();
-                }
-                else {
-                    if (outPut[i].link_vertices.size() > 0) {
+                    ofCircle(outPut[i].pos, 3);
+                    
+                    // set dstOutput to the encapsulated patch, or the regular exit
+                    ofPoint dstOutput;
+                    if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId){
+                        dstOutput = outPut[i].toPosEncapsulated;
+                    }else{
+                        dstOutput = outPut[i].to->pos;
+                    }
+                    if (linkType == STRAIGHT_LINKS)
+                        ofLine(outPut[i].pos, dstOutput);
+                    else if (linkType == CURVE_LINKS) {
                         ofNoFill();
-                        for(int j = 0; j < outPut[i].link_vertices.size(); j++){
-                            ofCircle( outPut[i].link_vertices[j], 4);
+                        ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+                        ofFill();
+                    }
+                    else {
+                        if (outPut[i].link_vertices.size() > 0) {
+                            ofNoFill();
+                            for(int j = 0; j < outPut[i].link_vertices.size(); j++){
+                                ofCircle( outPut[i].link_vertices[j], 4);
+                            }
                         }
+                        
+                        outPut[i].link_line.clear();
+                        outPut[i].link_line.addVertex(outPut[i].pos);
+                        if (outPut[i].link_vertices.size() > 0)
+                            outPut[i].link_line.addVertices(outPut[i].link_vertices);
+                        outPut[i].link_line.addVertex(dstOutput);
+                        outPut[i].link_line.draw();
+                        
+                        ofFill();
                     }
                     
-                    outPut[i].link_line.clear();
-                    outPut[i].link_line.addVertex(outPut[i].pos);
-                    if (outPut[i].link_vertices.size() > 0)
-                        outPut[i].link_line.addVertices(outPut[i].link_vertices);
-                    outPut[i].link_line.addVertex(dstOutput);
-                    outPut[i].link_line.draw();
-                    
-                    ofFill();
+                    ofCircle(dstOutput, 3);
                 }
-
-                ofCircle(dstOutput, 3);
             }
         }
     }
