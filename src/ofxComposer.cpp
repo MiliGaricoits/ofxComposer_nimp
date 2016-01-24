@@ -8,6 +8,8 @@
 
 #include "ofxComposer.h"
 #include "ImageOutput.h"
+#include "ConsoleLog.h"
+#include "EventHandler.h"
 
 //  HELP screen -> F1
 //
@@ -178,6 +180,11 @@ void ofxComposer::drawInspectorGUIs() {
 /* ================================================ */
 
 void ofxComposer::_keyPressed(ofKeyEventArgs &e){
+    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+        return;
+    }
+    
+    
     if (e.key == OF_KEY_F1 ){
         bHelp = !bHelp;
     } else if (e.key == OF_KEY_F2 ){
@@ -211,6 +218,7 @@ void ofxComposer::activePatch( int _nID ){
 
 //------------------------------------------------------------------
 void ofxComposer::_mousePressed(ofMouseEventArgs &e){
+    
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
@@ -270,6 +278,9 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
+    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+        return;
+    }
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
@@ -334,6 +345,10 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
+    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+        return;
+    }
+    
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     if (selectedDot != -1){
@@ -348,7 +363,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                 for (int j = 0; j < it->second->inPut.size(); j++){
                     
                     // And after checking in each dot of each shader...
-                    // ... fin the one where the mouse it«s over
+                    // ... fin the one where the mouse itï¿½s over
                     //
                     if ( it->second->inPut[j].pos.distance(ofPoint(mouse.x, mouse.y)) < 5){
                         
@@ -593,6 +608,7 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
             newDot.to = &(patches[ _toID ]->inPut[ nTexture ]);
             newDot.toShader = patches[ _toID ]->getShader();
             newDot.nTex = nTexture;
+            newDot.toEncapsulatedId = -1;
             
             patches[ _fromID ]->outPut.push_back( newDot );
         }
@@ -625,11 +641,15 @@ void ofxComposer::updateConnectionsSize(ofxPatch* patch){
 void ofxComposer::multipleSelectAndReset(){
     if(disabledPatches){
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            ofRectangle aux = multipleSelectRectangle.getIntersection(it->second->getBox());
-            if(aux.getArea() > 0){
-                it->second->bActive = true;
-            } else{
-                it->second->bActive = false;
+            
+            // if it is invisible, don't make it count, it is encapsulated
+            if(it->second->bVisible){
+                ofRectangle aux = multipleSelectRectangle.getIntersection(it->second->getBox());
+                if(aux.getArea() > 0){
+                    it->second->bActive = true;
+                } else{
+                    it->second->bActive = false;
+                }
             }
         }
     }
@@ -692,4 +712,178 @@ int ofxComposer::isAnyPatchHit(float x, float y, float z){
     }
     delete point;
     return isAnyHit;
+}
+
+
+// -------------------------------------------------------------
+// ------------------------------------------------- ENCAPSULATE
+// -------------------------------------------------------------
+
+void ofxComposer::encapsulate(){
+    vector<int> patchesToEncapsulate;
+    patchesToEncapsulate.clear();
+    int lastPatch = this->validateEncapsulation(patchesToEncapsulate);
+    if(lastPatch > 0) {
+        nodesCount++;
+        int encapsulatedId = getNodesCount();
+        for(vector<int>::iterator it = patchesToEncapsulate.begin(); it != patchesToEncapsulate.end(); it++ ){
+            if(patches.at(*it)->getId() != lastPatch){
+                patches.at(*it)->setWindowId(-1);
+            }
+            patches.at(*it)->setEncapsulatedId(encapsulatedId);
+            patches.at(*it)->setLastEncapsulated(patches.at(*it)->getId() == lastPatch);
+            patches.at(*it)->setToEncapsulatedId(lastPatch);
+        }
+        setOutputEncapsulated(lastPatch, patchesToEncapsulate);
+        deactivateAllPatches();
+    } else {
+        ConsoleLog::getInstance()->pushMessage("The selection of nodes is invalid");
+    }
+}
+
+
+void ofxComposer::uncapsulate(int encapsulatedId){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->getEncapsulatedId() == encapsulatedId){
+            it->second->setWindowId(MAIN_WINDOW);
+            it->second->setEncapsulatedId(-1);
+            it->second->setLastEncapsulated(false);
+            it->second->setToEncapsulatedId(-1);
+        }
+    }
+}
+
+int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
+    int patchId = -1;
+    int validOutput = 0;
+    
+    // load vector with all selected patches
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->bActive){
+            patchesToEncapsulate.push_back(it->second->getId());
+        }
+    }
+    
+    if(patchesToEncapsulate.size() > 1){
+        // validate that every output is goint to an encapsulated node, except one
+        for(vector<int>::iterator it = patchesToEncapsulate.begin(); it != patchesToEncapsulate.end(); it++ ){
+            vector<LinkDot> output = patches.at(*it)->outPut;
+            if(output.size() == 0){
+                patchId = *it;
+                validOutput++;
+            }
+            for(vector<LinkDot>::iterator it2 = output.begin(); it2 != output.end(); it2++ ){
+                // if the output of a node is not found in the selected nodes
+                bool found = false;
+                vector<int>::iterator it3 = patchesToEncapsulate.begin();
+                while(it3 != patchesToEncapsulate.end() && !found){
+                    if(*it3 == it2->toId){
+                        found = true;
+                    }
+                    it3++;
+                }
+                if(!found){
+                    patchId = *it;
+                    validOutput++;
+                }
+            }
+            if(validOutput > 1) {
+                ConsoleLog::getInstance()->pushError("There is more than one output of a node that it's destiny is not a selected node");
+                patchId = -1;
+                patchesToEncapsulate.clear();
+                break;
+            }
+        }
+        
+        // validation ok
+        if(patchId != -1) {
+            ConsoleLog::getInstance()->pushSuccess("The nodes selected are valid to encapsulate");
+        }
+    }else{
+        ConsoleLog::getInstance()->pushError("There are not enough nodes selected to encapsulate");
+    }
+    
+    return patchId;
+}
+
+
+int ofxComposer::getSelectedEncapsulated(){
+    int activeSelected = 0;
+    int retId = -1;
+    
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->bActive) {
+            activeSelected++;
+            if(it->second->isLastEncapsulated()){
+                retId = it->second->getEncapsulatedId();
+            }
+        }
+    }
+    
+    if(activeSelected > 1){
+        retId = -1;
+    }
+    
+    return retId;
+}
+void ofxComposer::setWindowsIdForEncapsulated(int encapsulatedId, int winId){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+//        if(it->second->getEncapsulatedId() == encapsulatedId && !it->second->isLastEncapsulated()){
+        if(it->second->getEncapsulatedId() == encapsulatedId){
+            cout << "encapId: " << encapsulatedId << ", patchId: " << it->second->getId() << ", winId: " << winId << endl;
+            it->second->setWindowId(winId);
+        }
+    }
+}
+
+void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->getWindowId() == previousWin){
+            if(it->second->isLastEncapsulated()){
+                it->second->setWindowId(MAIN_WINDOW);
+            }else{
+                it->second->setWindowId(-1);
+            }
+        }
+    }
+}
+
+// This function sets the output of every node that is conected to one encapsulated
+// to the last encapsulated node
+void ofxComposer::setOutputEncapsulated(int patchId, vector<int> encapsulatedPatches){
+    ofPoint dst = patches.at(patchId)->inPut.at(0).pos;
+    // iterate through every output patch
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        vector<LinkDot> output = it->second->outPut;
+        for(int i = 0; i < output.size(); i++){
+            // if the toId of the output is one of the encapsulated patches, set the values of the new output
+            for(int j = 0; j < encapsulatedPatches.size(); j++){
+                if(encapsulatedPatches[j] == output[i].toId){
+                    output[i].toEncapsulatedId = patchId;
+                    output[i].toPosEncapsulated = dst;
+                    it->second->outPut[i] = output[i];
+                }
+            }
+        }
+    }
+}
+
+void ofxComposer::restoreOutputEncapsulated(int lastPatchId){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        vector<LinkDot> output = it->second->outPut;
+        for(int i = 0; i < output.size(); i++){
+            if(output[i].toEncapsulatedId == lastPatchId){
+                output[i].toEncapsulatedId = -1;
+                it->second->outPut[i] = output[i];
+            }
+        }
+    }
+}
+
+int ofxComposer::getLastPatchEncapsulated(int encapsulatedId){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->bActive && it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+            return it->second->getId();
+        }
+    }
 }

@@ -65,7 +65,17 @@ public:
     
     void    deactivateAllPatches();
     bool    arePatchesDeactivated();
-    
+
+    // encapsulate
+    void    encapsulate();
+    void    uncapsulate(int encapsulatedId);
+    int     getSelectedEncapsulated();
+    int     getLastPatchEncapsulated(int encapsulatedId);
+    void    setWindowsIdForEncapsulated(int encapsulatedId, int winId);
+    void    restoreWindowsForEncapsulated(int previousWin);
+    void    setOutputEncapsulated(int patchId, vector<int> encapsulatedPatches);
+    void    restoreOutputEncapsulated(int lastPatchId);
+
 protected:
     
     bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
@@ -126,6 +136,9 @@ private:
     //
     bool draggingGrip;
     bool draggingHGrip;
+    
+    // encapsulate
+    int validateEncapsulation(vector<int> &patchesToEncapsulate);
 };
 
 

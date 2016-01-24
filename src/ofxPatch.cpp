@@ -8,6 +8,7 @@
 
 #include "ofxPatch.h"
 #include <GLUT/glut.h>
+#include "EventHandler.h"
 
 ofxPatch::ofxPatch(){
     nId                 = -1;
@@ -77,6 +78,11 @@ ofxPatch::ofxPatch(){
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     
     noInputs.loadImage("assets/no_inputs.png");
+    
+    // multiple Window - Encapsulated
+    windowId = MAIN_WINDOW;
+    lastEncapsulated = false;
+    encapsulatedId = -1;
 };
 
 ofxPatch::~ofxPatch(){
@@ -195,6 +201,11 @@ void ofxPatch::update(){
 //------------------------------------------------------------------
 void ofxPatch::customDraw(){
     
+    if ( (EventHandler::getInstance()->getWindowIdDraw() != windowId) &&
+         (!lastEncapsulated || EventHandler::getInstance()->getWindowIdDraw() != MAIN_WINDOW) ){
+        return;
+    }
+    
     if ( bEditMode || bVisible ) {
         
         if (bActive || !bEditMode || (type == "ofxGLEditor"))
@@ -234,6 +245,15 @@ void ofxPatch::customDraw(){
                     ofSetLineWidth(3.f);
                     ofSetColor(150,150,250);
                 }
+                
+                if(lastEncapsulated){
+                    ofSetColor(0, 255, 0);
+                }
+                
+                if(lastEncapsulated && bActive){
+                    ofSetColor(0, 255, 250);
+                }
+                
                 ofLine(textureCorners[i].x, textureCorners[i].y, textureCorners[(i+1)%4].x, textureCorners[(i+1)%4].y);
                 ofSetLineWidth(1.f);
             }
@@ -303,11 +323,19 @@ void ofxPatch::customDraw(){
             if (outPut[i].to != NULL){
                 ofFill();
                 ofCircle(outPut[i].pos, 3);
+                
+                // set dstOutput to the encapsulated patch, or the regular exit
+                ofPoint dstOutput;
+                if(outPut[i].toEncapsulatedId > 0){
+                    dstOutput = outPut[i].toPosEncapsulated;
+                }else{
+                    dstOutput = outPut[i].to->pos;
+                }
                 if (linkType == STRAIGHT_LINKS)
-                    ofLine(outPut[i].pos, outPut[i].to->pos);
+                    ofLine(outPut[i].pos, dstOutput);
                 else if (linkType == CURVE_LINKS) {
                     ofNoFill();
-                    ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, outPut[i].to->pos.x-55, outPut[i].to->pos.y, outPut[i].to->pos.x, outPut[i].to->pos.y);
+                    ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
                     ofFill();
                 }
                 else {
@@ -322,13 +350,13 @@ void ofxPatch::customDraw(){
                     outPut[i].link_line.addVertex(outPut[i].pos);
                     if (outPut[i].link_vertices.size() > 0)
                         outPut[i].link_line.addVertices(outPut[i].link_vertices);
-                    outPut[i].link_line.addVertex(outPut[i].to->pos);
+                    outPut[i].link_line.addVertex(dstOutput);
                     outPut[i].link_line.draw();
                     
                     ofFill();
                 }
-                
-                ofCircle(outPut[i].to->pos, 3);
+
+                ofCircle(dstOutput, 3);
             }
         }
     }
@@ -336,6 +364,10 @@ void ofxPatch::customDraw(){
 
 //------------------------------------------------------------------
 void ofxPatch::drawInspectorGUI() {
+    
+    if(EventHandler::getInstance()->getWindowIdDraw() != windowId && !lastEncapsulated){
+        return;
+    }
     
     // Draw the inspector
     //
@@ -378,6 +410,10 @@ void ofxPatch::_reMakeFrame( int &_nId ){
 
 //------------------------------------------------------------------
 void ofxPatch::_mousePressed(ofMouseEventArgs &e){
+    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+        return;
+    }
+        
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     if (bEditMode){
@@ -521,6 +557,9 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
+    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+        return;
+    }
     
     if((disabledPatch and !isLinkHit()) or canvas->getOtherSelected()){
         return;
@@ -635,6 +674,9 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
+    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+        return;
+    }
     
     // mouse is not longer pressing the inspector or link
     canvas->setOtherSelected(false);
@@ -657,6 +699,9 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_keyPressed(ofKeyEventArgs &e){
+    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+        return;
+    }
     
     if (e.key == OF_KEY_F2){
         bEditMode = !bEditMode;
@@ -826,6 +871,16 @@ void ofxPatch::setLinkHit(bool linkHit){
 void ofxPatch::setDrawInspector(bool draw_){
     this->bInspector = draw_;
 }
+
+////------------------------------------------------------------------
+//void ofxPatch::setWindowId(int winId) {
+//    this->windowId = winId;
+//}
+//
+////------------------------------------------------------------------
+//void ofxPatch::setLastEncapsulated(bool lastEnc){
+//    this->lastEncapsulated = lastEnc;
+//}
 
 /* ================================================ */
 /* ================================================ */
@@ -1673,6 +1728,35 @@ bool ofxPatch::saveSettingsToSnippet(ofxXmlSettings &XML, int _nTag, map<int,int
 /* ================================================ */
 
 
+// -------------------------------------------------------------
+// ------------------------------------------------- ENCAPSULATED
+// -------------------------------------------------------------
 
+int ofxPatch::getWindowId(){
+    return windowId;
+}
+int ofxPatch::getEncapsulatedId(){
+    return encapsulatedId;
+}
+int ofxPatch::getToEncapsulatedId(){
+    return outPut[0].toEncapsulatedId;
+}
+bool ofxPatch::isLastEncapsulated(){
+    return lastEncapsulated;
+}
+void ofxPatch::setWindowId(int winId){
+    windowId = winId;
+}
+void ofxPatch::setEncapsulatedId(int encapId){
+    encapsulatedId = encapId;
+}
+void ofxPatch::setLastEncapsulated(bool last){
+    lastEncapsulated = last;
+}
+void ofxPatch::setToEncapsulatedId(int patchId){
+    for (int i = 0; i < outPut.size(); i++){
+        outPut[i].toEncapsulatedId = patchId;
+    }
+}
 
 

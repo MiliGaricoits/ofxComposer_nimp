@@ -34,6 +34,8 @@ struct LinkDot{
     ofxShaderObj *toShader;
     vector<ofPoint> link_vertices;   // vertices in the nodes links
     ofPolyline  link_line;
+    ofPoint     toPosEncapsulated;
+    int         toEncapsulatedId;
 };
 
 class ofxPatch : public ofNode {
@@ -71,6 +73,8 @@ public:
     void            setLinkType(nodeLinkType type);
     void            setMainCanvas(ofxUISuperCanvas* gui);
     void            setDrawInspector(bool draw_);
+//    void            setWindowId(int winId);
+//    void            setLastEncapsulated(bool lastEnc);
     
     
     //** GETTERS **//
@@ -136,6 +140,16 @@ public:
     
     bool            disabledPatch; // disable patches when zooming & scrolling
     
+    
+    // encapsulated
+    int             getWindowId();
+    int             getEncapsulatedId();
+    int             getToEncapsulatedId();
+    bool            isLastEncapsulated();
+    void            setWindowId(int winId);
+    void            setEncapsulatedId(int encapId);
+    void            setLastEncapsulated(bool last);
+    void            setToEncapsulatedId(int encapId);
     
 protected:
     
@@ -219,6 +233,12 @@ private:
     int             selectedLink;
     nodeLinkType    linkType;
     bool            linkHit;
+    
+    // multiple Window - encapsulated
+    int             windowId;
+    bool            lastEncapsulated;
+    int             encapsulatedId;
+    LinkDot         lastEncapsulatedId;
     
 };
 
