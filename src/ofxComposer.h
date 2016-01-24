@@ -13,13 +13,6 @@
 #include "ofxPatch.h"
 #include "enumerations.h"
 
-//  Comment the "define USE_OFXGLEDITOR" if you don't want to use ofxGLEditor
-//
-//#define USE_OFXGLEDITOR
-#ifdef USE_OFXGLEDITOR
-#include "ofxGLEditor.h"
-#endif
-
 class ofxComposer : public ofNode {
     
 public:
@@ -92,13 +85,6 @@ private:
     
     void    activePatch( int _nID );
     
-#ifdef USE_OFXGLEDITOR
-    ofxGLEditor editor;
-    ofFbo       editorFbo;
-    ofColor     editorBgColor;
-    ofColor     editorFgColor;
-#endif
-    
     int     isAnyPatchHit(float x, float y, float z);
     bool    isAnyLinkHit();
     bool    isAnyPatchSelected;
@@ -110,7 +96,7 @@ private:
     string  configFile;
     
     bool    bEditMode;
-    bool    bGLEditorPatch, bHelp;
+    bool    bHelp;
     
     // node select, and link vertex selected
     //

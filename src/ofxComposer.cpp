@@ -23,9 +23,6 @@ On mask mode on:\n \
 - x: delete mask path point\n \
 - r: reset mask path\n \
 \n \
-- F4:   Reset surface coorners\n \
-- F5:   Add ofxGLEditor (temporal!!!) and if have it add ofVideoGrabber (temporal!!!)\n \
-- F6:   Add ofShader (temporal!!!)\n \
 - F7:   Turn ON/OFF the fullscreen-mode\n \
 \n \
 Mouse and Coorners: \n \
@@ -50,24 +47,12 @@ ofxComposer::ofxComposer(){
     //
     ofAddListener(ofEvents().mouseDragged, this, &ofxComposer::_mouseDragged, COMPOSER_EVENT_PRIORITY);
     
-#ifdef USE_OFXGLEDITOR
-    editor.setup("menlo.ttf");
-    editor.setCurrentEditor(1);
-    editorBgColor.set(0,0);
-    editorFgColor.set(0,0);
-    editorFbo.allocate(ofGetWindowWidth(), ofGetWindowHeight());
-    editorFbo.begin();
-    ofClear(editorBgColor);
-    editorFbo.end();
-#endif
-    
     //  Default parameters
     //
     configFile = "config.xml";
     selectedDot = -1;
     selectedID = -1;
     bEditMode = true;
-    bGLEditorPatch = false;
     bHelp = false;
     
     // zoom & drag
@@ -95,27 +80,6 @@ void ofxComposer::update(){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->update();
     }
-    
-    if ( (bEditMode) && (selectedID >= 0)){
-#ifdef USE_OFXGLEDITOR
-        if (patches[selectedID]->getType() == "ofShader"){
-            editorBgColor.lerp(ofColor(0,150), 0.01);
-            editorFgColor.lerp(ofColor(255,255), 0.1);
-        } else {
-            editorBgColor.lerp(ofColor(0,0), 0.01);
-            editorFgColor.lerp(ofColor(0,0), 0.05);
-        }
-        
-        editorFbo.begin();
-        //ofEnableAlphaBlending();
-        ofClear(editorBgColor);
-        ofDisableBlendMode();
-        ofRotate(180, 0, 1, 0);
-        ofSetColor(255,255);
-        editor.draw();
-        editorFbo.end();
-#endif
-    }
 }
 
 //------------------------------------------------------------------
@@ -125,19 +89,6 @@ void ofxComposer::customDraw(){
     ofPushMatrix();
     
     ofEnableAlphaBlending();
-    
-#ifdef USE_OFXGLEDITOR
-    //  Draw the GLEditor if it«s not inside a Patch
-    //
-    if (bEditMode && !bGLEditorPatch){
-        ofPushMatrix();
-        ofRotate(180, 1, 0, 0);
-        ofTranslate(0, -ofGetWindowHeight());
-        ofSetColor(editorFgColor);
-        editorFbo.draw(0, 0);
-        ofPopMatrix();
-    }
-#endif
     
     //  Draw Patches
     //
@@ -236,28 +187,6 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         //        
     } else if (e.key == OF_KEY_F7){
         ofToggleFullscreen();
-        
-#ifdef USE_OFXGLEDITOR
-        editor.reShape();
-        editorFbo.allocate(ofGetWindowWidth(),ofGetWindowHeight());
-        editorFbo.begin();
-        ofClear(editorBgColor);
-        editorFbo.end();
-#endif
-    } else {
-        //  If no special key was pressed and the GLEditor is present pass the key
-        //
-#ifdef USE_OFXGLEDITOR
-        editor.keyPressed(e.key);
-        
-        if (selectedID >= 0){
-            if (patches[selectedID]->getType() == "ofShader"){
-                patches[selectedID]->setFrag(editor.getText(1));
-                patches[selectedID]->saveSettings();
-            }
-        }
-#endif
-        
     }
 }
 
@@ -324,12 +253,6 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
                 if ((it->second->bActive) && (it->second->bEditMode) && !(it->second->bEditMask)){
                     selectedID = it->first;
-#ifdef USE_OFXGLEDITOR
-                    //if (bGLEditorPatch
-                    if ((it->second->getType() == "ofShader")){
-                        editor.setText(it->second->getFrag(), 1);
-                    }
-#endif
                 }
             }
         }
@@ -478,13 +401,6 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_windowResized(ofResizeEventArgs &e){
-#ifdef USE_OFXGLEDITOR
-    editor.reShape();
-    editorFbo.allocate(e.width, e.height);
-    editorFbo.begin();
-    ofClear(editorBgColor);
-    editorFbo.end();
-#endif
 }
 
 /* ================================================ */
