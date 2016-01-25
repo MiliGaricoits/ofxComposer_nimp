@@ -95,6 +95,8 @@ public:
     float           getHeight();
     float           getWidth();
     bool            drawInspector();
+    float           getHighestInspectorYCoord();
+    float           getHighestInspectorXCoord();
     
     // when dragging nodes
     //

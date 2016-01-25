@@ -42,6 +42,8 @@ public:
     int     getPatchesHighestCoord();
     int     getPatchesLeftMostCoord();
     int     getPatchesRightMostCoord();
+    int     getPatchesHighestYInspectorCoord();
+    int     getPatchesHighestXInspectorCoord();
     bool    getEdit();
     nodeLinkType getLinkType();
     int     getNodesCount();

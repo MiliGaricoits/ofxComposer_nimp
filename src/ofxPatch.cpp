@@ -936,11 +936,26 @@ float ofxPatch::getHighestYCoord(){
         }
     }
     
-    if(bInspector && panel.getPosition().y + panel.getHeight() > highestCoord){
+//    if(bInspector && panel.getPosition().y + panel.getHeight() > highestCoord){
+//        return panel.getPosition().y + panel.getHeight();
+//    } else{
+//        return highestCoord;
+//    }
+}
+
+//------------------------------------------------------------------
+float ofxPatch::getHighestInspectorYCoord(){
+    if(bInspector){
         return panel.getPosition().y + panel.getHeight();
-    } else{
-        return highestCoord;
     }
+    return 10;
+}
+
+float ofxPatch::getHighestInspectorXCoord(){
+    if(bInspector){
+        return panel.getPosition().x + panel.getWidth();
+    }
+    return 10;
 }
 
 //------------------------------------------------------------------
@@ -967,11 +982,11 @@ float ofxPatch::getHighestXCoord(){
         }
     }
     
-    if(bInspector && panel.getPosition().x + panel.getWidth() > highestCoord){
-        return panel.getPosition().x + panel.getWidth();
-    } else{
-        return highestCoord;
-    }
+//    if(bInspector && panel.getPosition().x + panel.getWidth() > highestCoord){
+//        return panel.getPosition().x + panel.getWidth();
+//    } else{
+//        return highestCoord;
+//    }
 }
 
 //------------------------------------------------------------------

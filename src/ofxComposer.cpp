@@ -548,6 +548,26 @@ int ofxComposer::getPatchesRightMostCoord(){
     return coordMasDer;
 }
 
+int ofxComposer::getPatchesHighestYInspectorCoord(){
+    int highestY = -1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(highestY < it->second->getHighestInspectorYCoord()){
+            highestY = it->second->getHighestInspectorYCoord();
+        }
+    }
+    return highestY;
+}
+
+int ofxComposer::getPatchesHighestXInspectorCoord(){
+    int highestX = -1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(highestX < it->second->getHighestInspectorXCoord()){
+            highestX = it->second->getHighestInspectorXCoord();
+        }
+    }
+    return highestX;
+}
+
 //------------------------------------------------------------------
 bool ofxComposer::isDraggingGrip(){
     return draggingGrip;
