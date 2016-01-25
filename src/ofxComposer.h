@@ -90,12 +90,13 @@ private:
     //
     void    _mouseMoved(ofMouseEventArgs &e);
     void    _keyPressed(ofKeyEventArgs &e);
+    void    _keyReleased(ofKeyEventArgs &e);
     void    _mousePressed(ofMouseEventArgs &e);
     void    _mouseReleased(ofMouseEventArgs &e);
     void    _windowResized(ofResizeEventArgs &e);
     void    _mouseDragged(ofMouseEventArgs &e);
     
-    void    activePatch( int _nID );
+    void    activePatch( int _nID);
     
     int     isAnyPatchHit(float x, float y, float z);
     bool    isAnyLinkHit();
@@ -133,6 +134,7 @@ private:
     int     multipleSelectFromX;
     int     multipleSelectFromY;
     void    multipleSelectAndReset();
+    bool    holdingCommand;
     
     // scroll
     //

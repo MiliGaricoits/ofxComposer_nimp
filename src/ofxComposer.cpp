@@ -43,6 +43,7 @@ ofxComposer::ofxComposer(){
     ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().keyReleased, this, &ofxComposer::_keyReleased, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().windowResized, this, &ofxComposer::_windowResized, COMPOSER_EVENT_PRIORITY);
     
     // scrollbar
@@ -72,6 +73,7 @@ ofxComposer::ofxComposer(){
     //
     multipleSelectFromX = 0;
     multipleSelectFromY = 0;
+    holdingCommand = false;
 }
 
 /* ================================================ */
@@ -194,7 +196,14 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         //        
     } else if (e.key == OF_KEY_F7){
         ofToggleFullscreen();
+    } else if (e.key == OF_KEY_LEFT_COMMAND || e.key == OF_KEY_RIGHT_COMMAND){
+        holdingCommand = true;
     }
+}
+
+//------------------------------------------------------------------
+void ofxComposer::_keyReleased(ofKeyEventArgs &e){
+    holdingCommand = false;
 }
 
 //------------------------------------------------------------------
@@ -208,10 +217,11 @@ void ofxComposer::activePatch( int _nID ){
         selectedID = _nID;
         
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if (it->first == _nID)
+            if (it->first == _nID){
                 it->second->bActive = true;
-            else
-                it->second->bActive = false;
+            } else if(!holdingCommand){
+                it->second->bActive = false;   
+            }
         }
     }
 }
@@ -231,7 +241,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         
         // zoom & drag
         //
-        if(idPatchHit == -1){
+        if(idPatchHit == -1 && !holdingCommand){
             disabledPatches = true;
             isAnyPatchSelected = false;
             deactivateAllPatches();
