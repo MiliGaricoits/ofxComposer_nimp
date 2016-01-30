@@ -942,11 +942,7 @@ float ofxPatch::getHighestYCoord(){
         }
     }
     
-//    if(bInspector && panel.getPosition().y + panel.getHeight() > highestCoord){
-//        return panel.getPosition().y + panel.getHeight();
-//    } else{
-//        return highestCoord;
-//    }
+    return highestCoord;
 }
 
 //------------------------------------------------------------------
@@ -954,14 +950,14 @@ float ofxPatch::getHighestInspectorYCoord(){
     if(bInspector){
         return panel.getPosition().y + panel.getHeight();
     }
-    return 10;
+    return -1;
 }
 
 float ofxPatch::getHighestInspectorXCoord(){
     if(bInspector){
         return panel.getPosition().x + panel.getWidth();
     }
-    return 10;
+    return -1;
 }
 
 //------------------------------------------------------------------
@@ -988,11 +984,7 @@ float ofxPatch::getHighestXCoord(){
         }
     }
     
-//    if(bInspector && panel.getPosition().x + panel.getWidth() > highestCoord){
-//        return panel.getPosition().x + panel.getWidth();
-//    } else{
-//        return highestCoord;
-//    }
+    return highestCoord;
 }
 
 //------------------------------------------------------------------
