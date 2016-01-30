@@ -26,6 +26,12 @@ public:
     void    drawInspectorGUIs();
     
     
+    //** EVENTS **//
+    //
+    void    _mousePressed(ofMouseEventArgs &e); // We removed the event listener for mousePressed
+                                                // and it's only executed when is not pressing the menu bars
+    
+    
     //** SETTERS **//
     //
     void    setEdit(bool _state);
@@ -83,6 +89,7 @@ protected:
     bool    connect( int _fromID, int _toID, int _nTexture, bool addInput );
     
     map<int,ofxPatch*>  patches;
+    bool midiLearnActive;
     
 private:
     
@@ -91,7 +98,6 @@ private:
     void    _mouseMoved(ofMouseEventArgs &e);
     void    _keyPressed(ofKeyEventArgs &e);
     void    _keyReleased(ofKeyEventArgs &e);
-    void    _mousePressed(ofMouseEventArgs &e);
     void    _mouseReleased(ofMouseEventArgs &e);
     void    _windowResized(ofResizeEventArgs &e);
     void    _mouseDragged(ofMouseEventArgs &e);

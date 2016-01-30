@@ -38,8 +38,9 @@ public:
     ofEvent<int> reset;
     ofEvent<int> drag;
     
-private:
     void _mousePressed(ofMouseEventArgs &e);
+    
+private:
     void _mouseReleased(ofMouseEventArgs &e);
     
     ofRectangle    tittleBox;

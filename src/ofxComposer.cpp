@@ -40,7 +40,7 @@ ofxComposer::ofxComposer(){
     //  Event listeners
     //
     ofAddListener(ofEvents().mouseMoved, this, &ofxComposer::_mouseMoved, COMPOSER_EVENT_PRIORITY);
-    ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
+    //ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyReleased, this, &ofxComposer::_keyReleased, COMPOSER_EVENT_PRIORITY);
@@ -74,6 +74,10 @@ ofxComposer::ofxComposer(){
     multipleSelectFromX = 0;
     multipleSelectFromY = 0;
     holdingCommand = false;
+    
+    // MIDI learn
+    //
+    midiLearnActive = false;
 }
 
 /* ================================================ */
@@ -186,7 +190,6 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         return;
     }
     
-    
     if (e.key == OF_KEY_F1 ){
         bHelp = !bHelp;
     } else if (e.key == OF_KEY_F2 ){
@@ -233,9 +236,9 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
-    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() &&
+    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() /*&&
        (mouse.x - this->getParent()->getPosition().x > RIGHT_MENU_WIDTH) &&
-       (mouse.y - this->getParent()->getPosition().y > MENU_HEIGHT)) {
+       (mouse.y - this->getParent()->getPosition().y > MENU_HEIGHT)*/) {
         
         int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
@@ -245,15 +248,15 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             disabledPatches = true;
             isAnyPatchSelected = false;
             deactivateAllPatches();
-        } else {
+        } else if (idPatchHit != -1){
             disabledPatches = false;
-            for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            //for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
                 if(!patches.find(idPatchHit)->second->bActive){
                     activePatch(idPatchHit);
                     isAnyPatchSelected = true;
-                    break;
+                    //break;
                 }
-            }
+            //}
         }
         
         selectedDot = -1;
@@ -276,14 +279,20 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         }
         
         // multiple select
+        //
         if(disabledPatches && e.button == 0 && !canvas->getOtherSelected()){
             multipleSelectFromX = mouse.x;
             multipleSelectFromY = mouse.y;
             multipleSelectRectangle.x = mouse.x;
             multipleSelectRectangle.y = mouse.y;
         }
+        
+        // execute mouse pressed for all patches
+        //
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            it->second->_mousePressed(e);
+        }
     }
-    
 }
 
 //------------------------------------------------------------------
@@ -296,7 +305,7 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
     
     // mouse is being drag, and the mouse is not over any patch
     if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit())
-        && (!canvas->getOtherSelected() && (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)) ) {
+        && (!canvas->getOtherSelected() /*&& (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)*/) ) {
         
         // left button -> multiple select
         if(e.button == 0){

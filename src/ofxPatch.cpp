@@ -72,7 +72,7 @@ ofxPatch::ofxPatch(){
     title->setParent(*this);
     ofAddListener( title->reset , this, &ofxPatch::_reMakeFrame);
     
-    ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
+    //ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
@@ -554,6 +554,12 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                 }
             }
         }
+    }
+    
+    // execute mouse pressed for title
+    //
+    if (bEditMode){
+        title->_mousePressed(e);
     }
 }
 
@@ -1745,31 +1751,45 @@ bool ofxPatch::saveSettingsToSnippet(ofxXmlSettings &XML, int _nTag, map<int,int
 /* ================================================ */
 
 
-// -------------------------------------------------------------
-// ------------------------------------------------- ENCAPSULATED
-// -------------------------------------------------------------
+// ---------------------------------------------------
+// -------------------------------------- ENCAPSULATED
+// ---------------------------------------------------
 
 int ofxPatch::getWindowId(){
     return windowId;
 }
+
+//------------------------------------------------------------------
 int ofxPatch::getEncapsulatedId(){
     return encapsulatedId;
 }
+
+//------------------------------------------------------------------
 int ofxPatch::getToEncapsulatedId(){
     return outPut[0].toEncapsulatedId;
 }
+
+//------------------------------------------------------------------
 bool ofxPatch::isLastEncapsulated(){
     return lastEncapsulated;
 }
+
+//------------------------------------------------------------------
 void ofxPatch::setWindowId(int winId){
     windowId = winId;
 }
+
+//------------------------------------------------------------------
 void ofxPatch::setEncapsulatedId(int encapId){
     encapsulatedId = encapId;
 }
+
+//------------------------------------------------------------------
 void ofxPatch::setLastEncapsulated(bool last){
     lastEncapsulated = last;
 }
+
+//------------------------------------------------------------------
 void ofxPatch::setToEncapsulatedId(int patchId){
     for (int i = 0; i < outPut.size(); i++){
         outPut[i].toEncapsulatedId = patchId;
@@ -1777,3 +1797,16 @@ void ofxPatch::setToEncapsulatedId(int patchId){
 }
 
 
+// ---------------------------------------------------
+// -------------------------------------- ENCAPSULATED
+// ---------------------------------------------------
+
+void ofxPatch::setMidiLearnActive(bool active_) {
+    this->midiLearnActive = active_;
+    
+    //gui.setMidiLearnActive(active_);
+    panel.setMidiLearnActive(active_);
+}
+
+/* ================================================ */
+/* ================================================ */

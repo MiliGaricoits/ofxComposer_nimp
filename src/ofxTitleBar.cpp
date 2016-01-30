@@ -9,7 +9,7 @@
 #include "ofxTitleBar.h"
 
 ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
-    ofAddListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed);
+    //ofAddListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed);
     
     windowsBox = wBox;
     windowsId = _windowsId;

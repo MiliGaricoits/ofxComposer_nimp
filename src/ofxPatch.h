@@ -56,6 +56,7 @@ public:
     
     //** EVENTS **//
     //
+    void            _mousePressed(ofMouseEventArgs &e);
     //void            guiEvent(ofxUIEventArgs &e);
     
     
@@ -122,7 +123,8 @@ public:
     void            resetSize(int _width = 0, int _height = 0);
     virtual void    resetSizeBasedOnInput(ofxPatch* input_);
     
-    //methods for adding input//
+    // methods for adding input
+    //
     void            addInputDot();
     virtual bool    addInput(ofxPatch* layer_){};
     virtual void    removeInput(int inputId_){};
@@ -152,6 +154,9 @@ public:
     void            setEncapsulatedId(int encapId);
     void            setLastEncapsulated(bool last);
     void            setToEncapsulatedId(int encapId);
+    
+    // MIDI learn
+    void setMidiLearnActive(bool active_);
     
 protected:
     
@@ -205,6 +210,10 @@ protected:
     bool            bInspector;
     string          imageSrc;
     
+    // MIDI learn
+    //
+    bool midiLearnActive;
+    
 private:
     
     void            doSurfaceToScreenMatrix();      // Update the SurfaceToScreen transformation matrix
@@ -213,7 +222,6 @@ private:
     
     // Mouse & Key Events ( it´s not better if is centralized on the composer )
     //
-    void            _mousePressed(ofMouseEventArgs &e);
     void            _mouseDragged(ofMouseEventArgs &e);
     void            _mouseReleased(ofMouseEventArgs &e);
     void            _keyPressed(ofKeyEventArgs &e);
