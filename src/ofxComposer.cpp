@@ -799,6 +799,11 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
     // load vector with all selected patches
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->bActive){
+            if(it->second->getEncapsulatedId() > 0){
+                ConsoleLog::getInstance()->pushError("There is an encapsulated node selected");
+                patchesToEncapsulate.clear();
+                return -1;
+            }
             patchesToEncapsulate.push_back(it->second->getId());
         }
     }

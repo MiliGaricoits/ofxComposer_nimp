@@ -327,7 +327,7 @@ void ofxPatch::customDraw(){
                     
                     // set dstOutput to the encapsulated patch, or the regular exit
                     ofPoint dstOutput;
-                    if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId){
+                    if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
                         dstOutput = outPut[i].toPosEncapsulated;
                     }else{
                         dstOutput = outPut[i].to->pos;
