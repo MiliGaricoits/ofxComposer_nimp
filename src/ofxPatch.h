@@ -34,7 +34,7 @@ struct LinkDot{
     ofxShaderObj *toShader;
     vector<ofPoint> link_vertices;   // vertices in the nodes links
     ofPolyline  link_line;
-    ofPoint     toPosEncapsulated;
+    LinkDot     *toEncapsulated;
     int         toEncapsulatedId;
 };
 
@@ -74,6 +74,7 @@ public:
     void            setLinkType(nodeLinkType type);
     void            setMainCanvas(ofxUISuperCanvas* gui);
     void            setDrawInspector(bool draw_);
+    void            setCamera(ofEasyCam cam);
 //    void            setWindowId(int winId);
 //    void            setLastEncapsulated(bool lastEnc);
     
@@ -96,15 +97,15 @@ public:
     float           getHeight();
     float           getWidth();
     bool            drawInspector();
-    float           getHighestInspectorYCoord();
-    float           getHighestInspectorXCoord();
+    float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
+    float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
     
     // when dragging nodes
     //
-    float           getHighestYCoord();
-    float           getLowestYCoord();
-    float           getHighestXCoord();
-    float           getLowestXCoord();
+    float           getHighestYCoord(int winId = MAIN_WINDOW);
+    float           getLowestYCoord(int winId = MAIN_WINDOW);
+    float           getHighestXCoord(int winId = MAIN_WINDOW);
+    float           getLowestXCoord(int winId = MAIN_WINDOW);
     
     
     //** OTHER FUNCTIONS **//
@@ -248,7 +249,6 @@ private:
     int             windowId;
     bool            lastEncapsulated;
     int             encapsulatedId;
-    LinkDot         lastEncapsulatedId;
     
 };
 

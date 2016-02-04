@@ -44,12 +44,12 @@ public:
     //
     map<int,ofxPatch*> getPatches();
     map<int,ofxPatch*> getActivePatches();
-    int     getPatchesLowestCoord();
-    int     getPatchesHighestCoord();
-    int     getPatchesLeftMostCoord();
-    int     getPatchesRightMostCoord();
-    int     getPatchesHighestYInspectorCoord();
-    int     getPatchesHighestXInspectorCoord();
+    int     getPatchesLowestCoord(int winId = MAIN_WINDOW);
+    int     getPatchesHighestCoord(int winId = MAIN_WINDOW);
+    int     getPatchesLeftMostCoord(int winId = MAIN_WINDOW);
+    int     getPatchesRightMostCoord(int winId = MAIN_WINDOW);
+    int     getPatchesHighestYInspectorCoord(int winId = MAIN_WINDOW);
+    int     getPatchesHighestXInspectorCoord(int winId = MAIN_WINDOW);
     bool    getEdit();
     nodeLinkType getLinkType();
     int     getNodesCount();
@@ -83,6 +83,7 @@ public:
     void    restoreWindowsForEncapsulated(int previousWin);
     void    setOutputEncapsulated(int patchId, vector<int> encapsulatedPatches);
     void    restoreOutputEncapsulated(int lastPatchId);
+    void    setCameraForWindow(int winId, ofEasyCam cam);
 
 protected:
     

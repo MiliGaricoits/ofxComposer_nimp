@@ -328,7 +328,7 @@ void ofxPatch::customDraw(){
                     // set dstOutput to the encapsulated patch, or the regular exit
                     ofPoint dstOutput;
                     if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
-                        dstOutput = outPut[i].toPosEncapsulated;
+                        dstOutput = outPut[i].toEncapsulated->pos;
                     }else{
                         dstOutput = outPut[i].to->pos;
                     }
@@ -415,7 +415,10 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
     if (EventHandler::getInstance()->getWindowEvent() != windowId) {
         return;
     }
-        
+    
+//    cout << "id: " << nId << endl;
+//    cout << "winid: " << windowId << endl;
+//    cout << "bInspector: " << bInspector << endl;
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     if (bEditMode){
@@ -932,12 +935,27 @@ float ofxPatch::getWidth(){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestYCoord(){
+float ofxPatch::getHighestInspectorYCoord(int winId){
+    if(bInspector && winId == windowId){
+        return panel.getPosition().y + panel.getHeight();
+    }
+    return -1;
+}
+
+float ofxPatch::getHighestInspectorXCoord(int winId){
+    if(bInspector && winId == windowId){
+        return panel.getPosition().x + panel.getWidth();
+    }
+    return -1;
+}
+
+//------------------------------------------------------------------
+float ofxPatch::getHighestYCoord(int winId){
     int highestCoord = 0;
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].y){
+        if(highestCoord < textureCorners[i].y && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
             highestCoord = textureCorners[i].y;
         }
     }
@@ -946,26 +964,11 @@ float ofxPatch::getHighestYCoord(){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestInspectorYCoord(){
-    if(bInspector){
-        return panel.getPosition().y + panel.getHeight();
-    }
-    return -1;
-}
-
-float ofxPatch::getHighestInspectorXCoord(){
-    if(bInspector){
-        return panel.getPosition().x + panel.getWidth();
-    }
-    return -1;
-}
-
-//------------------------------------------------------------------
-float ofxPatch::getLowestYCoord(){
+float ofxPatch::getLowestYCoord(int winId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].y){
+        if(lowestCoord > textureCorners[i].y && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
             lowestCoord = textureCorners[i].y;
         }
     }
@@ -974,12 +977,12 @@ float ofxPatch::getLowestYCoord(){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestXCoord(){
+float ofxPatch::getHighestXCoord(int winId){
     int highestCoord = 0;
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].x){
+        if(highestCoord < textureCorners[i].x && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
             highestCoord = textureCorners[i].x;
         }
     }
@@ -988,11 +991,11 @@ float ofxPatch::getHighestXCoord(){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getLowestXCoord(){
+float ofxPatch::getLowestXCoord(int winId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].x){
+        if(lowestCoord > textureCorners[i].x && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
             lowestCoord = textureCorners[i].x;
         }
     }
@@ -1788,6 +1791,10 @@ void ofxPatch::setToEncapsulatedId(int patchId){
     }
 }
 
+void ofxPatch::setCamera(ofEasyCam cam){
+    this->title->setParent(cam);
+    this->setParent(cam);
+}
 
 // ---------------------------------------------------
 // -------------------------------------- ENCAPSULATED
