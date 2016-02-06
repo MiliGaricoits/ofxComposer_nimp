@@ -25,13 +25,6 @@ public:
     void    customDraw();
     void    drawInspectorGUIs();
     
-    
-    //** EVENTS **//
-    //
-    void    _mousePressed(ofMouseEventArgs &e); // We removed the event listener for mousePressed
-                                                // and it's only executed when is not pressing the menu bars
-    
-    
     //** SETTERS **//
     //
     void    setEdit(bool _state);
@@ -96,6 +89,7 @@ private:
     
     //** EVENTS **//
     //
+    void    _mousePressed(ofMouseEventArgs &e);
     void    _mouseMoved(ofMouseEventArgs &e);
     void    _keyPressed(ofKeyEventArgs &e);
     void    _keyReleased(ofKeyEventArgs &e);

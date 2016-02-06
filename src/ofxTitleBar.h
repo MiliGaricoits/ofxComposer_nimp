@@ -10,6 +10,7 @@
 #define OFXTITLEBAR
 
 #include "ofMain.h"
+#include "enumerations.h"
 
 enum ButtonType {
     TOGGLE_BUTTON,
@@ -38,10 +39,9 @@ public:
     ofEvent<int> reset;
     ofEvent<int> drag;
     
-    void _mousePressed(ofMouseEventArgs &e);
-    
 private:
     void _mouseReleased(ofMouseEventArgs &e);
+    void _mousePressed(ofMouseEventArgs &e);
     
     ofRectangle    tittleBox;
     ofRectangle    *windowsBox;

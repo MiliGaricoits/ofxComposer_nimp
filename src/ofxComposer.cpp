@@ -40,7 +40,7 @@ ofxComposer::ofxComposer(){
     //  Event listeners
     //
     ofAddListener(ofEvents().mouseMoved, this, &ofxComposer::_mouseMoved, COMPOSER_EVENT_PRIORITY);
-    //ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed, COMPOSER_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyReleased, this, &ofxComposer::_keyReleased, COMPOSER_EVENT_PRIORITY);
@@ -210,11 +210,6 @@ void ofxComposer::_keyReleased(ofKeyEventArgs &e){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
-    
-}
-
-//------------------------------------------------------------------
 void ofxComposer::activePatch( int _nID ){
     if ( (_nID != -1) && (patches[_nID] != NULL) ){
         selectedID = _nID;
@@ -227,6 +222,11 @@ void ofxComposer::activePatch( int _nID ){
             }
         }
     }
+}
+
+//------------------------------------------------------------------
+void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
+    
 }
 
 //------------------------------------------------------------------
@@ -287,12 +287,6 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             multipleSelectFromY = mouse.y;
             multipleSelectRectangle.x = mouse.x;
             multipleSelectRectangle.y = mouse.y;
-        }
-        
-        // execute mouse pressed for all patches
-        //
-        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            it->second->_mousePressed(e);
         }
     }
 }

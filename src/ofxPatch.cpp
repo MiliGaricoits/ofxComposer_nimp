@@ -72,7 +72,7 @@ ofxPatch::ofxPatch(){
     title->setParent(*this);
     ofAddListener( title->reset , this, &ofxPatch::_reMakeFrame);
     
-    //ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
@@ -557,12 +557,6 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
                 }
             }
         }
-    }
-    
-    // execute mouse pressed for title
-    //
-    if (bEditMode){
-        title->_mousePressed(e);
     }
 }
 

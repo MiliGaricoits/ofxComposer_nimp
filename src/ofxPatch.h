@@ -56,7 +56,6 @@ public:
     
     //** EVENTS **//
     //
-    void            _mousePressed(ofMouseEventArgs &e);
     //void            guiEvent(ofxUIEventArgs &e);
     
     
@@ -223,6 +222,7 @@ private:
     
     // Mouse & Key Events ( it´s not better if is centralized on the composer )
     //
+    void            _mousePressed(ofMouseEventArgs &e);
     void            _mouseDragged(ofMouseEventArgs &e);
     void            _mouseReleased(ofMouseEventArgs &e);
     void            _keyPressed(ofKeyEventArgs &e);
