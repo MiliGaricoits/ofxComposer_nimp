@@ -90,6 +90,12 @@ ofxPatch::~ofxPatch(){
     if ( shader != NULL )
         delete shader;
     
+    if (videoGrabber != NULL) {
+        videoGrabber->close();
+        delete videoGrabber;
+        videoGrabber = NULL;
+    }
+    
     inPut.clear();
     outPut.clear();
     textureCorners.clear();

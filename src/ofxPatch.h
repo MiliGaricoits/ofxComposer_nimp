@@ -206,7 +206,7 @@ protected:
     ofxGuiGroup     gui;
     //ofxUICanvas*    inspector = NULL;
     bool            bInspector;
-    string          imageSrc;
+//    string          imageSrc;
     
     // MIDI learn
     //
