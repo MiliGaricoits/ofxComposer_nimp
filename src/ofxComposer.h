@@ -77,6 +77,7 @@ public:
     void    setOutputEncapsulated(int patchId, vector<int> encapsulatedPatches);
     void    restoreOutputEncapsulated(int lastPatchId);
     void    setCameraForWindow(int winId, ofEasyCam cam);
+    string  getLastEncapsulatedName(int encapsulatedId);
 
 protected:
     
