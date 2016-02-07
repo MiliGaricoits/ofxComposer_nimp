@@ -24,7 +24,7 @@ ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
 
 ofxTitleBar::~ofxTitleBar(){
     
-    ofRemoveListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed);
+    ofRemoveListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed, PATCH_EVENT_PRIORITY);
 }
 
 void ofxTitleBar::addButton( char letter, bool *variableToControl, ButtonType _type){
