@@ -73,9 +73,6 @@ public:
     void            setLinkType(nodeLinkType type);
     void            setMainCanvas(ofxUISuperCanvas* gui);
     void            setDrawInspector(bool draw_);
-    void            setCamera(ofEasyCam cam);
-//    void            setWindowId(int winId);
-//    void            setLastEncapsulated(bool lastEnc);
     
     
     //** GETTERS **//
@@ -154,6 +151,7 @@ public:
     void            setEncapsulatedId(int encapId);
     void            setLastEncapsulated(bool last);
     void            setToEncapsulatedId(int encapId);
+    virtual string  getName() {};
     
     // MIDI learn
     void setMidiLearnActive(bool active_);

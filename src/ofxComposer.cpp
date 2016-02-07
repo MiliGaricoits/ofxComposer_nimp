@@ -925,11 +925,19 @@ int ofxComposer::getLastPatchEncapsulated(int encapsulatedId){
     }
 }
 
-
 void ofxComposer::setCameraForWindow(int winId, ofEasyCam cam){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(it->second->getWindowId() == winId){
-            it->second->setCamera(cam);
+        if(it->second->getWindowId() == winId || it->second->isLastEncapsulated()){
+            it->second->setParent(*this->getParent());
         }
     }
+}
+
+string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+            return it->second->getName();
+        }
+    }
+    return "";
 }

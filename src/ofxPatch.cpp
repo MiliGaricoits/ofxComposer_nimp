@@ -1785,11 +1785,6 @@ void ofxPatch::setToEncapsulatedId(int patchId){
     }
 }
 
-void ofxPatch::setCamera(ofEasyCam cam){
-    this->title->setParent(cam);
-    this->setParent(cam);
-}
-
 // ---------------------------------------------------
 // -------------------------------------- ENCAPSULATED
 // ---------------------------------------------------
