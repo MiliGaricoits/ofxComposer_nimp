@@ -117,29 +117,30 @@ void ofxComposer::customDraw(){
         //
         if (isAnyPatchSelected) {
             ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+            ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
             if (verticalAlign1) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight()*scale.y);
+                ofLine(verticalAlign1, cam_pos.y, verticalAlign1, ofGetHeight()*scale.y + cam_pos.y);
             }
             if (verticalAlign2) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight()*scale.y);
+                ofLine(verticalAlign2, cam_pos.y, verticalAlign2, ofGetHeight()*scale.y + cam_pos.y);
             }
             if (verticalAlign3) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight()*scale.y);
+                ofLine(verticalAlign3, cam_pos.y, verticalAlign3, ofGetHeight()*scale.y + cam_pos.y);
             }
             if (horizontalAlign1) {
                 ofSetColor(255, 208, 111);
-                ofLine(0, horizontalAlign1, ofGetWidth()*scale.x, horizontalAlign1);
+                ofLine(cam_pos.x, horizontalAlign1, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign1);
             }
             if (horizontalAlign2) {
                 ofSetColor(255, 208, 111);
-                ofLine(0, horizontalAlign2, ofGetWidth()*scale.x, horizontalAlign2);
+                ofLine(cam_pos.x, horizontalAlign2, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign2);
             }
             if (horizontalAlign3) {
                 ofSetColor(255, 208, 111);
-                ofLine(0, horizontalAlign3, ofGetWidth()*scale.x, horizontalAlign3);
+                ofLine(cam_pos.x, horizontalAlign3, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign3);
             }
         }
         
