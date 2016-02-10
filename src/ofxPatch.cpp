@@ -1414,6 +1414,7 @@ bool ofxPatch::loadSettings(ofxXmlSettings &XML, int nTag_, int nodesCount_) {
             
             LinkDot newDot;
             newDot.toId = XML.getValue("dot:to", 0) + nodesCount_;
+            newDot.toEncapsulatedId = -1;
             
             if (newDot.toId != 0 && newDot.toId != nodesCount_){
                 
