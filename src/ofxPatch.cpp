@@ -1133,6 +1133,20 @@ void ofxPatch::resetSizeBasedOnInput(ofxPatch* input_){
 }
 
 //------------------------------------------------------------------
+void ofxPatch::resetSizeToNoInputs(){
+    
+    ofPoint iC[4];
+    ofPoint pos_ = getTextureCoorners().getVertices()[0];
+    
+    iC[0] = pos_;
+    iC[1] = ofPoint(pos_.x + 640/4, pos_.y);
+    iC[2] = ofPoint(pos_.x + 640/4, pos_.y + 480/4);
+    iC[3] = ofPoint(pos_.x, pos_.y + 480/4);
+    
+    setCoorners(iC);
+}
+
+//------------------------------------------------------------------
 void ofxPatch::addInputDot() {
     LinkDot p;
     inPut.push_back(p);

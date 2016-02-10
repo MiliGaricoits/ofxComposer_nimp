@@ -119,6 +119,7 @@ public:
     bool            isLinkHit(); // is node link hit my mouse click ?
     void            resetSize(int _width = 0, int _height = 0);
     virtual void    resetSizeBasedOnInput(ofxPatch* input_);
+    void            resetSizeToNoInputs();
     
     // methods for adding input
     //
