@@ -17,7 +17,6 @@
 #include "ofxShaderObj.h"
 #include "ofxPingPong.h"
 #include "enumerations.h"
-#include "ofxUISuperCanvas.h"
 #include "ofxPanel.h"
 
 struct LinkDot{
@@ -71,7 +70,6 @@ public:
     void            setDisablePatch(bool disable);
     void            setLinkHit(bool linkHit);
     void            setLinkType(nodeLinkType type);
-    void            setMainCanvas(ofxUISuperCanvas* gui);
     void            setDrawInspector(bool draw_);
     
     
@@ -205,9 +203,7 @@ protected:
     //
     ofxPanel        panel;
     ofxGuiGroup     gui;
-    //ofxUICanvas*    inspector = NULL;
     bool            bInspector;
-//    string          imageSrc;
     
     // MIDI learn
     //
@@ -234,8 +230,6 @@ private:
     ofPoint         src[4];
     ofMatrix4x4     surfaceToScreenMatrix;
     ofMatrix4x4     screenToSurfaceMatrix;
-    
-    ofxUISuperCanvas* canvas; // application main canvas
     
     // Node links Variables
     //

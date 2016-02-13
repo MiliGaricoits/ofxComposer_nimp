@@ -28,7 +28,6 @@ public:
     //** SETTERS **//
     //
     void    setEdit(bool _state);
-    void    setMainCanvas(ofxUISuperCanvas* gui);
     void    setLinkType (nodeLinkType type);
     void    setNodesCount(int count);
     
@@ -103,8 +102,6 @@ private:
     int     isAnyPatchHit(float x, float y, float z);
     bool    isAnyLinkHit();
     bool    isAnyPatchSelected;
-    
-    ofxUISuperCanvas* canvas;
     
     bool    disabledPatches;
     

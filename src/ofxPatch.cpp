@@ -418,23 +418,11 @@ void ofxPatch::_reMakeFrame( int &_nId ){
 
 //------------------------------------------------------------------
 void ofxPatch::_mousePressed(ofMouseEventArgs &e){
-    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+    if (EventHandler::getInstance()->getWindowEvent() != windowId){
         return;
     }
     
-//    cout << "id: " << nId << endl;
-//    cout << "winid: " << windowId << endl;
-//    cout << "bInspector: " << bInspector << endl;
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
-    
-    if (bEditMode){
-        
-        // check is mouse is pressing over the inspector
-//        if (bInspector && panel. ->isHit(mouse.x, mouse.y)) {
-//            canvas->setOtherSelected(true);
-//            return;
-//        }
-    }
     
     if ( bEditMode && bActive ){
         if (!bEditMask){
@@ -572,7 +560,7 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
         return;
     }
     
-    if((disabledPatch and !isLinkHit()) or canvas->getOtherSelected()){
+    if((disabledPatch and !isLinkHit())){
         return;
     }
     
@@ -690,7 +678,6 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     }
     
     // mouse is not longer pressing the inspector or link
-    canvas->setOtherSelected(false);
     selectedLinkVertex = -1;
     selectedLink     = -1;
     setLinkHit(false);
@@ -861,11 +848,6 @@ void ofxPatch::setCoorners(vector<ofPoint> _coorners){
 //------------------------------------------------------------------
 void ofxPatch::setLinkType(nodeLinkType type) {
     linkType = type;
-}
-
-//------------------------------------------------------------------
-void ofxPatch::setMainCanvas(ofxUISuperCanvas* _canvas) {
-    this->canvas = _canvas;
 }
 
 //------------------------------------------------------------------

@@ -237,9 +237,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
-    if(!draggingGrip && !draggingHGrip && !canvas->getOtherSelected() /*&&
-       (mouse.x - this->getParent()->getPosition().x > RIGHT_MENU_WIDTH) &&
-       (mouse.y - this->getParent()->getPosition().y > MENU_HEIGHT)*/) {
+    if(!draggingGrip && !draggingHGrip) {
         
         int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
@@ -283,7 +281,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         
         // multiple select
         //
-        if(disabledPatches && e.button == 0 && !canvas->getOtherSelected()){
+        if(disabledPatches && e.button == 0){
             multipleSelectFromX = mouse.x;
             multipleSelectFromY = mouse.y;
             multipleSelectRectangle.x = mouse.x;
@@ -301,8 +299,7 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     // mouse is being drag, and the mouse is not over any patch
-    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit())
-        && (!canvas->getOtherSelected() /*&& (mouse.x > RIGHT_MENU_WIDTH) && (mouse.y > MENU_HEIGHT)*/) ) {
+    if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) ) {
         
         // left button -> multiple select
         if(e.button == 0){
@@ -477,11 +474,6 @@ void ofxComposer::setDraggingHGrip(bool dragging){
     draggingHGrip = dragging;
 }
 
-//------------------------------------------------------------------
-void ofxComposer::setMainCanvas(ofxUISuperCanvas* _canvas) {
-    this->canvas = _canvas;
-}
-
 /* ================================================ */
 /* ================================================ */
 
@@ -609,7 +601,6 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
     }
     patches[p->getId()] = p;
     
-    p->setMainCanvas(this->canvas);
     p->setParent(*this->getParent());
 }
 
