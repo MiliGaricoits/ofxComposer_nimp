@@ -49,7 +49,7 @@ public:
     //** LOOPS **//
     //
     void            update();
-    void            customDraw();
+    virtual void    customDraw();
     void            drawInspectorGUI();
     
     
@@ -164,6 +164,7 @@ protected:
     ofImage         noInputs;
     
     bool            drawNoInputs;
+    bool            isAudio;
     
     // Mask variables
     //

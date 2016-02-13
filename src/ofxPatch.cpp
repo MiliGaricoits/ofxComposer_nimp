@@ -33,6 +33,7 @@ ofxPatch::ofxPatch(){
     videoGrabber        = NULL;
     
     drawNoInputs        = false;
+    isAudio             = false;
     
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
@@ -116,6 +117,10 @@ ofxPatch::~ofxPatch(){
 
 void ofxPatch::update(){
 
+    // audio in do not draw mask or textures
+    if (isAudio) return;
+    
+    
     if ((width != getTexture()->getWidth()) ||
         (height != getTexture()->getHeight()) ){
         
@@ -212,9 +217,9 @@ void ofxPatch::customDraw(){
         return;
     }
     
-    if ( bEditMode || bVisible ) {
+    if (( bEditMode || bVisible ) && !isAudio ) {
         
-        if (bActive || !bEditMode || (type == "ofxGLEditor"))
+        if (bActive || !bEditMode)
             color.lerp(ofColor(255,255), 0.1);
         else
             color.lerp(ofColor(200,200), 0.1);
@@ -308,62 +313,64 @@ void ofxPatch::customDraw(){
             }
         }
 
-        // Draw the input linking dots
+        // Draw the input linking dots (if i'm not audio)
         //
-        for(int i = 0; i < inPut.size(); i++){
-            ofSetColor(255, 150);
+        if (!isAudio) {
+            for(int i = 0; i < inPut.size(); i++){
+                ofSetColor(255, 150);
+                ofNoFill();
+                ofCircle(inPut[i].pos, 5);
+            }
+            
+            // Draw the output linking dot
+            //
             ofNoFill();
-            ofCircle(inPut[i].pos, 5);
-        }
-        
-        // Draw the output linking dot
-        //
-        ofNoFill();
-        ofSetColor(255, 150);
-        ofCircle(getOutPutPosition(), 5);
-        ofPopStyle();
-        
-        // Draw the links between nodes
-        //
-        if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
-            for (int i = 0; i < outPut.size(); i++){
-                if (outPut[i].to != NULL){
-                    ofFill();
-                    ofCircle(outPut[i].pos, 3);
-                    
-                    // set dstOutput to the encapsulated patch, or the regular exit
-                    ofPoint dstOutput;
-                    if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
-                        dstOutput = outPut[i].toEncapsulated->pos;
-                    }else{
-                        dstOutput = outPut[i].to->pos;
-                    }
-                    if (linkType == STRAIGHT_LINKS)
-                        ofLine(outPut[i].pos, dstOutput);
-                    else if (linkType == CURVE_LINKS) {
-                        ofNoFill();
-                        ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+            ofSetColor(255, 150);
+            ofCircle(getOutPutPosition(), 5);
+            ofPopStyle();
+            
+            // Draw the links between nodes
+            //
+            if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
+                for (int i = 0; i < outPut.size(); i++){
+                    if (outPut[i].to != NULL){
                         ofFill();
-                    }
-                    else {
-                        if (outPut[i].link_vertices.size() > 0) {
+                        ofCircle(outPut[i].pos, 3);
+                        
+                        // set dstOutput to the encapsulated patch, or the regular exit
+                        ofPoint dstOutput;
+                        if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
+                            dstOutput = outPut[i].toEncapsulated->pos;
+                        }else{
+                            dstOutput = outPut[i].to->pos;
+                        }
+                        if (linkType == STRAIGHT_LINKS)
+                            ofLine(outPut[i].pos, dstOutput);
+                        else if (linkType == CURVE_LINKS) {
                             ofNoFill();
-                            for(int j = 0; j < outPut[i].link_vertices.size(); j++){
-                                ofCircle( outPut[i].link_vertices[j], 4);
+                            ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+                            ofFill();
+                        }
+                        else {
+                            if (outPut[i].link_vertices.size() > 0) {
+                                ofNoFill();
+                                for(int j = 0; j < outPut[i].link_vertices.size(); j++){
+                                    ofCircle( outPut[i].link_vertices[j], 4);
+                                }
                             }
+                            
+                            outPut[i].link_line.clear();
+                            outPut[i].link_line.addVertex(outPut[i].pos);
+                            if (outPut[i].link_vertices.size() > 0)
+                                outPut[i].link_line.addVertices(outPut[i].link_vertices);
+                            outPut[i].link_line.addVertex(dstOutput);
+                            outPut[i].link_line.draw();
+                            
+                            ofFill();
                         }
                         
-                        outPut[i].link_line.clear();
-                        outPut[i].link_line.addVertex(outPut[i].pos);
-                        if (outPut[i].link_vertices.size() > 0)
-                            outPut[i].link_line.addVertices(outPut[i].link_vertices);
-                        outPut[i].link_line.addVertex(dstOutput);
-                        outPut[i].link_line.draw();
-                        
-                        ofFill();
+                        ofCircle(dstOutput, 3);
                     }
-                    
-                    ofCircle(dstOutput, 3);
                 }
             }
         }
