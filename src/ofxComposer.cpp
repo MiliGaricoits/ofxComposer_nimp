@@ -78,6 +78,10 @@ ofxComposer::ofxComposer(){
     // MIDI learn
     //
     midiLearnActive = false;
+    
+    // Audio In
+    //
+    editAudioInActive = false;
 }
 
 /* ================================================ */

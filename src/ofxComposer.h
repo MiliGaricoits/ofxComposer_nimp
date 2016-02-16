@@ -84,6 +84,7 @@ protected:
     
     map<int,ofxPatch*>  patches;
     bool midiLearnActive;
+    bool editAudioInActive;
     
 private:
     

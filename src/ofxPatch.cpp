@@ -51,6 +51,9 @@ ofxPatch::ofxPatch(){
     
     bInspector          = false;
     
+    midiLearnActive     = false;
+    editAudioInActive   = false;
+    
     maskShader.load("Shaders/myShader");
     maskFbo.allocate(width, height);
     
@@ -118,8 +121,10 @@ ofxPatch::~ofxPatch(){
 void ofxPatch::update(){
 
     // audio in do not draw mask or textures
-    if (isAudio) return;
-    
+    if (isAudio){
+        box = textureCorners.getBoundingBox();
+        return;
+    };
     
     if ((width != getTexture()->getWidth()) ||
         (height != getTexture()->getHeight()) ){
@@ -1796,14 +1801,21 @@ void ofxPatch::setToEncapsulatedId(int patchId){
 }
 
 // ---------------------------------------------------
-// -------------------------------------- ENCAPSULATED
+// ---------------------------------------- MIDI Learn
 // ---------------------------------------------------
 
 void ofxPatch::setMidiLearnActive(bool active_) {
     this->midiLearnActive = active_;
-    
-    //gui.setMidiLearnActive(active_);
     panel.setMidiLearnActive(active_);
+}
+
+// ---------------------------------------------------
+// ------------------------------------------ Audio in
+// ---------------------------------------------------
+
+void ofxPatch::setEditAudioInActive(bool active_) {
+    this->editAudioInActive = active_;
+    panel.setEditAudioInActive(active_);
 }
 
 /* ================================================ */

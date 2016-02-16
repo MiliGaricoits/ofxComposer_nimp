@@ -155,7 +155,18 @@ public:
     // MIDI learn
     void setMidiLearnActive(bool active_);
     
+    // Audio in
+    void setEditAudioInActive(bool active_);
+    
 protected:
+    
+    // Mouse & Key Events ( it´s not better if is centralized on the composer )
+    //
+    void            _mousePressed(ofMouseEventArgs &e);
+    virtual void    _mouseDragged(ofMouseEventArgs &e);
+    void            _mouseReleased(ofMouseEventArgs &e);
+    void            _keyPressed(ofKeyEventArgs &e);
+    void            _reMakeFrame( int &_nId );
     
     ofVideoGrabber  *videoGrabber;
     ofxShaderObj    *shader;
@@ -210,19 +221,14 @@ protected:
     //
     bool midiLearnActive;
     
+    // Audio In
+    bool editAudioInActive;
+    
 private:
     
     void            doSurfaceToScreenMatrix();      // Update the SurfaceToScreen transformation matrix
     void            doScreenToSurfaceMatrix();      // Update the ScreenToSurface transformation matrix
     void            doGaussianElimination(float *input, int n); // This is used making the matrix
-    
-    // Mouse & Key Events ( it´s not better if is centralized on the composer )
-    //
-    void            _mousePressed(ofMouseEventArgs &e);
-    void            _mouseDragged(ofMouseEventArgs &e);
-    void            _mouseReleased(ofMouseEventArgs &e);
-    void            _keyPressed(ofKeyEventArgs &e);
-    void            _reMakeFrame( int &_nId );
     
     virtual ofTexture* getTexture(){};
     
