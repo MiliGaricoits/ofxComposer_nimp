@@ -67,7 +67,9 @@ public:
     bool    arePatchesDeactivated();
 
     // encapsulate
-    void    encapsulate();
+    // returns id of encapsulated Patch
+    // -1 if error
+    int     encapsulate();
     void    uncapsulate(int encapsulatedId);
     int     getSelectedEncapsulated();
     int     getLastPatchEncapsulated(int encapsulatedId);
@@ -77,6 +79,7 @@ public:
     void    restoreOutputEncapsulated(int lastPatchId);
     void    setCameraForWindow(int winId, ofEasyCam cam);
     string  getLastEncapsulatedName(int encapsulatedId);
+    bool    saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulatedId);
 
 protected:
     

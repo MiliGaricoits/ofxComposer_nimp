@@ -750,7 +750,7 @@ int ofxComposer::isAnyPatchHit(float x, float y, float z){
 // ------------------------------------------------- ENCAPSULATE
 // -------------------------------------------------------------
 
-void ofxComposer::encapsulate(){
+int ofxComposer::encapsulate(){
     vector<int> patchesToEncapsulate;
     patchesToEncapsulate.clear();
     int lastPatch = this->validateEncapsulation(patchesToEncapsulate);
@@ -767,8 +767,10 @@ void ofxComposer::encapsulate(){
         }
         setOutputEncapsulated(lastPatch, patchesToEncapsulate);
         deactivateAllPatches();
+        return encapsulatedId;
     } else {
         ConsoleLog::getInstance()->pushMessage("The selection of nodes is invalid");
+        return -1;
     }
 }
 
@@ -782,6 +784,7 @@ void ofxComposer::uncapsulate(int encapsulatedId){
             it->second->setToEncapsulatedId(-1);
         }
     }
+    nodesCount--;
 }
 
 int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
@@ -936,4 +939,61 @@ string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){
         }
     }
     return "";
+}
+
+bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulatedId){
+    bool saved = false;
+    int lastPatch = -1;
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+            lastPatch = it->second->getId();
+        }
+    }
+
+    
+    if(lastPatch < 0){
+        stringstream ss;
+        ss << "Error saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushError(ss.str());
+        ConsoleLog::getInstance()->pushError("It doesn't exist");
+        return false;
+    }
+    
+    int totalEncapsulated = XML.getNumTags("ENCAPSULATED_NODE");
+    for (int i = 0; i <= totalEncapsulated; i++){
+        if ( XML.getAttribute("ENCAPSULATED_NODE", "id", -1, i) == encapsulatedId){
+            XML.setAttribute("ENCAPSULATED_NODE", "id", encapsulatedId, totalEncapsulated);
+            XML.setAttribute("ENCAPSULATED_NODE", "lastEncapsulatedId", lastPatch, totalEncapsulated);
+            XML.pushTag("ENCAPSULATED_NODE");
+            saved = true;
+            break;
+        } else if (i == totalEncapsulated) {
+            // all ENCAPSULATED_NODE tags were already processed and it wasn't found
+            int lastPlace = XML.addTag("ENCAPSULATED_NODE");
+            XML.addAttribute("ENCAPSULATED_NODE", "id", encapsulatedId, totalEncapsulated);
+            XML.addAttribute("ENCAPSULATED_NODE", "lastEncapsulatedId", lastPatch, totalEncapsulated);
+            XML.pushTag("ENCAPSULATED_NODE", lastPlace);
+            saved = true;
+        }
+    }
+
+    if(saved){
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            if(!it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+                XML.setValue("NODE", it->second->getId());
+            }
+        }
+    }
+    XML.popTag();
+    
+    stringstream ss;
+    if(saved){
+        ss << "Error saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushError(ss.str());
+    } else{
+        ss << "Success saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushSuccess(ss.str());
+    }
+    
+    return saved;
 }
