@@ -93,6 +93,7 @@ public:
     bool            drawInspector();
     float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
     float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
+    bool            getIsAudio(){ return isAudio; };
     
     // when dragging nodes
     //
