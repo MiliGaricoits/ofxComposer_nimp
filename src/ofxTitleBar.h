@@ -32,6 +32,7 @@ public:
     void setTitle(string _title){ title = _title; };
     
     void addButton( char letter, bool *variableToControl, ButtonType _type);
+    void removeButton( char letter);
     
     void draw();
     

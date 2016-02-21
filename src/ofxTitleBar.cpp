@@ -35,6 +35,19 @@ void ofxTitleBar::addButton( char letter, bool *variableToControl, ButtonType _t
     buttons.push_back( newButton );
 }
 
+void ofxTitleBar::removeButton( char letter_){
+    
+    int i = 0;
+    
+    while (i < buttons.size()) {
+        if(buttons.at(i).letter == letter_) {
+            buttons.erase(buttons.begin() + i);
+            i = buttons.size();
+        }
+        i++;
+    }
+}
+
 void ofxTitleBar::draw(){
     // Update the information of the position
     //
@@ -81,10 +94,10 @@ void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
         for (int i = 0; i < buttons.size() && !hit; i++){
             if (((mouse_transformed.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
                 ((mouse_transformed.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
-                if ( i == 0){
+                if ( buttons[i].letter == 'x' ){
                     ofNotifyEvent(close, *windowsId);
                     hit = true;
-                } else if ( i == 1){
+                } else if ( buttons[i].letter == 'r' ){
                     ofNotifyEvent(reset, *windowsId);
                     hit = true;
                 } else {
