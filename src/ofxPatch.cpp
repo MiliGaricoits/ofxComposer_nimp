@@ -1813,9 +1813,15 @@ void ofxPatch::setMidiLearnActive(bool active_) {
 // ------------------------------------------ Audio in
 // ---------------------------------------------------
 
-void ofxPatch::setEditAudioInActive(bool active_) {
+void ofxPatch::setEditLeftAudioInActive(bool active_) {
     this->editAudioInActive = active_;
-    panel.setEditAudioInActive(active_);
+    panel.setEditLeftAudioInActive(active_);
+}
+
+//------------------------------------------------------------------
+void ofxPatch::setEditRightAudioInActive(bool active_) {
+    this->editAudioInActive = active_;
+    panel.setEditRightAudioInActive(active_);
 }
 
 /* ================================================ */

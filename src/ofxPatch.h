@@ -94,6 +94,7 @@ public:
     float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
     float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
     bool            getIsAudio(){ return isAudio; };
+    nodeType        getNodeType(){ return nodeType; };
     
     // when dragging nodes
     //
@@ -157,7 +158,8 @@ public:
     void setMidiLearnActive(bool active_);
     
     // Audio in
-    void setEditAudioInActive(bool active_);
+    void setEditLeftAudioInActive(bool active_);
+    void setEditRightAudioInActive(bool active_);
     
 protected:
     
