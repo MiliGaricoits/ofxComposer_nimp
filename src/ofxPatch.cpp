@@ -33,6 +33,7 @@ ofxPatch::ofxPatch(){
     videoGrabber        = NULL;
     
     drawNoInputs        = false;
+    drawAudioAnalizer   = false;
     isAudio             = false;
     
     width               = NODE_WIDTH;
@@ -218,7 +219,7 @@ void ofxPatch::update(){
 void ofxPatch::customDraw(){
     
     if ( (EventHandler::getInstance()->getWindowIdDraw() != windowId) &&
-         (!lastEncapsulated || EventHandler::getInstance()->getWindowIdDraw() != MAIN_WINDOW) ){
+         (!lastEncapsulated || EventHandler::getInstance()->getWindowIdDraw() != MAIN_WINDOW)) {
         return;
     }
     

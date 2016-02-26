@@ -71,6 +71,12 @@ public:
     void            setLinkHit(bool linkHit);
     void            setLinkType(nodeLinkType type);
     void            setDrawInspector(bool draw_);
+    // MIDI learn
+    void            setMidiLearnActive(bool active_);
+    // Audio in
+    void            setEditLeftAudioInActive(bool active_);
+    void            setEditRightAudioInActive(bool active_);
+    void            setDrawAudioAnalizer(bool draw_) { drawAudioAnalizer = draw_; };
     
     
     //** GETTERS **//
@@ -94,7 +100,9 @@ public:
     float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
     float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
     bool            getIsAudio(){ return isAudio; };
+    bool            getDrawAudioAnalizer(){ return drawAudioAnalizer; };
     nodeType        getNodeType(){ return nodeType; };
+    virtual string  getName() {};
     
     // when dragging nodes
     //
@@ -152,14 +160,6 @@ public:
     void            setEncapsulatedId(int encapId);
     void            setLastEncapsulated(bool last);
     void            setToEncapsulatedId(int encapId);
-    virtual string  getName() {};
-    
-    // MIDI learn
-    void setMidiLearnActive(bool active_);
-    
-    // Audio in
-    void setEditLeftAudioInActive(bool active_);
-    void setEditRightAudioInActive(bool active_);
     
 protected:
     
@@ -178,6 +178,7 @@ protected:
     ofImage         noInputs;
     
     bool            drawNoInputs;
+    bool            drawAudioAnalizer;
     bool            isAudio;
     
     // Mask variables
