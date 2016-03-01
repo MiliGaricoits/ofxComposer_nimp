@@ -228,6 +228,12 @@ protected:
     // Audio In
     bool editAudioInActive;
     
+    
+    // multiple Window - encapsulated
+    int             windowId;
+    bool            lastEncapsulated;
+    int             encapsulatedId;
+    
 private:
     
     void            doSurfaceToScreenMatrix();      // Update the SurfaceToScreen transformation matrix
@@ -248,11 +254,6 @@ private:
     int             selectedLink;
     nodeLinkType    linkType;
     bool            linkHit;
-    
-    // multiple Window - encapsulated
-    int             windowId;
-    bool            lastEncapsulated;
-    int             encapsulatedId;
     
 };
 

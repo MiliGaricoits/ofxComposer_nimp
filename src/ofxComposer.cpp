@@ -802,7 +802,7 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
             patchesToEncapsulate.push_back(it->second->getId());
         }
     }
-    
+
     if(patchesToEncapsulate.size() > 1){
         // validate that every output is goint to an encapsulated node, except one
         for(vector<int>::iterator it = patchesToEncapsulate.begin(); it != patchesToEncapsulate.end(); it++ ){
@@ -822,8 +822,16 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
                     it3++;
                 }
                 if(!found){
-                    patchId = *it;
-                    validOutput++;
+                    if(validOutput == 0){
+                        patchId = *it;
+                        validOutput++;
+                    } else {
+                        if(patchId != *it) {
+                            validOutput++;
+                            break;
+                        }
+                    }
+                    
                 }
             }
             if(validOutput > 1) {
