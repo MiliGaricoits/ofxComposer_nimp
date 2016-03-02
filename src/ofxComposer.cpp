@@ -995,7 +995,7 @@ bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulated
     XML.popTag();
     
     stringstream ss;
-    if(saved){
+    if(!saved){
         ss << "Error saving encapsulatedId " << encapsulatedId;
         ConsoleLog::getInstance()->pushError(ss.str());
     } else{

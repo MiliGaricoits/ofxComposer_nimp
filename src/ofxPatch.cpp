@@ -113,6 +113,7 @@ ofxPatch::~ofxPatch(){
     ofRemoveListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     
     delete title;
+    title = NULL;
 }
 
 /* ================================================ */
