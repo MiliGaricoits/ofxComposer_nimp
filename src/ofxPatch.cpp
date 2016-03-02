@@ -1476,7 +1476,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         
         // Position of the texture coorners
         //
-        if (XML.pushTag("texture")){
+        saved = XML.pushTag("texture");
+        if (saved){
             for(int i = 0; i < 4; i++){
                 XML.setValue("point:x",textureCorners[i].x, i);
                 XML.setValue("point:y",textureCorners[i].y, i);
@@ -1486,7 +1487,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         
         // Mask path
         //
-        if (XML.pushTag("mask")){
+        saved = XML.pushTag("mask");
+        if (saved){
             int totalSavedPoints = XML.getNumTags("point");
             
             for(int j = 0; j < maskCorners.size(); j++){
@@ -1512,7 +1514,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         
         // Save out linked dots
         //
-        if(XML.pushTag("out")){
+        saved = XML.pushTag("out");
+        if(saved){
             int totalSavedLinks = XML.getNumTags("dot");
             
             for(int j = 0; j < outPut.size(); j++){
@@ -1553,10 +1556,6 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
             }
             XML.popTag(); // pop "out"
         }
-        
-        // Once it finish save
-        //
-        saved = XML.saveFile();
     }
 
     // If it was the last node in the XML and it wasn't me..
@@ -1590,7 +1589,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         // Texture Corners
         //
         XML.addTag("texture");
-        if (XML.pushTag("texture")){
+        saved = XML.pushTag("texture");
+        if (saved){
             for(int i = 0; i < 4; i++){
                 
                 XML.addTag("point");
@@ -1604,7 +1604,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         // Mask Path
         //
         XML.addTag("mask");
-        if (XML.pushTag("mask")){
+        saved = XML.pushTag("mask");
+        if (saved){
             for(int i = 0; i < 4; i++){
                 XML.addTag("point");
                 
@@ -1618,7 +1619,8 @@ bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
         //
         XML.addTag("out");
         XML.setValue("out:active",1);
-        if(XML.pushTag("out")){
+        saved = XML.pushTag("out");
+        if(saved){
             int totalSavedLinks = XML.getNumTags("dot");
             
             for(int j = 0; j < outPut.size(); j++){
