@@ -889,6 +889,8 @@ void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
             }else{
                 it->second->setWindowId(-1);
             }
+        } else if(it->second->getWindowId() > previousWin){
+            it->second->setWindowId(it->second->getWindowId() - 1);
         }
     }
 }
