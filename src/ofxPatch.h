@@ -77,6 +77,8 @@ public:
     void            setEditLeftAudioInActive(bool active_);
     void            setEditRightAudioInActive(bool active_);
     void            setDrawAudioAnalizer(bool draw_) { drawAudioAnalizer = draw_; };
+    // OSC
+    void            setEditOSCActive(bool active_);
     
     
     //** GETTERS **//
@@ -100,6 +102,7 @@ public:
     float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
     float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
     bool            getIsAudio(){ return isAudio; };
+    bool            getIsOSCReceiver(){ return isOSC; };
     bool            getDrawAudioAnalizer(){ return drawAudioAnalizer; };
     nodeType        getNodeType(){ return nodeType; };
     virtual string  getName() {};
@@ -175,11 +178,12 @@ protected:
     ofxShaderObj    *shader;
     ofTexture       tex;
     ofFbo           fbo;
-    ofImage         noInputs;
+    ofImage         noInputsImg;
     
     bool            drawNoInputs;
     bool            drawAudioAnalizer;
     bool            isAudio;
+    bool            isOSC;
     
     // Mask variables
     //
@@ -227,6 +231,9 @@ protected:
     
     // Audio In
     bool editAudioInActive;
+    
+    // OSC
+    bool editOSCActive;
     
     
     // multiple Window - encapsulated

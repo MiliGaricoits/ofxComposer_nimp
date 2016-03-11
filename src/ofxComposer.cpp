@@ -82,6 +82,10 @@ ofxComposer::ofxComposer(){
     // Audio In
     //
     editAudioInActive = false;
+    
+    // OSC
+    //
+    editOSCActive = false;
 }
 
 /* ================================================ */

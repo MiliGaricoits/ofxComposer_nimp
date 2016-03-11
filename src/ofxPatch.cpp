@@ -35,6 +35,7 @@ ofxPatch::ofxPatch(){
     drawNoInputs        = false;
     drawAudioAnalizer   = false;
     isAudio             = false;
+    isOSC               = false;
     
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
@@ -82,7 +83,7 @@ ofxPatch::ofxPatch(){
     ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     
-    noInputs.loadImage("assets/no_inputs.png");
+    noInputsImg.loadImage("assets/no_inputs.png");
     
     // multiple Window - Encapsulated
     windowId = MAIN_WINDOW;
@@ -320,9 +321,9 @@ void ofxPatch::customDraw(){
             }
         }
 
-        // Draw the input linking dots (if i'm not audio)
+        // Draw the input linking dots (if i'm not audio or OSC receiver)
         //
-        if (!isAudio) {
+        if (!isAudio && !isOSC) {
             for(int i = 0; i < inPut.size(); i++){
                 ofSetColor(255, 150);
                 ofNoFill();
@@ -1827,6 +1828,16 @@ void ofxPatch::setEditRightAudioInActive(bool active_) {
     this->editAudioInActive = active_;
     panel.setEditRightAudioInActive(active_);
 }
+
+// ---------------------------------------------------
+// ----------------------------------------------- OSC
+// ---------------------------------------------------
+
+void ofxPatch::setEditOSCActive(bool active_) {
+    this->editOSCActive = active_;
+    panel.setEditOSCActive(active_);
+}
+
 
 /* ================================================ */
 /* ================================================ */
