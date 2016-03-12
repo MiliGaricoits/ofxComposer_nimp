@@ -74,11 +74,11 @@ public:
     // MIDI learn
     void            setMidiLearnActive(bool active_);
     // Audio in
-    void            setEditLeftAudioInActive(bool active_);
-    void            setEditRightAudioInActive(bool active_);
+    void            setEditLeftAudioInActive(bool active_, int band_);
+    void            setEditRightAudioInActive(bool active_, int band_);
     void            setDrawAudioAnalizer(bool draw_) { drawAudioAnalizer = draw_; };
     // OSC
-    void            setEditOSCActive(bool active_);
+    void            setEditOSCActive(bool active_, int node_);
     
     
     //** GETTERS **//
