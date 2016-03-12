@@ -18,6 +18,7 @@
 #include "ofxPingPong.h"
 #include "enumerations.h"
 #include "ofxPanel.h"
+#include "ConsoleLog.h"
 
 struct LinkDot{
     LinkDot(){
@@ -261,6 +262,10 @@ private:
     int             selectedLink;
     nodeLinkType    linkType;
     bool            linkHit;
+    
+    float           minArea, maxArea;
+    bool            canScalePatch(ofVec3f mouse);
+    bool            canPushMinMaxSizeMessage;
     
 };
 
