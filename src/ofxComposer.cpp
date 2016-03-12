@@ -803,9 +803,15 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
                 patchesToEncapsulate.clear();
                 return -1;
             }
-            patchesToEncapsulate.push_back(it->second->getId());
+            
+            if(it->second->getIsAudio()){
+                ConsoleLog::getInstance()->pushWarning("An audio node was selected. It can't be encapsulated.");
+            }else{
+                patchesToEncapsulate.push_back(it->second->getId());
+            }
         }
     }
+    
 
     if(patchesToEncapsulate.size() > 1){
         // validate that every output is goint to an encapsulated node, except one
