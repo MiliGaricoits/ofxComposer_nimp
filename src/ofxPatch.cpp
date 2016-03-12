@@ -89,6 +89,10 @@ ofxPatch::ofxPatch(){
     windowId = MAIN_WINDOW;
     lastEncapsulated = false;
     encapsulatedId = -1;
+    
+    minArea = 5000.f;
+    maxArea = 100000.f;
+    canPushMinMaxSizeMessage = true;
 };
 
 ofxPatch::~ofxPatch(){
@@ -633,8 +637,15 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                     
                     float dif = actualDist/prevDist;
                     
-                    move( textureCorners[opositCorner] + toOpositCorner * dif );
-                    scale(dif);
+                    if(canScalePatch(mouse)){
+                        move( textureCorners[opositCorner] + toOpositCorner * dif );
+                        scale(dif);
+                    } else {
+                        if(canPushMinMaxSizeMessage){
+                            ConsoleLog::getInstance()->pushWarning("Minimum or maximum node size reached");
+                            canPushMinMaxSizeMessage = false;
+                        }
+                    }
                 }
                 
                 // Drag all the surface
@@ -708,6 +719,8 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
             selectedMaskCorner = -1;
         }
     }
+    
+    canPushMinMaxSizeMessage = true;
 }
 
 //------------------------------------------------------------------
@@ -1804,6 +1817,55 @@ void ofxPatch::setToEncapsulatedId(int patchId){
         outPut[i].toEncapsulatedId = patchId;
     }
 }
+
+
+
+// ---------------------------------------------------
+// -------------------------------------- Validate MIN MAX Patch size
+// ---------------------------------------------------
+
+bool ofxPatch::canScalePatch(ofVec3f mouse){
+    float area = textureCorners.getArea();
+    
+    if(area < maxArea && area > minArea){
+        return true;
+    }
+    
+    if(area < minArea){
+        switch(selectedTextureCorner){
+            case 0:
+                return mouse.x < textureCorners[0].x && mouse.y < textureCorners[0].y;
+                break;
+            case 1:
+                return mouse.x > textureCorners[0].x && mouse.y < textureCorners[0].y;
+                break;
+            case 2:
+                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
+                break;
+            case 3:
+                return mouse.x < textureCorners[0].x && mouse.y > textureCorners[0].y;
+                break;
+        }
+    }
+    if(area < maxArea){
+        switch(selectedTextureCorner){
+            case 0:
+                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
+                break;
+            case 1:
+                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
+                break;
+            case 2:
+                return mouse.x < textureCorners[0].x && mouse.y < textureCorners[0].y;
+                break;
+            case 3:
+                return mouse.x > textureCorners[0].x && mouse.y < textureCorners[0].y;
+                break;
+        }
+    }
+}
+
+
 
 // ---------------------------------------------------
 // ---------------------------------------- MIDI Learn

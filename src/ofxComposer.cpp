@@ -10,6 +10,7 @@
 #include "ImageOutput.h"
 #include "ConsoleLog.h"
 #include "EventHandler.h"
+#include "AudioAnalizer.h"
 
 //  HELP screen -> F1
 //
@@ -803,9 +804,21 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
                 patchesToEncapsulate.clear();
                 return -1;
             }
-            patchesToEncapsulate.push_back(it->second->getId());
+            
+            if(it->second->getIsAudio()){
+                if(dynamic_cast<AudioAnalizer*>(it->second) != NULL){
+                    if(it->second->getDrawAudioAnalizer()){
+                        ConsoleLog::getInstance()->pushWarning("An audio node was selected. It can't be encapsulated.");
+                    }
+                } else {
+                    ConsoleLog::getInstance()->pushWarning("An audio node was selected. It can't be encapsulated.");
+                }
+            }else{
+                patchesToEncapsulate.push_back(it->second->getId());
+            }
         }
     }
+    
 
     if(patchesToEncapsulate.size() > 1){
         // validate that every output is goint to an encapsulated node, except one
