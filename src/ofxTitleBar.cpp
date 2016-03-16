@@ -48,13 +48,15 @@ void ofxTitleBar::removeButton( char letter_){
     }
 }
 
-void ofxTitleBar::draw(){
+void ofxTitleBar::customDraw(float x_, float y_, float z_,  ofVec3f camPos_){
+    
     // Update the information of the position
     //
-    tittleBox.width = windowsBox->width;
+    tittleBox.width = windowsBox->width/z_;
     tittleBox.height = height;
-    tittleBox.x = windowsBox->x;
-    tittleBox.y = windowsBox->y - height;
+//    tittleBox.x = windowsBox->x;
+//    tittleBox.y = windowsBox->y - height;
+    tittleBox.setPosition(ofVec3f(windowsBox->x/x_, (windowsBox->y - height*z_)/y_, camPos_.z/z_));
     
     ofPushStyle();
     
@@ -67,8 +69,10 @@ void ofxTitleBar::draw(){
     // Draw the tittle
     //
     ofFill();
-    ofSetColor(230);
-    ofDrawBitmapString(title, tittleBox.x + tittleBox.width - title.size() * 8, tittleBox.y + letterHeight);
+    ofSetColor(100);
+    (tittleBox.width - title.size() * 8) > 57
+        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - title.size() * 8, tittleBox.y + letterHeight)
+        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - 24, tittleBox.y + letterHeight);
     
     // Draw the bottoms
     //

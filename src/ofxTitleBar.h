@@ -34,7 +34,7 @@ public:
     void addButton( char letter, bool *variableToControl, ButtonType _type);
     void removeButton( char letter);
     
-    void draw();
+    void customDraw(float x, float y, float z, ofVec3f camPos);
     
     ofEvent<int> close;
     ofEvent<int> reset;

@@ -183,6 +183,7 @@ protected:
     
     bool            drawNoInputs;
     bool            drawAudioAnalizer;
+    bool            isAudioAnalizer;
     bool            isAudio;
     bool            isOSC;
     
