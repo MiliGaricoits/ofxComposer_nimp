@@ -76,7 +76,7 @@ ofxPatch::ofxPatch(){
     title->addButton('m', &bEditMask, TOGGLE_BUTTON);
     title->addButton('v', &bVisible, TOGGLE_BUTTON);
     title->addButton('i', &bInspector, TOGGLE_BUTTON);
-    title->setParent(*this);
+    title->setParent(*this->getParent());
     ofAddListener( title->reset , this, &ofxPatch::_reMakeFrame);
     
     ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
@@ -410,7 +410,7 @@ void ofxPatch::drawInspectorGUI() {
     // Draw de title
     //
     if (bEditMode && title != NULL && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)))
-        title->customDraw(scale.x, scale.y, scale.z, cam_pos);
+        title->customDraw();
 }
 
 /* ================================================ */

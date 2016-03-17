@@ -48,15 +48,18 @@ void ofxTitleBar::removeButton( char letter_){
     }
 }
 
-void ofxTitleBar::customDraw(float x_, float y_, float z_,  ofVec3f camPos_){
+void ofxTitleBar::customDraw(){
+    
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
     // Update the information of the position
     //
-    tittleBox.width = windowsBox->width/z_;
+    tittleBox.width = windowsBox->width/scale.z;
     tittleBox.height = height;
 //    tittleBox.x = windowsBox->x;
 //    tittleBox.y = windowsBox->y - height;
-    tittleBox.setPosition(ofVec3f(windowsBox->x/x_, (windowsBox->y - height*z_)/y_, camPos_.z/z_));
+    tittleBox.setPosition(ofVec3f(windowsBox->x/scale.x, (windowsBox->y - height*scale.z)/scale.y, cam_pos.z/scale.z));
     
     ofPushStyle();
     
@@ -93,11 +96,11 @@ void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
     ofPoint mouse = ofPoint(e.x, e.y);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
     
-    if ( tittleBox.inside(mouse_transformed)){
+    if ( tittleBox.inside(mouse)){
         bool hit = false;
         for (int i = 0; i < buttons.size() && !hit; i++){
-            if (((mouse_transformed.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
-                ((mouse_transformed.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
+            if (((mouse.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
+                ((mouse.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
                 if ( buttons[i].letter == 'x' ){
                     ofNotifyEvent(close, *windowsId);
                     hit = true;
