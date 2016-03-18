@@ -59,7 +59,7 @@ void ofxTitleBar::customDraw(){
     tittleBox.height = height;
 //    tittleBox.x = windowsBox->x;
 //    tittleBox.y = windowsBox->y - height;
-    tittleBox.setPosition(ofVec3f(windowsBox->x/scale.x, (windowsBox->y - height*scale.z)/scale.y, cam_pos.z/scale.z));
+    tittleBox.setPosition(ofVec3f((windowsBox->x - cam_pos.x)/scale.x, (windowsBox->y - height*scale.z - cam_pos.y)/scale.y, cam_pos.z/scale.z));
     
     ofPushStyle();
     
