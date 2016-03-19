@@ -643,10 +643,10 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                     float actualDist = mouse.distance( textureCorners[opositCorner] );
                     
                     float dif = actualDist/prevDist;
-                    
-                    if(canScalePatch(mouse)){
-                        move( textureCorners[opositCorner] + toOpositCorner * dif );
-                        scale(dif);
+                    float patchScale = getPatchScale(mouse, mouseLast, dif);
+                    if(patchScale > 0){
+                        move( textureCorners[opositCorner] + toOpositCorner * patchScale );
+                        scale(patchScale);
                     } else {
                         if(canPushMinMaxSizeMessage){
                             ConsoleLog::getInstance()->pushWarning("Minimum or maximum node size reached");
@@ -1826,52 +1826,89 @@ void ofxPatch::setToEncapsulatedId(int patchId){
 }
 
 
-
 // ---------------------------------------------------
 // -------------------------------------- Validate MIN MAX Patch size
 // ---------------------------------------------------
 
-bool ofxPatch::canScalePatch(ofVec3f mouse){
+float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
+    // get patch area
     float area = textureCorners.getArea();
     
-    if(area < maxArea && area > minArea){
-        return true;
+    // set if making patch bigger or smaller
+    bool bigger = makingPatchBigger(mouse, mousePrev);
+    bool smaller = makingPatchSmaller(mouse, mousePrev);
+    float scale = 1.f;
+    
+    bool canScale = false;
+    
+    // return -1 if min/max size reached
+    if((area < minArea && smaller) || (area > maxArea && bigger)){
+        return -1.f;
     }
     
-    if(area < minArea){
-        switch(selectedTextureCorner){
-            case 0:
-                return mouse.x < textureCorners[0].x && mouse.y < textureCorners[0].y;
-                break;
-            case 1:
-                return mouse.x > textureCorners[0].x && mouse.y < textureCorners[0].y;
-                break;
-            case 2:
-                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
-                break;
-            case 3:
-                return mouse.x < textureCorners[0].x && mouse.y > textureCorners[0].y;
-                break;
+    // determine if can be scaled
+    if(area < maxArea && area > minArea){
+        canScale = bigger || smaller;
+    } else if(area < minArea){
+        canScale = bigger;
+    } else if(area > maxArea){
+        canScale = smaller;
+    }
+    
+    // set patch scale
+    if(canScale) {
+        if(ABS(1 - dif) > MAX_SCALE_STEP){
+            if(bigger){
+                scale = 1 + MAX_SCALE_STEP;
+            } else {
+                scale = 1 - MAX_SCALE_STEP;
+            }
+        } else {
+            scale = dif;
         }
     }
-    if(area < maxArea){
-        switch(selectedTextureCorner){
-            case 0:
-                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
-                break;
-            case 1:
-                return mouse.x > textureCorners[0].x && mouse.y > textureCorners[0].y;
-                break;
-            case 2:
-                return mouse.x < textureCorners[0].x && mouse.y < textureCorners[0].y;
-                break;
-            case 3:
-                return mouse.x > textureCorners[0].x && mouse.y < textureCorners[0].y;
-                break;
-        }
+    
+    return scale;
+    
+}
+
+bool ofxPatch::makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev){
+    switch(selectedTextureCorner){
+        case 0:
+            return mouse.x < mousePrev.x && mouse.y < mousePrev.y;
+            break;
+        case 1:
+            return mouse.x > mousePrev.x && mouse.y < mousePrev.y;
+            break;
+        case 2:
+            return mouse.x > mousePrev.x && mouse.y > mousePrev.y;
+            break;
+        case 3:
+            return mouse.x < mousePrev.x && mouse.y > mousePrev.y;
+            break;
+        default:
+            return false;
     }
 }
 
+bool ofxPatch::makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev){
+    switch(selectedTextureCorner){
+        case 0:
+            return mouse.x > mousePrev.x && mouse.y > mousePrev.y;
+            break;
+        case 1:
+            return mouse.x < mousePrev.x && mouse.y > mousePrev.y;
+            break;
+        case 2:
+            return mouse.x < mousePrev.x && mouse.y < mousePrev.y;
+            break;
+        case 3:
+            return mouse.x > mousePrev.x && mouse.y < mousePrev.y;
+            break;
+        default:
+            return false;
+    }
+}
 
 
 // ---------------------------------------------------

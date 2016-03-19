@@ -265,7 +265,10 @@ private:
     bool            linkHit;
     
     float           minArea, maxArea;
-    bool            canScalePatch(ofVec3f mouse);
+    // return -1 if max/min size reached
+    float           getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif);
+    bool            makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev);
+    bool            makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev);
     bool            canPushMinMaxSizeMessage;
     
 };
