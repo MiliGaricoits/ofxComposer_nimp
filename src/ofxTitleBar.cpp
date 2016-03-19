@@ -53,13 +53,12 @@ void ofxTitleBar::customDraw(){
     ofPushMatrix();
     
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
     // Update the information of the position
     //
     tittleBox.width = windowsBox->width;
     tittleBox.height = height*scale.z;
-    tittleBox.setPosition(ofVec3f((windowsBox->x - cam_pos.x), (windowsBox->y - tittleBox.height - cam_pos.y), cam_pos.z));
+    tittleBox.setPosition(ofVec3f((windowsBox->x), (windowsBox->y - tittleBox.height), 0));
     
     ofPushStyle();
     
