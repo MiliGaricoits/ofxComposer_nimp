@@ -30,6 +30,7 @@ public:
     ~ofxTitleBar();
     
     void setTitle(string _title){ title = _title; };
+    ofRectangle getTittleBox() { return tittleBox; };
     
     void addButton( char letter, bool *variableToControl, ButtonType _type);
     void removeButton( char letter);

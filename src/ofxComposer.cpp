@@ -240,15 +240,18 @@ void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::_mousePressed(ofMouseEventArgs &e){
+bool ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    int idPatchHit = -1;
+    bool result = false;
+    ofxPatch* activePatch;
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
     if(!draggingGrip && !draggingHGrip) {
         
-        int idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
+        idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
         
         // zoom & drag
         //
@@ -259,8 +262,10 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
         } else if (idPatchHit != -1){
             disabledPatches = false;
             //for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-                if(!patches.find(idPatchHit)->second->bActive){
-                    activePatch(idPatchHit);
+            activePatch = patches.find(idPatchHit)->second;
+            result = !activePatch->title->getTittleBox().inside(mouse);
+                if(!activePatch->bActive){
+                    this->activePatch(idPatchHit);
                     isAnyPatchSelected = true;
                     //break;
                 } else if(holdingCommand){
@@ -297,6 +302,8 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             multipleSelectRectangle.y = mouse.y;
         }
     }
+    activePatch = NULL;
+    return result;
 }
 
 //------------------------------------------------------------------

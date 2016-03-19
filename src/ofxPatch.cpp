@@ -248,10 +248,10 @@ void ofxPatch::customDraw(){
         
         ofPushStyle();
         
-        // Draw de title
+        // Draw de title && inspector
         //
-//        if (title != NULL)
-//            title->draw();
+        if (title != NULL)
+            title->customDraw();
         
         if ( !bEditMask ){
             ofFill();
@@ -400,6 +400,7 @@ void ofxPatch::drawInspectorGUI() {
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
     ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
+    
     // Draw the inspector
     //
     if (bInspector) {
@@ -407,10 +408,11 @@ void ofxPatch::drawInspectorGUI() {
         panel.draw();
     }
     
+    
     // Draw de title
     //
-    if (bEditMode && title != NULL && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)))
-        title->customDraw();
+//    if (bEditMode && title != NULL && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)))
+//        title->customDraw();
 }
 
 /* ================================================ */
@@ -1088,7 +1090,8 @@ void ofxPatch::rotate(float _rotAngle){
 //------------------------------------------------------------------
 bool ofxPatch::isOver(ofPoint _pos){
     ofRectangle biggerBox = textureCorners.getBoundingBox();
-    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+20);
+    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+10, biggerBox.height+20);
+    biggerBox.setPosition(biggerBox.x, biggerBox.y-10);
     
     return biggerBox.inside(_pos);
 };

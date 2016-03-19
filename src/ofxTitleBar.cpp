@@ -50,16 +50,16 @@ void ofxTitleBar::removeButton( char letter_){
 
 void ofxTitleBar::customDraw(){
     
+    ofPushMatrix();
+    
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
     ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
     // Update the information of the position
     //
-    tittleBox.width = windowsBox->width/scale.z;
-    tittleBox.height = height;
-//    tittleBox.x = windowsBox->x;
-//    tittleBox.y = windowsBox->y - height;
-    tittleBox.setPosition(ofVec3f((windowsBox->x - cam_pos.x)/scale.x, (windowsBox->y - height*scale.z - cam_pos.y)/scale.y, cam_pos.z/scale.z));
+    tittleBox.width = windowsBox->width;
+    tittleBox.height = height*scale.z;
+    tittleBox.setPosition(ofVec3f((windowsBox->x - cam_pos.x), (windowsBox->y - tittleBox.height - cam_pos.y), cam_pos.z));
     
     ofPushStyle();
     
@@ -73,9 +73,9 @@ void ofxTitleBar::customDraw(){
     //
     ofFill();
     ofSetColor(100);
-    (tittleBox.width - title.size() * 8) > 57
-        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - title.size() * 8, tittleBox.y + letterHeight)
-        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - 24, tittleBox.y + letterHeight);
+    (tittleBox.width - title.size() * (8*scale.z)) > (57*scale.z)
+        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - (title.size() * 8 * scale.z), tittleBox.y + (letterHeight*scale.z))
+        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - (24*scale.z), tittleBox.y + (letterHeight*scale.z));
     
     // Draw the bottoms
     //
@@ -87,20 +87,23 @@ void ofxTitleBar::customDraw(){
                 ofSetColor(255);
         }
         
-        ofDrawBitmapString( ofToString(buttons[i].letter) , tittleBox.x + offSetWidth + i*letterWidth, tittleBox.y + letterHeight);
+        ofDrawBitmapString( ofToString(buttons[i].letter) , tittleBox.x + (offSetWidth*scale.z) + (i*letterWidth*scale.z), tittleBox.y + (letterHeight*scale.z));
     }
+
     ofPopStyle();
+    ofPopMatrix();
 }
 
 void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
     ofPoint mouse = ofPoint(e.x, e.y);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
     
-    if ( tittleBox.inside(mouse)){
+    if ( tittleBox.inside(mouse_transformed)){
         bool hit = false;
         for (int i = 0; i < buttons.size() && !hit; i++){
-            if (((mouse.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
-                ((mouse.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
+            if (((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) > i * letterWidth * scale.z ) &&
+                ((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) < (i+1) * letterWidth * scale.z ) ){
                 if ( buttons[i].letter == 'x' ){
                     ofNotifyEvent(close, *windowsId);
                     hit = true;
