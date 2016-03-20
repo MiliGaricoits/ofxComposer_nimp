@@ -57,6 +57,7 @@ public:
     //** EVENTS **//
     //
     //void            guiEvent(ofxUIEventArgs &e);
+    ofEvent<int>    deletePatchConections;
     
     
     //** SETTERS **//
@@ -174,6 +175,7 @@ protected:
     virtual void    _mouseDragged(ofMouseEventArgs &e);
     void            _mouseReleased(ofMouseEventArgs &e);
     void            _keyPressed(ofKeyEventArgs &e);
+    void            _keyReleased(ofKeyEventArgs &e);
     void            _reMakeFrame( int &_nId );
     
     ofVideoGrabber  *videoGrabber;
@@ -221,6 +223,9 @@ protected:
     GLfloat         glMatrix[16];
     
     nodeType        nodeType;
+    
+    bool            ctrl_active;
+    bool            alt_active;
     
     // Inspector
     //

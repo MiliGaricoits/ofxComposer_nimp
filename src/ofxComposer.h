@@ -55,6 +55,7 @@ public:
     void    movePatches(ofVec3f diff);
     void    scalePatches(float yDiff);
     void    updateConnectionsSize(ofxPatch* patch);
+    void    deletePatchConections(int &patch_id);
     
     // scroll
     //

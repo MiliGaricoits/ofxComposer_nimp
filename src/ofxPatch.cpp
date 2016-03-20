@@ -7,7 +7,6 @@
 //
 
 #include "ofxPatch.h"
-#include <GLUT/glut.h>
 #include "EventHandler.h"
 
 ofxPatch::ofxPatch(){
@@ -54,6 +53,9 @@ ofxPatch::ofxPatch(){
     
     bInspector          = false;
     
+    ctrl_active         = false;
+    alt_active          = false;
+    
     midiLearnActive     = false;
     editAudioInActive   = false;
     
@@ -83,6 +85,7 @@ ofxPatch::ofxPatch(){
     ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().keyReleased, this, &ofxPatch::_keyReleased, PATCH_EVENT_PRIORITY);
     
     noInputsImg.loadImage("assets/no_inputs.png");
     
@@ -518,28 +521,32 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
         }
     }
     // Is mouse pressing over link dot ?
-    if (bEditMode and linkType == PATH_LINKS){
+    if (bEditMode && (linkType == PATH_LINKS || alt_active)){
         
         bool overDot = false;
         for (int i = 0; i < outPut.size() and !overDot; i++){
             
-            if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) ||
-                ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10 )) {
-                overDot = true;
-            }
-            
-            for (int j = 0; j < outPut[i].link_vertices.size(); j++){
-                
-                if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
-                    if ((e.button == 2) || (glutGetModifiers() == GLUT_ACTIVE_CTRL)) {
-                        outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
-                    }
-                    else {
-                        selectedLinkVertex = j;
-                        selectedLink = i;
-                    }
+            if (linkType == PATH_LINKS) {
+                if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) ||
+                    ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10 )) {
                     overDot = true;
-                    setLinkHit(true);
+                }
+                
+                for (int j = 0; j < outPut[i].link_vertices.size(); j++){
+                    
+                    if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
+                        if ((e.button == 2) || ctrl_active) {
+                            //delete link dot
+                            outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
+                        }
+                        else {
+                            //select link dot
+                            selectedLinkVertex = j;
+                            selectedLink = i;
+                        }
+                        overDot = true;
+                        setLinkHit(true);
+                    }
                 }
             }
             
@@ -548,7 +555,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
                 
                 if (link_vertices.size()){
                     int addNew = -1;
-                    int tolerance = 3;
+                    int tolerance = 4;
                     
                     for (int j = 0; j < link_vertices.size()-1; j++){
                         int next = (j+1)%link_vertices.size();
@@ -567,12 +574,19 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
                             
                             // Checking if (x, y) is on the line passing through the end points.
                             if(std::fabs (mouse.y - (M * mouse.x + C)) <= tolerance) {
-                                addNew = j;
+                                
+                                if (alt_active) {
+                                    ofNotifyEvent(deletePatchConections, nId);
+                                    break;
+                                }
+                                else {
+                                    addNew = j;
+                                }
                             }
                         }
                     }
                     
-                    if (addNew >= 0) {
+                    if ((addNew >= 0) && (linkType == PATH_LINKS)) {
                         
                         setLinkHit(true);
                         overDot = true;
@@ -724,8 +738,8 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
     }
     
     // mouse is not longer pressing the inspector or link
-    selectedLinkVertex = -1;
-    selectedLink     = -1;
+    selectedLinkVertex  = -1;
+    selectedLink        = -1;
     setLinkHit(false);
     
     ofVec3f mouse = ofVec3f(e.x, e.y,0);
@@ -749,7 +763,13 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
         return;
     }
     
-    if (e.key == OF_KEY_F2){
+    if (e.key == OF_KEY_RIGHT_ALT || e.key == OF_KEY_LEFT_ALT) {
+        alt_active = true;
+    }
+    else if (e.key == OF_KEY_RIGHT_CONTROL || e.key == OF_KEY_LEFT_CONTROL) {
+        ctrl_active = true;
+    }
+    else if (e.key == OF_KEY_F2){
         bEditMode = !bEditMode;
     } else if (e.key == OF_KEY_F3){
         if ( bActive ){
@@ -804,6 +824,13 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
             bMasking = false;
         }
     }
+}
+
+//------------------------------------------------------------------
+void ofxPatch::_keyReleased(ofKeyEventArgs &e){
+    
+    ctrl_active = false;
+    alt_active  = false;
 }
 
 //------------------------------------------------------------------

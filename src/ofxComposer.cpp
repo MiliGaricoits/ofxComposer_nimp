@@ -414,16 +414,16 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         // If he release the mouse over nothing it will clear all
         // the connections of that dot.
         //
-        if (selectedDot != -1){
-            
-            for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
-                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getId());
-                this->updateConnectionsSize(patches[patches[selectedDot]->outPut[i].toId]);
-            }
-            patches[selectedDot]->outPut.clear();
-            selectedDot = -1;
-            
-        }
+//        if (selectedDot != -1){
+//            
+//            for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
+//                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getId());
+//                this->updateConnectionsSize(patches[patches[selectedDot]->outPut[i].toId]);
+//            }
+//            patches[selectedDot]->outPut.clear();
+//            selectedDot = -1;
+//            
+//        }
     }
     
     // aligned nodes
@@ -617,9 +617,10 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
         p->move( _position );
         p->setLinkType(nodeLinkType);
     }
-    patches[p->getId()] = p;
-    
     p->setParent(*this->getParent());
+    ofAddListener(p->deletePatchConections , this, &ofxComposer::deletePatchConections);
+    
+    patches[p->getId()] = p;
 }
 
 //------------------------------------------------------------------
@@ -672,12 +673,23 @@ bool ofxComposer::connect( int _fromID, int _toID, int nTexture, bool addInput_)
     return connected;
 }
 
+//------------------------------------------------------------------
 void ofxComposer::updateConnectionsSize(ofxPatch* patch){
     
     for(int j = 0; j < patch->outPut.size(); j++){
         patches[ patch->outPut[j].toId ]->resetSizeBasedOnInput(patch);
         updateConnectionsSize(patches[ patch->outPut[j].toId ]);
     }
+}
+
+//------------------------------------------------------------------
+void ofxComposer::deletePatchConections(int &patch_id){
+
+    for(int i = 0; i < patches[patch_id]->outPut.size(); i++) {
+        patches[patches[patch_id]->outPut[i].toId]->removeInput(((ImageOutput*)patches[patch_id])->getId());
+        this->updateConnectionsSize(patches[patches[patch_id]->outPut[i].toId]);
+    }
+    patches[patch_id]->outPut.clear();
 }
 
 // -----------------------------------------------------------
