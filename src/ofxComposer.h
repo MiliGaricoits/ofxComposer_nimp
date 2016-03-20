@@ -94,7 +94,7 @@ private:
     
     //** EVENTS **//
     //
-    bool    _mousePressed(ofMouseEventArgs &e);
+    void    _mousePressed(ofMouseEventArgs &e);
     void    _mouseMoved(ofMouseEventArgs &e);
     void    _keyPressed(ofKeyEventArgs &e);
     void    _keyReleased(ofKeyEventArgs &e);

@@ -43,7 +43,7 @@ public:
     
 private:
     void _mouseReleased(ofMouseEventArgs &e);
-    void _mousePressed(ofMouseEventArgs &e);
+    bool _mousePressed(ofMouseEventArgs &e);
     
     ofRectangle    tittleBox;
     ofRectangle    *windowsBox;

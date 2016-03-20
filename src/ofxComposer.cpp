@@ -240,11 +240,11 @@ void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
 }
 
 //------------------------------------------------------------------
-bool ofxComposer::_mousePressed(ofMouseEventArgs &e){
+void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     int idPatchHit = -1;
-    bool result = false;
+//    bool result = false;
     ofxPatch* activePatch;
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
@@ -263,7 +263,7 @@ bool ofxComposer::_mousePressed(ofMouseEventArgs &e){
             disabledPatches = false;
             //for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             activePatch = patches.find(idPatchHit)->second;
-            result = !activePatch->title->getTittleBox().inside(mouse);
+//            result = !activePatch->title->getTittleBox().inside(mouse);
                 if(!activePatch->bActive){
                     this->activePatch(idPatchHit);
                     isAnyPatchSelected = true;
@@ -302,8 +302,8 @@ bool ofxComposer::_mousePressed(ofMouseEventArgs &e){
             multipleSelectRectangle.y = mouse.y;
         }
     }
-    activePatch = NULL;
-    return result;
+//    activePatch = NULL;
+//    return result;
 }
 
 //------------------------------------------------------------------

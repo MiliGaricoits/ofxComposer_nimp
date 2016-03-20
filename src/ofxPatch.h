@@ -107,6 +107,7 @@ public:
     bool            getDrawAudioAnalizer(){ return drawAudioAnalizer; };
     nodeType        getNodeType(){ return nodeType; };
     virtual string  getName() {};
+    ofxPanel*       getPanel() { return &panel; };
     
     // when dragging nodes
     //
@@ -169,7 +170,7 @@ protected:
     
     // Mouse & Key Events ( it´s not better if is centralized on the composer )
     //
-    void            _mousePressed(ofMouseEventArgs &e);
+    bool            _mousePressed(ofMouseEventArgs &e);
     virtual void    _mouseDragged(ofMouseEventArgs &e);
     void            _mouseReleased(ofMouseEventArgs &e);
     void            _keyPressed(ofKeyEventArgs &e);

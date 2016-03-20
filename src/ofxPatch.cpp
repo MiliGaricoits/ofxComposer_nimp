@@ -445,14 +445,20 @@ void ofxPatch::_reMakeFrame( int &_nId ){
 }
 
 //------------------------------------------------------------------
-void ofxPatch::_mousePressed(ofMouseEventArgs &e){
+bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
+    
+    bool result = false;
+    
     if (EventHandler::getInstance()->getWindowEvent() != windowId){
-        return;
+        return result;
     }
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
     if ( bEditMode && bActive ){
+        
+        result = !title->getTittleBox().inside(mouse);
+        
         if (!bEditMask){
             // Editing the texture corners
             //
@@ -580,6 +586,7 @@ void ofxPatch::_mousePressed(ofMouseEventArgs &e){
             }
         }
     }
+    return result;
 }
 
 //------------------------------------------------------------------
@@ -1090,7 +1097,7 @@ void ofxPatch::rotate(float _rotAngle){
 //------------------------------------------------------------------
 bool ofxPatch::isOver(ofPoint _pos){
     ofRectangle biggerBox = textureCorners.getBoundingBox();
-    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+10, biggerBox.height+20);
+    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+30);
     biggerBox.setPosition(biggerBox.x, biggerBox.y-10);
     
     return biggerBox.inside(_pos);

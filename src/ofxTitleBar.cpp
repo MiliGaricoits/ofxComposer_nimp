@@ -9,7 +9,7 @@
 #include "ofxTitleBar.h"
 
 ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
-    ofAddListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed, PATCH_EVENT_PRIORITY);
+    ofAddListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed, PATCH_TITLE_EVENT_PRIORITY);
     
     windowsBox = wBox;
     windowsId = _windowsId;
@@ -93,7 +93,7 @@ void ofxTitleBar::customDraw(){
     ofPopMatrix();
 }
 
-void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
+bool ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
     ofPoint mouse = ofPoint(e.x, e.y);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
@@ -117,7 +117,9 @@ void ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
                 }
             }
         }
+        return true;
     }
+    else return false;
 };
 
 void ofxTitleBar::_mouseReleased(ofMouseEventArgs &e){
