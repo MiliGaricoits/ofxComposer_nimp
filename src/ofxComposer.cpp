@@ -396,11 +396,13 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     //
                     if ( it->second->inPut[j].pos.distance(ofPoint(mouse.x, mouse.y)) < 5){
                         
-                        // Once he founds it
-                        // make the link and forget the selection
-                        //
-                        connect( selectedDot , it->first, j, true);
-                        selectedDot = -1;
+                        if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW))) {
+                            // Once he founds it
+                            // make the link and forget the selection
+                            //
+                            connect( selectedDot , it->first, j, true);
+                            selectedDot = -1;
+                        }
                     }
                 }
             }

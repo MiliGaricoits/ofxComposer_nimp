@@ -329,10 +329,13 @@ void ofxPatch::customDraw(){
         // Draw the input linking dots (if i'm not audio or OSC receiver)
         //
         if (!isAudio && !isOSC) {
-            for(int i = 0; i < inPut.size(); i++){
-                ofSetColor(255, 150);
-                ofNoFill();
-                ofCircle(inPut[i].pos, 5);
+            
+            if (!lastEncapsulated || (lastEncapsulated && !(EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW))) {
+                for(int i = 0; i < inPut.size(); i++){
+                    ofSetColor(255, 150);
+                    ofNoFill();
+                    ofCircle(inPut[i].pos, 5);
+                }
             }
             
             // Draw the output linking dot
@@ -340,8 +343,9 @@ void ofxPatch::customDraw(){
             ofNoFill();
             ofSetColor(255, 150);
             ofCircle(getOutPutPosition(), 5);
-            ofPopStyle();
             
+            ofPopStyle();
+        
             // Draw the links between nodes
             //
             if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
