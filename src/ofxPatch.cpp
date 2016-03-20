@@ -672,12 +672,12 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                 //
             } else if ( bActive && !isLinkHit() ){
                 for (int i = 0; i < 4; i++){
-                    textureCorners[i] += mouse-mouseLast;
+                    textureCorners[i] += ((mouse-mouseLast)*((ofCamera*)this->getParent())->getScale().x);
                 }
                 
                 for (int i = 0; i < outPut.size(); i++) {
                     for(int j = 0; j < outPut[i].link_vertices.size(); j++){
-                        outPut[i].link_vertices[j] += mouse-mouseLast;
+                        outPut[i].link_vertices[j] += ((mouse-mouseLast)*((ofCamera*)this->getParent())->getScale().x);
                     }
                 }
                 
@@ -1869,16 +1869,21 @@ float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
         canScale = smaller;
     }
     
+    
+    float step = 1.f;
+    if(((ofCamera*)this->getParent())->getScale().x >= 1){
+        step = SCALE_STEP / ((ofCamera*)this->getParent())->getScale().x;
+    } else {
+        step = SCALE_STEP * ((ofCamera*)this->getParent())->getScale().x;
+    }
     // set patch scale
     if(canScale) {
-        if(ABS(1 - dif) > MAX_SCALE_STEP){
-            if(bigger){
-                scale = 1 + MAX_SCALE_STEP;
-            } else {
-                scale = 1 - MAX_SCALE_STEP;
-            }
+        if(bigger) {
+            scale = 1.f + step;
+        } else if(smaller) {
+            scale = 1.f - step;
         } else {
-            scale = dif;
+            scale = 1.f;
         }
     }
     
@@ -1889,16 +1894,16 @@ float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
 bool ofxPatch::makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev){
     switch(selectedTextureCorner){
         case 0:
-            return mouse.x < mousePrev.x && mouse.y < mousePrev.y;
+            return mouse.x < mousePrev.x;
             break;
         case 1:
-            return mouse.x > mousePrev.x && mouse.y < mousePrev.y;
+            return mouse.x > mousePrev.x;
             break;
         case 2:
-            return mouse.x > mousePrev.x && mouse.y > mousePrev.y;
+            return mouse.x > mousePrev.x;
             break;
         case 3:
-            return mouse.x < mousePrev.x && mouse.y > mousePrev.y;
+            return mouse.x < mousePrev.x;
             break;
         default:
             return false;
@@ -1908,16 +1913,16 @@ bool ofxPatch::makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev){
 bool ofxPatch::makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev){
     switch(selectedTextureCorner){
         case 0:
-            return mouse.x > mousePrev.x && mouse.y > mousePrev.y;
+            return mouse.x > mousePrev.x;
             break;
         case 1:
-            return mouse.x < mousePrev.x && mouse.y > mousePrev.y;
+            return mouse.x < mousePrev.x;
             break;
         case 2:
-            return mouse.x < mousePrev.x && mouse.y < mousePrev.y;
+            return mouse.x < mousePrev.x;
             break;
         case 3:
-            return mouse.x > mousePrev.x && mouse.y < mousePrev.y;
+            return mouse.x > mousePrev.x;
             break;
         default:
             return false;
