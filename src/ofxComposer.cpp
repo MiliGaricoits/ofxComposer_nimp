@@ -101,7 +101,7 @@ void ofxComposer::update(){
 
 //------------------------------------------------------------------
 void ofxComposer::customDraw(){
-//    ofPushView();
+
     ofPushStyle();
     
     ofEnableAlphaBlending();
@@ -111,8 +111,6 @@ void ofxComposer::customDraw(){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->customDraw();
     }
-    
-//    ofPushMatrix();
     
     if (bEditMode) {
         
@@ -124,7 +122,6 @@ void ofxComposer::customDraw(){
         ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0);
         ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
         if (selectedDot >= 0){
-//            ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
             ofLine((patches[selectedDot]->getOutPutPosition()-ofPoint(cam_pos.x, cam_pos.y))/ofPoint(scale.x, scale.y), ofPoint(mouse.x, mouse.y));
         }
         
@@ -156,31 +153,6 @@ void ofxComposer::customDraw(){
                 ofSetColor(255, 208, 111);
                 ofLine(0, horizontalAlign3, ofGetWidth(), horizontalAlign3);
             }
-            
-//            if (verticalAlign1) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(verticalAlign1, cam_pos.y, verticalAlign1, ofGetHeight()*scale.y + cam_pos.y);
-//            }
-//            if (verticalAlign2) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(verticalAlign2, cam_pos.y, verticalAlign2, ofGetHeight()*scale.y + cam_pos.y);
-//            }
-//            if (verticalAlign3) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(verticalAlign3, cam_pos.y, verticalAlign3, ofGetHeight()*scale.y + cam_pos.y);
-//            }
-//            if (horizontalAlign1) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(cam_pos.x, horizontalAlign1, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign1);
-//            }
-//            if (horizontalAlign2) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(cam_pos.x, horizontalAlign2, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign2);
-//            }
-//            if (horizontalAlign3) {
-//                ofSetColor(255, 208, 111);
-//                ofLine(cam_pos.x, horizontalAlign3, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign3);
-//            }
         }
         
         //  Draw Help screen
@@ -200,9 +172,7 @@ void ofxComposer::customDraw(){
     ofDisableBlendMode();
     ofEnableAlphaBlending();
     
-//    ofPopMatrix();
     ofPopStyle();
-//    ofPopView();
 }
 
 //------------------------------------------------------------------
@@ -349,8 +319,6 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
         if(e.button == 0){
             multipleSelectRectangle.width = mouse.x - multipleSelectFromX;
             multipleSelectRectangle.height = mouse.y - multipleSelectFromY;
-//            multipleSelectRectangle.width = mouse_transformed.x - multipleSelectFromX;
-//            multipleSelectRectangle.height = mouse_transformed.y - multipleSelectFromY;
         }
         
         // right mouse -> zoom in / out
@@ -401,32 +369,6 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
                         horizontalAlign3 =  p_box.y;
                     }
                 }
-                
-//                if (it->second != p) {
-//                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[0].x or
-//                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[0].x) {
-//                        verticalAlign1 = p->getTextureCoorners()[0].x ;
-//                    }
-//                    if ((int)(it->second->getTextureCoorners()[0].x + it->second->getBox().width/2) == (int)(p->getTextureCoorners()[0].x + p->getBox().width/2)) {
-//                        verticalAlign2 = (p->getTextureCoorners()[0].x + p->getBox().width/2);
-//                    }
-//                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[1].x or
-//                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[1].x ) {
-//                        verticalAlign3 = p->getTextureCoorners()[1].x;
-//                    }
-//                    
-//                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[1].y or
-//                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[1].y) {
-//                        horizontalAlign1 = p->getTextureCoorners()[1].y ;
-//                    }
-//                    if ((int)(it->second->getTextureCoorners()[1].y + it->second->getBox().height/2) == (int)(p->getTextureCoorners()[1].y + p->getBox().height/2)) {
-//                        horizontalAlign2 = (p->getTextureCoorners()[1].y + p->getBox().height/2);
-//                    }
-//                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[3].y or
-//                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[3].y ) {
-//                        horizontalAlign3 = p->getTextureCoorners()[3].y;
-//                    }
-//                }
             }
         }
     }
@@ -472,20 +414,10 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
             it->second->setDisablePatch(false);
         }
         
-        // If he release the mouse over nothing it will clear all
-        // the connections of that dot.
+        // If he release the mouse over nothing
+        // release the selected dot.
         //
         selectedDot = -1;
-//        if (selectedDot != -1){
-//            
-//            for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
-//                patches[patches[selectedDot]->outPut[i].toId]->removeInput(((ImageOutput*)patches[selectedDot])->getId());
-//                this->updateConnectionsSize(patches[patches[selectedDot]->outPut[i].toId]);
-//            }
-//            patches[selectedDot]->outPut.clear();
-//            selectedDot = -1;
-//            
-//        }
     }
     
     // aligned nodes

@@ -267,7 +267,7 @@ void ofxPatch::customDraw(){
             // Draw dragables texture corners
             //
             for(int i = 0; i < 4; i++){
-//                if ( ( selectedTextureCorner == i) || ( ofDist(mouse.x, mouse.y, textureCorners[i].x, textureCorners[i].y) <= 4 ) ) ofSetColor(200,255);
+                
                 if ( ( selectedTextureCorner == i) || ( ofDist(mouse_transformed.x, mouse_transformed.y, textureCorners[i].x, textureCorners[i].y) <= 4*scale.x ))
                     ofSetColor(200,255);
                 else ofSetColor(color,100);
@@ -483,7 +483,6 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
     if ( bEditMode && bActive && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer))){
         
         result = !title->getTittleBox().inside(mouse_transformed);
-//        result = !title->getTittleBox().inside(mouse);
         
         if (!bEditMask){
             // Editing the texture corners
@@ -1166,9 +1165,7 @@ bool ofxPatch::isOver(ofPoint _pos){
         
         ofRectangle biggerBox = textureCorners.getBoundingBox();
         biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y-(5*scale.x), biggerBox.width+(20*scale.x), biggerBox.height+(30*scale.y));
-//        biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+30);
-//        biggerBox.setPosition(biggerBox.x, biggerBox.y-10);
-        
+
         return biggerBox.inside(_pos);
     }
     else return false;
