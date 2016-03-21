@@ -24,7 +24,7 @@ ofxTitleBar::ofxTitleBar( ofRectangle* wBox, int* _windowsId ){
 
 ofxTitleBar::~ofxTitleBar(){
     
-    ofRemoveListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed, PATCH_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().mousePressed, this, &ofxTitleBar::_mousePressed, PATCH_TITLE_EVENT_PRIORITY);
 }
 
 void ofxTitleBar::addButton( char letter, bool *variableToControl, ButtonType _type){
@@ -127,10 +127,10 @@ bool ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
     return result;
 };
 
-void ofxTitleBar::_mouseReleased(ofMouseEventArgs &e){
-    ofPoint mouse = ofPoint(e.x, e.y);
-    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
-    if ( tittleBox.inside(mouse_transformed)){
-        ofNotifyEvent(drag, *windowsId);
-    }
-}
+//void ofxTitleBar::_mouseReleased(ofMouseEventArgs &e){
+//    ofPoint mouse = ofPoint(e.x, e.y);
+//    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
+//    if ( tittleBox.inside(mouse_transformed)){
+//        ofNotifyEvent(drag, *windowsId);
+//    }
+//}
