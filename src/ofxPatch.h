@@ -98,13 +98,15 @@ public:
     ofxShaderObj*   getShader(){ if (getType() == "ofShader") return shader; else return NULL; };
     ofPoint&        getOutPutPosition(){ return outPutPos; };
     ofPolyline      getTextureCoorners();
-    ofRectangle     getBox() { return box; };
+//    ofRectangle     getBox() { return box; };
+    ofRectangle     getBox();
     float           getHeight();
     float           getWidth();
     bool            drawInspector();
     float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
     float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
     bool            getIsAudio(){ return isAudio; };
+    bool            getIsAudioAnalizer(){ return isAudioAnalizer; };
     bool            getIsOSCReceiver(){ return isOSC; };
     bool            getDrawAudioAnalizer(){ return drawAudioAnalizer; };
     nodeType        getNodeType(){ return nodeType; };
@@ -220,6 +222,7 @@ protected:
     bool            bMasking;
     bool            bUpdateMask;
     bool            bUpdateCoord;
+    ofVec3f         oldCameraScale;
     
     GLfloat         glMatrix[16];
     

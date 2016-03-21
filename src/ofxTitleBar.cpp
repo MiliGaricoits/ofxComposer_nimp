@@ -53,12 +53,17 @@ void ofxTitleBar::customDraw(){
     ofPushMatrix();
     
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
     // Update the information of the position
     //
-    tittleBox.width = windowsBox->width;
-    tittleBox.height = height*scale.z;
-    tittleBox.setPosition(ofVec3f((windowsBox->x), (windowsBox->y - tittleBox.height), 0));
+    tittleBox.width = windowsBox->width/scale.z;
+    tittleBox.height = height;
+    tittleBox.setPosition(ofVec3f((windowsBox->x - cam_pos.x)/scale.x, (windowsBox->y - height*scale.z - cam_pos.y)/scale.y, cam_pos.z/scale.z));
+
+//    tittleBox.width = windowsBox->width;
+//    tittleBox.height = height*scale.z;
+//    tittleBox.setPosition(ofVec3f((windowsBox->x), (windowsBox->y - tittleBox.height), 0));
     
     ofPushStyle();
     
@@ -72,9 +77,13 @@ void ofxTitleBar::customDraw(){
     //
     ofFill();
     ofSetColor(100);
-    (tittleBox.width - title.size() * (8*scale.z)) > (57*scale.z)
-        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - (title.size() * 8 * scale.z), tittleBox.y + (letterHeight*scale.z))
-        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - (24*scale.z), tittleBox.y + (letterHeight*scale.z));
+    (tittleBox.width - title.size() * 8) > (57)
+        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - (title.size() * 8), tittleBox.y + letterHeight)
+        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - 24, tittleBox.y + letterHeight);
+
+//    (tittleBox.width - title.size() * (8*scale.z)) > (57*scale.z)
+//        ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - (title.size() * 8 * scale.z), tittleBox.y + (letterHeight*scale.z))
+//        : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - (24*scale.z), tittleBox.y + (letterHeight*scale.z));
     
     // Draw the bottoms
     //
@@ -86,7 +95,8 @@ void ofxTitleBar::customDraw(){
                 ofSetColor(255);
         }
         
-        ofDrawBitmapString( ofToString(buttons[i].letter) , tittleBox.x + (offSetWidth*scale.z) + (i*letterWidth*scale.z), tittleBox.y + (letterHeight*scale.z));
+//        ofDrawBitmapString( ofToString(buttons[i].letter) , tittleBox.x + (offSetWidth*scale.z) + (i*letterWidth*scale.z), tittleBox.y + (letterHeight*scale.z));
+        ofDrawBitmapString( ofToString(buttons[i].letter) , tittleBox.x + offSetWidth + (i*letterWidth), tittleBox.y + letterHeight);
     }
 
     ofPopStyle();
@@ -94,15 +104,23 @@ void ofxTitleBar::customDraw(){
 }
 
 bool ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
-    ofPoint mouse = ofPoint(e.x, e.y);
-    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
-    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
     
-    if ( tittleBox.inside(mouse_transformed)){
+    bool result = false;
+    
+    ofPushMatrix();
+    ofPoint mouse = ofPoint(e.x, e.y);
+//    ofVec3f mouse_transformed = mouse*((ofCamera*)this->getParent())->getGlobalTransformMatrix();
+//    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    
+//    if ( tittleBox.inside(mouse_transformed)){
+    if ( tittleBox.inside(mouse)){
         bool hit = false;
+        result   = true;
         for (int i = 0; i < buttons.size() && !hit; i++){
-            if (((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) > i * letterWidth * scale.z ) &&
-                ((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) < (i+1) * letterWidth * scale.z ) ){
+//            if (((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) > i * letterWidth * scale.z ) &&
+//                ((mouse_transformed.x - tittleBox.x - (offSetWidth*scale.z)) < (i+1) * letterWidth * scale.z ) ){
+            if (((mouse.x - tittleBox.x - offSetWidth) > i * letterWidth ) &&
+                ((mouse.x - tittleBox.x - offSetWidth) < (i+1) * letterWidth ) ){
                 if ( buttons[i].letter == 'x' ){
                     ofNotifyEvent(close, *windowsId);
                     hit = true;
@@ -117,9 +135,10 @@ bool ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
                 }
             }
         }
-        return true;
     }
-    else return false;
+    
+    ofPopMatrix();
+    return result;
 };
 
 void ofxTitleBar::_mouseReleased(ofMouseEventArgs &e){

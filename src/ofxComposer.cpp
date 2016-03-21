@@ -101,9 +101,8 @@ void ofxComposer::update(){
 
 //------------------------------------------------------------------
 void ofxComposer::customDraw(){
-    ofPushView();
+//    ofPushView();
     ofPushStyle();
-    ofPushMatrix();
     
     ofEnableAlphaBlending();
     
@@ -113,44 +112,75 @@ void ofxComposer::customDraw(){
         it->second->customDraw();
     }
     
+//    ofPushMatrix();
+    
     if (bEditMode) {
+        
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
         
         //  Draw active line
         //
-        ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
+        ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0);
+        ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
         if (selectedDot >= 0){
-            ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
+//            ofLine(patches[selectedDot]->getOutPutPosition(), ofPoint(mouse.x, mouse.y));
+            ofLine((patches[selectedDot]->getOutPutPosition()-ofPoint(cam_pos.x, cam_pos.y))/ofPoint(scale.x, scale.y), ofPoint(mouse.x, mouse.y));
         }
         
         // aligned nodes
         //
         if (isAnyPatchSelected) {
-            ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-            ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
+
             if (verticalAlign1) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign1, cam_pos.y, verticalAlign1, ofGetHeight()*scale.y + cam_pos.y);
+                ofLine(verticalAlign1, 0, verticalAlign1, ofGetHeight());
             }
             if (verticalAlign2) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign2, cam_pos.y, verticalAlign2, ofGetHeight()*scale.y + cam_pos.y);
+                ofLine(verticalAlign2, 0, verticalAlign2, ofGetHeight());
             }
             if (verticalAlign3) {
                 ofSetColor(255, 208, 111);
-                ofLine(verticalAlign3, cam_pos.y, verticalAlign3, ofGetHeight()*scale.y + cam_pos.y);
+                ofLine(verticalAlign3, 0, verticalAlign3, ofGetHeight());
             }
             if (horizontalAlign1) {
                 ofSetColor(255, 208, 111);
-                ofLine(cam_pos.x, horizontalAlign1, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign1);
+                ofLine(0, horizontalAlign1, ofGetWidth(), horizontalAlign1);
             }
             if (horizontalAlign2) {
                 ofSetColor(255, 208, 111);
-                ofLine(cam_pos.x, horizontalAlign2, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign2);
+                ofLine(0, horizontalAlign2, ofGetWidth(), horizontalAlign2);
             }
             if (horizontalAlign3) {
                 ofSetColor(255, 208, 111);
-                ofLine(cam_pos.x, horizontalAlign3, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign3);
+                ofLine(0, horizontalAlign3, ofGetWidth(), horizontalAlign3);
             }
+            
+//            if (verticalAlign1) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(verticalAlign1, cam_pos.y, verticalAlign1, ofGetHeight()*scale.y + cam_pos.y);
+//            }
+//            if (verticalAlign2) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(verticalAlign2, cam_pos.y, verticalAlign2, ofGetHeight()*scale.y + cam_pos.y);
+//            }
+//            if (verticalAlign3) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(verticalAlign3, cam_pos.y, verticalAlign3, ofGetHeight()*scale.y + cam_pos.y);
+//            }
+//            if (horizontalAlign1) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(cam_pos.x, horizontalAlign1, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign1);
+//            }
+//            if (horizontalAlign2) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(cam_pos.x, horizontalAlign2, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign2);
+//            }
+//            if (horizontalAlign3) {
+//                ofSetColor(255, 208, 111);
+//                ofLine(cam_pos.x, horizontalAlign3, ofGetWidth()*scale.x + cam_pos.x, horizontalAlign3);
+//            }
         }
         
         //  Draw Help screen
@@ -170,9 +200,9 @@ void ofxComposer::customDraw(){
     ofDisableBlendMode();
     ofEnableAlphaBlending();
     
-    ofPopMatrix();
+//    ofPopMatrix();
     ofPopStyle();
-    ofPopView();
+//    ofPopView();
 }
 
 //------------------------------------------------------------------
@@ -242,16 +272,19 @@ void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
 //------------------------------------------------------------------
 void ofxComposer::_mousePressed(ofMouseEventArgs &e){
     
-    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
+    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
+    
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    
     int idPatchHit = -1;
-//    bool result = false;
     ofxPatch* activePatch;
     
     // si no estoy clickeando sobre ninguna de las 2 scrollbars, veo que hago
     // si estoy clickeando una de las scrollbars, no tengo que hacer nada aca
     if(!draggingGrip && !draggingHGrip) {
         
-        idPatchHit = isAnyPatchHit(mouse.x, mouse.y, mouse.z);
+        idPatchHit = isAnyPatchHit(mouse_transformed.x, mouse_transformed.y, mouse_transformed.z);
         
         // zoom & drag
         //
@@ -261,22 +294,18 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             deactivateAllPatches();
         } else if (idPatchHit != -1){
             disabledPatches = false;
-            //for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            activePatch = patches.find(idPatchHit)->second;
-//            result = !activePatch->title->getTittleBox().inside(mouse);
-                if(!activePatch->bActive){
-                    this->activePatch(idPatchHit);
-                    isAnyPatchSelected = true;
-                    //break;
-                } else if(holdingCommand){
-                    patches.find(idPatchHit)->second->bActive = false;
-                }
-            //}
+            if(!patches.find(idPatchHit)->second->bActive){
+                this->activePatch(idPatchHit);
+                isAnyPatchSelected = true;
+                //break;
+            } else if(holdingCommand){
+                patches.find(idPatchHit)->second->bActive = false;
+            }
         }
         
         selectedDot = -1;
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-            if ( (it->second->getOutPutPosition().distance(ofPoint(mouse.x, mouse.y)) < 5)
+            if ( (it->second->getOutPutPosition().distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < (5*scale.x))
                 && (it->second->bEditMode) && !(it->second->bEditMask) ){
                 
                 selectedDot = it->first;
@@ -302,8 +331,6 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
             multipleSelectRectangle.y = mouse.y;
         }
     }
-//    activePatch = NULL;
-//    return result;
 }
 
 //------------------------------------------------------------------
@@ -312,7 +339,8 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
         return;
     }
     
-    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
+    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
     
     // mouse is being drag, and the mouse is not over any patch
     if ( disabledPatches && !draggingGrip && !draggingHGrip && (!isAnyLinkHit()) ) {
@@ -321,6 +349,8 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
         if(e.button == 0){
             multipleSelectRectangle.width = mouse.x - multipleSelectFromX;
             multipleSelectRectangle.height = mouse.y - multipleSelectFromY;
+//            multipleSelectRectangle.width = mouse_transformed.x - multipleSelectFromX;
+//            multipleSelectRectangle.height = mouse_transformed.y - multipleSelectFromY;
         }
         
         // right mouse -> zoom in / out
@@ -333,6 +363,8 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
         if (activePatch != -1) {
             
             ofxPatch* p = patches[activePatch];
+            ofRectangle aux_box;
+            ofRectangle p_box = p->getBox();
             verticalAlign1 = 0;
             verticalAlign2 = 0;
             verticalAlign3 = 0;
@@ -342,31 +374,59 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
             
             for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
                 
+                aux_box = it->second->getBox();
+                
                 if (it->second != p) {
-                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[0].x or
-                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[0].x) {
-                        verticalAlign1 = p->getTextureCoorners()[0].x ;
+                    if ((int)aux_box.x == (int)p_box.x or
+                        (int)(aux_box.x + aux_box.width) == (int)p_box.x) {
+                        verticalAlign1 = p_box.x ;
                     }
-                    if ((int)(it->second->getTextureCoorners()[0].x + it->second->getBox().width/2) == (int)(p->getTextureCoorners()[0].x + p->getBox().width/2)) {
-                        verticalAlign2 = (p->getTextureCoorners()[0].x + p->getBox().width/2);
+                    if ((int)(aux_box.x + aux_box.width/2) == (int)(p_box.x + p_box.width/2)) {
+                        verticalAlign2 = (p_box.x + p_box.width/2);
                     }
-                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[1].x or
-                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[1].x ) {
-                        verticalAlign3 = p->getTextureCoorners()[1].x;
+                    if ((int)aux_box.x == (int)(p_box.x + p_box.width) or
+                        (int)(aux_box.x + aux_box.width) == (int)(p_box.x + p_box.width) ) {
+                        verticalAlign3 = p_box.x + p_box.width;
                     }
                     
-                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[1].y or
-                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[1].y) {
-                        horizontalAlign1 = p->getTextureCoorners()[1].y ;
+                    if ((int)(aux_box.y + aux_box.height) == (int)(p_box.y + p_box.height) or
+                        (int)aux_box.y == (int)(p_box.y + p_box.height)) {
+                        horizontalAlign1 = p_box.y + p_box.height;
                     }
-                    if ((int)(it->second->getTextureCoorners()[1].y + it->second->getBox().height/2) == (int)(p->getTextureCoorners()[1].y + p->getBox().height/2)) {
-                        horizontalAlign2 = (p->getTextureCoorners()[1].y + p->getBox().height/2);
+                    if ((int)(aux_box.y + aux_box.height/2) == (int)(p_box.y + p_box.height/2)) {
+                        horizontalAlign2 = (p_box.y + p->getBox().height/2);
                     }
-                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[3].y or
-                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[3].y ) {
-                        horizontalAlign3 = p->getTextureCoorners()[3].y;
+                    if ((int)(aux_box.y + aux_box.height) == (int)p_box.y or
+                        (int)(aux_box.y == (int) p_box.y) ) {
+                        horizontalAlign3 =  p_box.y;
                     }
                 }
+                
+//                if (it->second != p) {
+//                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[0].x or
+//                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[0].x) {
+//                        verticalAlign1 = p->getTextureCoorners()[0].x ;
+//                    }
+//                    if ((int)(it->second->getTextureCoorners()[0].x + it->second->getBox().width/2) == (int)(p->getTextureCoorners()[0].x + p->getBox().width/2)) {
+//                        verticalAlign2 = (p->getTextureCoorners()[0].x + p->getBox().width/2);
+//                    }
+//                    if ((int)it->second->getTextureCoorners()[0].x == (int)p->getTextureCoorners()[1].x or
+//                        (int)it->second->getTextureCoorners()[1].x == (int)p->getTextureCoorners()[1].x ) {
+//                        verticalAlign3 = p->getTextureCoorners()[1].x;
+//                    }
+//                    
+//                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[1].y or
+//                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[1].y) {
+//                        horizontalAlign1 = p->getTextureCoorners()[1].y ;
+//                    }
+//                    if ((int)(it->second->getTextureCoorners()[1].y + it->second->getBox().height/2) == (int)(p->getTextureCoorners()[1].y + p->getBox().height/2)) {
+//                        horizontalAlign2 = (p->getTextureCoorners()[1].y + p->getBox().height/2);
+//                    }
+//                    if ((int)it->second->getTextureCoorners()[1].y == (int)p->getTextureCoorners()[3].y or
+//                        (int)it->second->getTextureCoorners()[3].y == (int)p->getTextureCoorners()[3].y ) {
+//                        horizontalAlign3 = p->getTextureCoorners()[3].y;
+//                    }
+//                }
             }
         }
     }
@@ -378,7 +438,8 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         return;
     }
     
-    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
+    ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
+    ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
     
     if (selectedDot != -1){
         
@@ -394,7 +455,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     // And after checking in each dot of each shader...
                     // ... fin the one where the mouse it�s over
                     //
-                    if ( it->second->inPut[j].pos.distance(ofPoint(mouse.x, mouse.y)) < 5){
+                    if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5){
                         
                         if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW))) {
                             // Once he founds it
@@ -414,6 +475,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
         // If he release the mouse over nothing it will clear all
         // the connections of that dot.
         //
+        selectedDot = -1;
 //        if (selectedDot != -1){
 //            
 //            for(int i = 0; i < patches[selectedDot]->outPut.size(); i++) {
@@ -696,11 +758,15 @@ void ofxComposer::deletePatchConection(ofxPatchDeleteEvent &ev){
 // -----------------------------------------------------------
 void ofxComposer::multipleSelectAndReset(){
     if(disabledPatches){
+        
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             
             // if it is invisible, don't make it count, it is encapsulated
-            if(it->second->bVisible){
+            if(it->second->bVisible && (!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer()))){
                 ofRectangle aux = multipleSelectRectangle.getIntersection(it->second->getBox());
+                
                 if(aux.getArea() > 0){
                     it->second->bActive = true;
                 } else{
@@ -799,7 +865,7 @@ int ofxComposer::encapsulate(){
     }
 }
 
-
+//------------------------------------------------------------------
 void ofxComposer::uncapsulate(int encapsulatedId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getEncapsulatedId() == encapsulatedId){
@@ -812,6 +878,7 @@ void ofxComposer::uncapsulate(int encapsulatedId){
     nodesCount--;
 }
 
+//------------------------------------------------------------------
 int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
     int patchId = -1;
     int validOutput = 0;
@@ -890,7 +957,7 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
     return patchId;
 }
 
-
+//------------------------------------------------------------------
 int ofxComposer::getSelectedEncapsulated(){
     int activeSelected = 0;
     int retId = -1;
@@ -910,6 +977,8 @@ int ofxComposer::getSelectedEncapsulated(){
     
     return retId;
 }
+
+//------------------------------------------------------------------
 void ofxComposer::setWindowsIdForEncapsulated(int encapsulatedId, int winId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getEncapsulatedId() == encapsulatedId){
@@ -918,6 +987,7 @@ void ofxComposer::setWindowsIdForEncapsulated(int encapsulatedId, int winId){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getWindowId() == previousWin){
@@ -932,6 +1002,7 @@ void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
     }
 }
 
+//------------------------------------------------------------------
 // This function sets the output of every node that is conected to one encapsulated
 // to the last encapsulated node
 void ofxComposer::setOutputEncapsulated(int patchId, vector<int> encapsulatedPatches){
@@ -951,6 +1022,7 @@ void ofxComposer::setOutputEncapsulated(int patchId, vector<int> encapsulatedPat
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::restoreOutputEncapsulated(int lastPatchId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         vector<LinkDot> output = it->second->outPut;
@@ -963,6 +1035,7 @@ void ofxComposer::restoreOutputEncapsulated(int lastPatchId){
     }
 }
 
+//------------------------------------------------------------------
 int ofxComposer::getLastPatchEncapsulated(int encapsulatedId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->bActive && it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
@@ -971,14 +1044,17 @@ int ofxComposer::getLastPatchEncapsulated(int encapsulatedId){
     }
 }
 
+//------------------------------------------------------------------
 void ofxComposer::setCameraForWindow(int winId, ofEasyCam cam){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getWindowId() == winId || it->second->isLastEncapsulated()){
             it->second->setParent(*this->getParent());
+            it->second->title->setParent(*this->getParent());
         }
     }
 }
 
+//------------------------------------------------------------------
 string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
@@ -988,6 +1064,7 @@ string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){
     return "";
 }
 
+//------------------------------------------------------------------
 bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulatedId){
     bool saved = false;
     int lastPatch = -1;

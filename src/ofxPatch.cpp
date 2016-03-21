@@ -27,6 +27,7 @@ ofxPatch::ofxPatch(){
     
     bUpdateMask         = true;
     bUpdateCoord        = true;
+    oldCameraScale      = ofVec3f(1,1,1);
     
     shader              = NULL;
     videoGrabber        = NULL;
@@ -181,12 +182,12 @@ void ofxPatch::update(){
         
         if ( textureCorners.inside(ofGetMouseX(), ofGetMouseY()) && (bEditMode)){
             texOpacity = ofLerp(texOpacity,1.0, 0.05);
-            maskOpacity = ofLerp(maskOpacity,0.8, 0.05);
+            maskOpacity = ofLerp(maskOpacity,0.9, 0.05);
         } else if (!bEditMode){
             texOpacity = ofLerp(texOpacity, 1.0, 0.05);
             maskOpacity = ofLerp(maskOpacity, 0.0, 0.05);
         } else {
-            texOpacity = ofLerp(texOpacity, 0.8, 0.05);
+            texOpacity = ofLerp(texOpacity, 0.9, 0.05);
             maskOpacity = ofLerp(maskOpacity, 0.0, 0.05);
         }
         
@@ -203,17 +204,19 @@ void ofxPatch::update(){
         maskFbo.dst->end();
     }
     
-    if (bUpdateCoord){
+    if (bUpdateCoord || (oldCameraScale != ((ofCamera*)this->getParent())->getScale())){
+        
+        oldCameraScale = ((ofCamera*)this->getParent())->getScale();
         doSurfaceToScreenMatrix();
         
         box = textureCorners.getBoundingBox();
-        outPutPos.set( box.x + box.width + 4, box.y + box.height*0.5 );
+        outPutPos.set( box.x + box.width + (5*oldCameraScale.x), box.y + box.height*0.5 );
         for(int i = 0; i < outPut.size(); i++){
             outPut[i].pos = outPutPos;
         }
         int total = inPut.size();
         for(int i = 0; i < total; i++){
-            inPut[i].pos.set( box.x - 4, box.y + (box.height/(total))* (i+0.5) );
+            inPut[i].pos.set( box.x - (5*oldCameraScale.x), box.y + (box.height/(total))* (i+0.5) );
         }
         
         bUpdateCoord = false;
@@ -233,6 +236,14 @@ void ofxPatch::customDraw(){
         return;
     }
     
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
+    
+    ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0);
+    ofVec3f mouse_transformed = ofVec3f(mouse)*this->getGlobalTransformMatrix();
+    
+    ((ofCamera*)this->parent)->begin();
+    
     if (( bEditMode || bVisible ) && !isAudio ) {
         
         if (bActive || !bEditMode)
@@ -251,20 +262,17 @@ void ofxPatch::customDraw(){
         
         ofPushStyle();
         
-        // Draw de title && inspector
-        //
-        if (title != NULL)
-            title->customDraw();
-        
         if ( !bEditMask ){
             ofFill();
             // Draw dragables texture corners
             //
             for(int i = 0; i < 4; i++){
-                if ( ( selectedTextureCorner == i) || ( ofDist(ofGetMouseX(), ofGetMouseY(), textureCorners[i].x, textureCorners[i].y) <= 4 ) ) ofSetColor(200,255);
+//                if ( ( selectedTextureCorner == i) || ( ofDist(mouse.x, mouse.y, textureCorners[i].x, textureCorners[i].y) <= 4 ) ) ofSetColor(200,255);
+                if ( ( selectedTextureCorner == i) || ( ofDist(mouse_transformed.x, mouse_transformed.y, textureCorners[i].x, textureCorners[i].y) <= 4*scale.x ))
+                    ofSetColor(200,255);
                 else ofSetColor(color,100);
                 
-                ofRect(textureCorners[i].x-4,textureCorners[i].y-4, 8,8);
+                ofRect(textureCorners[i].x-(4*scale.x),textureCorners[i].y-(4*scale.y), 8*scale.x, 8*scale.y);
                 
                 // Draw contour Line
                 //
@@ -282,7 +290,7 @@ void ofxPatch::customDraw(){
                 }
                 
                 ofLine(textureCorners[i].x, textureCorners[i].y, textureCorners[(i+1)%4].x, textureCorners[(i+1)%4].y);
-                ofSetLineWidth(1.f);
+                ofSetLineWidth(1.f*scale.x);
             }
         } else {
             // Draw dragables mask corners
@@ -291,10 +299,9 @@ void ofxPatch::customDraw(){
                 ofVec3f pos = ofVec3f( maskCorners[i].x * width, maskCorners[i].y * height, 0.0);
                 pos = surfaceToScreenMatrix * pos;
                 
-                ofVec3f mouse = ofVec3f(ofGetMouseX(), ofGetMouseY(), 0.0)*this->getGlobalTransformMatrix();
-                if ( (selectedMaskCorner == i) || ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 4 ) ) {
+                if ( (selectedMaskCorner == i) || ( ofDist(mouse_transformed.x, mouse_transformed.y, pos.x, pos.y) <= 4*scale.x ) ) {
                     ofSetColor(255,255);
-                    ofCircle( pos, 4);
+                    ofCircle( pos, 4*scale.x);
                     ofSetColor(255,100);
                     ofFill();
                 } else {
@@ -302,7 +309,7 @@ void ofxPatch::customDraw(){
                     ofSetColor(255,100);
                 }
                 
-                ofCircle( pos, 4);
+                ofCircle( pos, 4*scale.x);
                 
                 // Draw contour mask line
                 //
@@ -337,7 +344,7 @@ void ofxPatch::customDraw(){
                 for(int i = 0; i < inPut.size(); i++){
                     ofSetColor(255, 150);
                     ofNoFill();
-                    ofCircle(inPut[i].pos, 5);
+                    ofCircle(inPut[i].pos, 5*scale.x);
                 }
             }
             
@@ -345,7 +352,7 @@ void ofxPatch::customDraw(){
             //
             ofNoFill();
             ofSetColor(255, 150);
-            ofCircle(getOutPutPosition(), 5);
+            ofCircle(getOutPutPosition(), 5*scale.x);
             
             ofPopStyle();
         
@@ -355,7 +362,7 @@ void ofxPatch::customDraw(){
                 for (int i = 0; i < outPut.size(); i++){
                     if (outPut[i].to != NULL){
                         ofFill();
-                        ofCircle(outPut[i].pos, 3);
+                        ofCircle(outPut[i].pos, 3*scale.x);
                         
                         // set dstOutput to the encapsulated patch, or the regular exit
                         ofPoint dstOutput;
@@ -375,7 +382,7 @@ void ofxPatch::customDraw(){
                             if (outPut[i].link_vertices.size() > 0) {
                                 ofNoFill();
                                 for(int j = 0; j < outPut[i].link_vertices.size(); j++){
-                                    ofCircle( outPut[i].link_vertices[j], 4);
+                                    ofCircle( outPut[i].link_vertices[j], 4*scale.x);
                                 }
                             }
                             
@@ -389,12 +396,20 @@ void ofxPatch::customDraw(){
                             ofFill();
                         }
                         
-                        ofCircle(dstOutput, 3);
+                        ofCircle(dstOutput, 3*scale.x);
                     }
                 }
             }
         }
     }
+    
+    ((ofCamera*)this->parent)->end();
+    
+    // Draw de title && inspector
+    //
+    if (title != NULL)
+//            title->customDraw();
+        drawInspectorGUI();
 }
 
 //------------------------------------------------------------------
@@ -418,8 +433,8 @@ void ofxPatch::drawInspectorGUI() {
     
     // Draw de title
     //
-//    if (bEditMode && title != NULL && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)))
-//        title->customDraw();
+    if (bEditMode && title != NULL && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)))
+        title->customDraw();
 }
 
 /* ================================================ */
@@ -460,17 +475,21 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
         return result;
     }
     
+    ofVec3f mouse_transformed = ofVec3f(e.x, e.y, 0.0);
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0)*this->getGlobalTransformMatrix();
     
-    if ( bEditMode && bActive ){
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    
+    if ( bEditMode && bActive && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer))){
         
-        result = !title->getTittleBox().inside(mouse);
+        result = !title->getTittleBox().inside(mouse_transformed);
+//        result = !title->getTittleBox().inside(mouse);
         
         if (!bEditMask){
             // Editing the texture corners
             //
             for(int i = 0; i < 4; i++){
-                if ( ofDist(mouse.x, mouse.y, textureCorners[i].x, textureCorners[i].y) <= 10 )
+                if ( ofDist(mouse.x, mouse.y, textureCorners[i].x, textureCorners[i].y) <= 10*scale.x )
                     selectedTextureCorner = i;
             }
         } else {
@@ -480,7 +499,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
             for(int i = 0; i < maskCorners.size(); i++){
                 ofVec3f pos = getSurfaceToScreen( ofPoint(maskCorners[i].x * width, maskCorners[i].y * height));
                 
-                if ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 10 ){
+                if ( ofDist(mouse.x, mouse.y, pos.x, pos.y) <= 10*scale.x ){
                     selectedMaskCorner = i;
                     overDot = true;
                 }
@@ -507,7 +526,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
                     float a = atan2f(AtoM.x, AtoM.y);
                     float b = atan2f(AtoB.x, AtoB.y);
                     
-                    if ( abs(a - b) < 0.05){
+                    if ( abs(a - b) < 0.05*scale.x){
                         addNew = next;
                     }
                 }
@@ -527,14 +546,14 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
         for (int i = 0; i < outPut.size() and !overDot; i++){
             
             if (linkType == PATH_LINKS) {
-                if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10 ) ||
-                    ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10 )) {
+                if (( ofDist(mouse.x, mouse.y, outPut[i].pos.x, outPut[i].pos.y) <= 10*scale.x ) ||
+                    ( ofDist(mouse.x, mouse.y, outPut[i].to->pos.x, outPut[i].to->pos.y) <= 10*scale.x )) {
                     overDot = true;
                 }
                 
                 for (int j = 0; j < outPut[i].link_vertices.size(); j++){
                     
-                    if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10 ){
+                    if ( ofDist(mouse.x, mouse.y, outPut[i].link_vertices[j].x, outPut[i].link_vertices[j].y) <= 10*scale.x ){
                         if ((e.button == 2) || ctrl_active) {
                             //delete link dot
                             outPut[i].link_vertices.erase(outPut[i].link_vertices.begin()+j);
@@ -555,7 +574,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
                 
                 if (link_vertices.size()){
                     int addNew = -1;
-                    int tolerance = 4;
+                    int tolerance = 4*scale.x;
                     
                     for (int j = 0; j < link_vertices.size()-1; j++){
                         int next = (j+1)%link_vertices.size();
@@ -995,6 +1014,17 @@ float ofxPatch::getWidth(){
 }
 
 //------------------------------------------------------------------
+ofRectangle ofxPatch::getBox(){
+    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
+    
+    ofRectangle aux = box;
+    aux.set(ofPoint((aux.x - cam_pos.x)/scale.x, (aux.y - cam_pos.y)/scale.y), aux.width/scale.x, aux.height/scale.y);
+    
+    return aux;
+}
+
+//------------------------------------------------------------------
 float ofxPatch::getHighestInspectorYCoord(int winId){
     if(bInspector && winId == windowId){
         return panel.getPosition().y + panel.getHeight();
@@ -1130,11 +1160,18 @@ void ofxPatch::rotate(float _rotAngle){
 
 //------------------------------------------------------------------
 bool ofxPatch::isOver(ofPoint _pos){
-    ofRectangle biggerBox = textureCorners.getBoundingBox();
-    biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+30);
-    biggerBox.setPosition(biggerBox.x, biggerBox.y-10);
     
-    return biggerBox.inside(_pos);
+    if (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer)) {
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        
+        ofRectangle biggerBox = textureCorners.getBoundingBox();
+        biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y-(5*scale.x), biggerBox.width+(20*scale.x), biggerBox.height+(30*scale.y));
+//        biggerBox.setFromCenter(biggerBox.getCenter().x, biggerBox.getCenter().y, biggerBox.width+20, biggerBox.height+30);
+//        biggerBox.setPosition(biggerBox.x, biggerBox.y-10);
+        
+        return biggerBox.inside(_pos);
+    }
+    else return false;
 };
 
 //------------------------------------------------------------------
