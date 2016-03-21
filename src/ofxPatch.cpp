@@ -576,7 +576,10 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
                             if(std::fabs (mouse.y - (M * mouse.x + C)) <= tolerance) {
                                 
                                 if (alt_active) {
-                                    ofNotifyEvent(deletePatchConections, nId);
+                                    ofxPatchDeleteEvent ev;
+                                    ev.patchId = nId;
+                                    ev.deleteOutputId = i;
+                                    ofNotifyEvent(deletePatchConection, ev);
                                     break;
                                 }
                                 else {

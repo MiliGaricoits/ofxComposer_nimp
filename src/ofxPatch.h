@@ -19,6 +19,7 @@
 #include "enumerations.h"
 #include "ofxPanel.h"
 #include "ConsoleLog.h"
+#include "ofxPatchDeleteEvent.h"
 
 struct LinkDot{
     LinkDot(){
@@ -57,7 +58,7 @@ public:
     //** EVENTS **//
     //
     //void            guiEvent(ofxUIEventArgs &e);
-    ofEvent<int>    deletePatchConections;
+    ofEvent<ofxPatchDeleteEvent> deletePatchConection;
     
     
     //** SETTERS **//

@@ -618,7 +618,7 @@ void ofxComposer::addPatch(ofxPatch *p, ofPoint _position){
         p->setLinkType(nodeLinkType);
     }
     p->setParent(*this->getParent());
-    ofAddListener(p->deletePatchConections , this, &ofxComposer::deletePatchConections);
+    ofAddListener(p->deletePatchConection , this, &ofxComposer::deletePatchConection);
     
     patches[p->getId()] = p;
 }
@@ -683,13 +683,12 @@ void ofxComposer::updateConnectionsSize(ofxPatch* patch){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::deletePatchConections(int &patch_id){
+void ofxComposer::deletePatchConection(ofxPatchDeleteEvent &ev){
 
-    for(int i = 0; i < patches[patch_id]->outPut.size(); i++) {
-        patches[patches[patch_id]->outPut[i].toId]->removeInput(((ImageOutput*)patches[patch_id])->getId());
-        this->updateConnectionsSize(patches[patches[patch_id]->outPut[i].toId]);
-    }
-    patches[patch_id]->outPut.clear();
+    patches[patches[ev.patchId]->outPut[ev.deleteOutputId].toId]->removeInput(((ImageOutput*)patches[ev.patchId])->getId());
+    this->updateConnectionsSize(patches[patches[ev.patchId]->outPut[ev.deleteOutputId].toId]);
+    
+    patches[ev.patchId]->outPut.erase(patches[ev.patchId]->outPut.begin() + ev.deleteOutputId);
 }
 
 // -----------------------------------------------------------
