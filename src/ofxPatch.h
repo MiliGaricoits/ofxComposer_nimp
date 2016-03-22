@@ -34,7 +34,8 @@ struct LinkDot{
     int         toId;
     ofxShaderObj *toShader;
     vector<ofPoint> link_vertices;   // vertices in the nodes links
-    ofPolyline  link_line;
+    ofPolyline  vertex_line;
+    ofPolyline  normal_bezier_line;
     LinkDot     *toEncapsulated;
     int         toEncapsulatedId;
 };

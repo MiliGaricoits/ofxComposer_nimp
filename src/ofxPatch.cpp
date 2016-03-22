@@ -371,11 +371,20 @@ void ofxPatch::customDraw(){
                         }else{
                             dstOutput = outPut[i].to->pos;
                         }
-                        if (linkType == STRAIGHT_LINKS)
-                            ofLine(outPut[i].pos, dstOutput);
+                        if (linkType == STRAIGHT_LINKS) {
+                            outPut[i].normal_bezier_line.clear();
+                            outPut[i].normal_bezier_line.addVertex(outPut[i].pos);
+                            outPut[i].normal_bezier_line.lineTo(dstOutput);
+                            outPut[i].normal_bezier_line.draw();
+//                            ofLine(outPut[i].pos, dstOutput);
+                        }
                         else if (linkType == CURVE_LINKS) {
                             ofNoFill();
-                            ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+                            outPut[i].normal_bezier_line.clear();
+                            outPut[i].normal_bezier_line.addVertex(outPut[i].pos.x, outPut[i].pos.y);
+                            outPut[i].normal_bezier_line.bezierTo(outPut[i].pos.x+60, outPut[i].pos.y, dstOutput.x-60, dstOutput.y, dstOutput.x, dstOutput.y);
+                            outPut[i].normal_bezier_line.draw();
+//                            ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
                             ofFill();
                         }
                         else {
@@ -386,12 +395,12 @@ void ofxPatch::customDraw(){
                                 }
                             }
                             
-                            outPut[i].link_line.clear();
-                            outPut[i].link_line.addVertex(outPut[i].pos);
+                            outPut[i].vertex_line.clear();
+                            outPut[i].vertex_line.addVertex(outPut[i].pos);
                             if (outPut[i].link_vertices.size() > 0)
-                                outPut[i].link_line.addVertices(outPut[i].link_vertices);
-                            outPut[i].link_line.addVertex(dstOutput);
-                            outPut[i].link_line.draw();
+                                outPut[i].vertex_line.addVertices(outPut[i].link_vertices);
+                            outPut[i].vertex_line.addVertex(dstOutput);
+                            outPut[i].vertex_line.draw();
                             
                             ofFill();
                         }
@@ -480,6 +489,8 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
     
     ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
     
+    int tolerance = 4*scale.x;
+    
     if ( bEditMode && bActive && (!isAudioAnalizer || (isAudioAnalizer && drawAudioAnalizer))){
         
         result = !title->getTittleBox().inside(mouse_transformed);
@@ -538,7 +549,22 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
             }
         }
     }
-    // Is mouse pressing over link dot ?
+    // Is link of type path or straight being deleted ?
+    if (alt_active) {
+        for (int i = 0; i < outPut.size(); i++){
+            if (( abs((outPut[i].normal_bezier_line.getClosestPoint(mouse) - mouse).x) < tolerance) &&
+                ( abs((outPut[i].normal_bezier_line.getClosestPoint(mouse) - mouse).y) < tolerance) ) {
+                
+                ofxPatchDeleteEvent ev;
+                ev.patchId = nId;
+                ev.deleteOutputId = i;
+                ofNotifyEvent(deletePatchConection, ev);
+                break;
+            }
+        }
+    }
+    
+    // Is mouse pressing over link dot or link with vertices being deleted?
     if (bEditMode && (linkType == PATH_LINKS || alt_active)){
         
         bool overDot = false;
@@ -569,11 +595,10 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
             }
             
             if (!overDot and outPut.size() > 0){
-                vector<ofPoint> link_vertices = outPut[i].link_line.getVertices();
+                vector<ofPoint> link_vertices = outPut[i].vertex_line.getVertices();
                 
                 if (link_vertices.size()){
                     int addNew = -1;
-                    int tolerance = 4*scale.x;
                     
                     for (int j = 0; j < link_vertices.size()-1; j++){
                         int next = (j+1)%link_vertices.size();
