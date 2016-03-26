@@ -12,30 +12,6 @@
 #include "EventHandler.h"
 #include "AudioAnalizer.h"
 
-//  HELP screen -> F1
-//
-string helpScreen = "\n \
-| ofxComposer help\n \
----------------------------------------------------\n \
-\n \
-- F1:   Turn ON/OFF this help message\n \
-- F2:   Surface Edit-Mode on/off\n \
-- F3:   Masking-Mode ON/OFF (need Edit-Mode ) \n \
-\n \
-On mask mode on:\n \
-- x: delete mask path point\n \
-- r: reset mask path\n \
-\n \
-- F7:   Turn ON/OFF the fullscreen-mode\n \
-\n \
-Mouse and Coorners: \n \
-- Left Button Drag:     coorner proportional scale \n \
-- Left Button Drag + R: Rotate Patch\n \
-- Middle Button Drag \n \
-or \n \
-Right Drag + A:       centered proportional scale\n \
-- Right Button Drag:    coorner transformation\n ";
-
 ofxComposer::ofxComposer(){
     
     //  Event listeners
@@ -57,7 +33,6 @@ ofxComposer::ofxComposer(){
     selectedDot = -1;
     selectedID = -1;
     bEditMode = true;
-    bHelp = false;
     
     // zoom & drag
     //
@@ -155,13 +130,6 @@ void ofxComposer::customDraw(){
             }
         }
         
-        //  Draw Help screen
-        //
-        if (bHelp){
-            ofSetColor(255);
-            ofDrawBitmapString(helpScreen, 20, ofGetWindowHeight()*0.5- 11.0*15.0);
-        }
-        
         // multiple select
         //
         ofNoFill();
@@ -200,9 +168,7 @@ void ofxComposer::_keyPressed(ofKeyEventArgs &e){
         return;
     }
     
-    if (e.key == OF_KEY_F1 ){
-        bHelp = !bHelp;
-    } else if (e.key == OF_KEY_F2 ){
+    if (e.key == OF_KEY_F2 ){
         bEditMode = !bEditMode;
     } else if ((e.key == OF_KEY_F3 ) || (e.key == OF_KEY_F4 ) ){
         //  Special keys reserved for Patch Events

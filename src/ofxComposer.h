@@ -114,7 +114,6 @@ private:
     string  configFile;
     
     bool    bEditMode;
-    bool    bHelp;
     
     // node select, and link vertex selected
     //
