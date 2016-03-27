@@ -356,7 +356,8 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
             if ((selectedDot != it->first) &&              // If not him self
                 //(it->second->getType() == "ofShader") && // The target it's a shader
                 (it->second->bEditMode) &&                 // And we are in editMode and not on maskMode
-                !(it->second->bEditMask) ){
+                !(it->second->bEditMask) &&
+                it->second->aceptsMoreInputs()){           // And the node acepts more inputs
                 
                 for (int j = 0; j < it->second->inPut.size(); j++){
                     

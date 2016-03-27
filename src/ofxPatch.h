@@ -138,6 +138,7 @@ public:
     virtual void    resetSize(int _width = 0, int _height = 0);
     virtual void    resetSizeBasedOnInput(ofxPatch* input_);
     void            resetSizeToNoInputs();
+    virtual bool    aceptsMoreInputs(){};
     
     // methods for adding input
     //
