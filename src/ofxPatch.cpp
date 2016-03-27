@@ -37,6 +37,7 @@ ofxPatch::ofxPatch(){
     isAudioAnalizer     = false;
     isAudio             = false;
     isOSC               = false;
+    isSyphonServer      = false;
     
     width               = NODE_WIDTH;
     height              = NODE_HEIGHT;
@@ -348,64 +349,66 @@ void ofxPatch::customDraw(){
                 }
             }
             
-            // Draw the output linking dot
-            //
-            ofNoFill();
-            ofSetColor(255, 150);
-            ofCircle(getOutPutPosition(), 5*scale.x);
-            
-            ofPopStyle();
-        
-            // Draw the links between nodes
-            //
-            if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
-                for (int i = 0; i < outPut.size(); i++){
-                    if (outPut[i].to != NULL){
-                        ofFill();
-                        ofCircle(outPut[i].pos, 3*scale.x);
-                        
-                        // set dstOutput to the encapsulated patch, or the regular exit
-                        ofPoint dstOutput;
-                        if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
-                            dstOutput = outPut[i].toEncapsulated->pos;
-                        }else{
-                            dstOutput = outPut[i].to->pos;
-                        }
-                        if (linkType == STRAIGHT_LINKS) {
-                            outPut[i].normal_bezier_line.clear();
-                            outPut[i].normal_bezier_line.addVertex(outPut[i].pos);
-                            outPut[i].normal_bezier_line.lineTo(dstOutput);
-                            outPut[i].normal_bezier_line.draw();
-//                            ofLine(outPut[i].pos, dstOutput);
-                        }
-                        else if (linkType == CURVE_LINKS) {
-                            ofNoFill();
-                            outPut[i].normal_bezier_line.clear();
-                            outPut[i].normal_bezier_line.addVertex(outPut[i].pos.x, outPut[i].pos.y);
-                            outPut[i].normal_bezier_line.bezierTo(outPut[i].pos.x+60, outPut[i].pos.y, dstOutput.x-60, dstOutput.y, dstOutput.x, dstOutput.y);
-                            outPut[i].normal_bezier_line.draw();
-//                            ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+            if(!isSyphonServer){
+                // Draw the output linking dot
+                //
+                ofNoFill();
+                ofSetColor(255, 150);
+                ofCircle(getOutPutPosition(), 5*scale.x);
+                
+                ofPopStyle();
+                
+                // Draw the links between nodes
+                //
+                if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
+                    for (int i = 0; i < outPut.size(); i++){
+                        if (outPut[i].to != NULL){
                             ofFill();
-                        }
-                        else {
-                            if (outPut[i].link_vertices.size() > 0) {
+                            ofCircle(outPut[i].pos, 3*scale.x);
+                            
+                            // set dstOutput to the encapsulated patch, or the regular exit
+                            ofPoint dstOutput;
+                            if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
+                                dstOutput = outPut[i].toEncapsulated->pos;
+                            }else{
+                                dstOutput = outPut[i].to->pos;
+                            }
+                            if (linkType == STRAIGHT_LINKS) {
+                                outPut[i].normal_bezier_line.clear();
+                                outPut[i].normal_bezier_line.addVertex(outPut[i].pos);
+                                outPut[i].normal_bezier_line.lineTo(dstOutput);
+                                outPut[i].normal_bezier_line.draw();
+                                //                            ofLine(outPut[i].pos, dstOutput);
+                            }
+                            else if (linkType == CURVE_LINKS) {
                                 ofNoFill();
-                                for(int j = 0; j < outPut[i].link_vertices.size(); j++){
-                                    ofCircle( outPut[i].link_vertices[j], 4*scale.x);
+                                outPut[i].normal_bezier_line.clear();
+                                outPut[i].normal_bezier_line.addVertex(outPut[i].pos.x, outPut[i].pos.y);
+                                outPut[i].normal_bezier_line.bezierTo(outPut[i].pos.x+60, outPut[i].pos.y, dstOutput.x-60, dstOutput.y, dstOutput.x, dstOutput.y);
+                                outPut[i].normal_bezier_line.draw();
+                                //                            ofBezier(outPut[i].pos.x, outPut[i].pos.y, outPut[i].pos.x+55, outPut[i].pos.y, dstOutput.x-55, dstOutput.y, dstOutput.x, dstOutput.y);
+                                ofFill();
+                            }
+                            else {
+                                if (outPut[i].link_vertices.size() > 0) {
+                                    ofNoFill();
+                                    for(int j = 0; j < outPut[i].link_vertices.size(); j++){
+                                        ofCircle( outPut[i].link_vertices[j], 4*scale.x);
+                                    }
                                 }
+                                
+                                outPut[i].vertex_line.clear();
+                                outPut[i].vertex_line.addVertex(outPut[i].pos);
+                                if (outPut[i].link_vertices.size() > 0)
+                                    outPut[i].vertex_line.addVertices(outPut[i].link_vertices);
+                                outPut[i].vertex_line.addVertex(dstOutput);
+                                outPut[i].vertex_line.draw();
+                                
+                                ofFill();
                             }
                             
-                            outPut[i].vertex_line.clear();
-                            outPut[i].vertex_line.addVertex(outPut[i].pos);
-                            if (outPut[i].link_vertices.size() > 0)
-                                outPut[i].vertex_line.addVertices(outPut[i].link_vertices);
-                            outPut[i].vertex_line.addVertex(dstOutput);
-                            outPut[i].vertex_line.draw();
-                            
-                            ofFill();
+                            ofCircle(dstOutput, 3*scale.x);
                         }
-                        
-                        ofCircle(dstOutput, 3*scale.x);
                     }
                 }
             }

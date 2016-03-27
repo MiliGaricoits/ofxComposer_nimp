@@ -110,6 +110,7 @@ public:
     bool            getIsAudioAnalizer(){ return isAudioAnalizer; };
     bool            getIsOSCReceiver(){ return isOSC; };
     bool            getDrawAudioAnalizer(){ return drawAudioAnalizer; };
+    bool            getIsSyphonServer(){ return isSyphonServer; };
     nodeType        getNodeType(){ return nodeType; };
     virtual string  getName() {};
     ofxPanel*       getPanel() { return &panel; };
@@ -194,6 +195,7 @@ protected:
     bool            isAudioAnalizer;
     bool            isAudio;
     bool            isOSC;
+    bool            isSyphonServer;
     
     // Mask variables
     //
