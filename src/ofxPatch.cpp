@@ -719,7 +719,8 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                     float actualDist = mouse.distance( textureCorners[opositCorner] );
                     
                     float dif = actualDist/prevDist;
-                    float patchScale = getPatchScale(mouse, mouseLast, dif);
+//                    float patchScale = getPatchScale(mouse, mouseLast, dif);
+                    float patchScale = getPatchScale(mouse, mouseLast, actualDist);
                     if(patchScale > 0){
                         move( textureCorners[opositCorner] + toOpositCorner * patchScale );
                         scale(patchScale);
@@ -1961,19 +1962,13 @@ float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
         canScale = smaller;
     }
     
-    
-    float step = 1.f;
-    if(((ofCamera*)this->getParent())->getScale().x >= 1){
-        step = SCALE_STEP / ((ofCamera*)this->getParent())->getScale().x;
-    } else {
-        step = SCALE_STEP * ((ofCamera*)this->getParent())->getScale().x;
-    }
+    float step = SCALE_STEP * ((ofCamera*)this->getParent())->getScale().x;
     // set patch scale
     if(canScale) {
         if(bigger) {
-            scale = 1.f + step;
+            scale = 1.f + step + mouse.distance(mousePrev)/500.f;
         } else if(smaller) {
-            scale = 1.f - step;
+            scale = 1.f - step - mouse.distance(mousePrev)/500.f;
         } else {
             scale = 1.f;
         }

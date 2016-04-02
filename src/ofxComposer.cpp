@@ -495,8 +495,10 @@ int ofxComposer::getNodesCount() {
 int ofxComposer::getPatchesLowestCoord(int winId){
     int coordMasBaja = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(coordMasBaja > it->second->getLowestYCoord(winId)){
-            coordMasBaja = it->second->getLowestYCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(coordMasBaja > it->second->getLowestYCoord(winId)){
+                coordMasBaja = it->second->getLowestYCoord(winId);
+            }
         }
     }
     return coordMasBaja - 20;
@@ -506,8 +508,10 @@ int ofxComposer::getPatchesLowestCoord(int winId){
 int ofxComposer::getPatchesHighestCoord(int winId){
     int coordMasAlta = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(coordMasAlta < it->second->getHighestYCoord(winId)){
-            coordMasAlta = it->second->getHighestYCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(coordMasAlta < it->second->getHighestYCoord(winId)){
+                coordMasAlta = it->second->getHighestYCoord(winId);
+            }
         }
     }
     return coordMasAlta;
@@ -517,8 +521,10 @@ int ofxComposer::getPatchesHighestCoord(int winId){
 int ofxComposer::getPatchesLeftMostCoord(int winId){
     int coordMasIzq = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(coordMasIzq > it->second->getLowestXCoord(winId)){
-            coordMasIzq = it->second->getLowestXCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(coordMasIzq > it->second->getLowestXCoord(winId)){
+                coordMasIzq = it->second->getLowestXCoord(winId);
+            }
         }
     }
     return coordMasIzq;
@@ -528,8 +534,10 @@ int ofxComposer::getPatchesLeftMostCoord(int winId){
 int ofxComposer::getPatchesRightMostCoord(int winId){
     int coordMasDer = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(coordMasDer < it->second->getHighestXCoord(winId)){
-            coordMasDer = it->second->getHighestXCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(coordMasDer < it->second->getHighestXCoord(winId)){
+                coordMasDer = it->second->getHighestXCoord(winId);
+            }
         }
     }
     return coordMasDer;
@@ -538,8 +546,10 @@ int ofxComposer::getPatchesRightMostCoord(int winId){
 int ofxComposer::getPatchesHighestYInspectorCoord(int winId){
     int highestY = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(highestY < it->second->getHighestInspectorYCoord(winId)){
-            highestY = it->second->getHighestInspectorYCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(highestY < it->second->getHighestInspectorYCoord(winId)){
+                highestY = it->second->getHighestInspectorYCoord(winId);
+            }
         }
     }
     return highestY;
@@ -548,8 +558,10 @@ int ofxComposer::getPatchesHighestYInspectorCoord(int winId){
 int ofxComposer::getPatchesHighestXInspectorCoord(int winId){
     int highestX = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(highestX < it->second->getHighestInspectorXCoord(winId)){
-            highestX = it->second->getHighestInspectorXCoord(winId);
+        if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
+            if(highestX < it->second->getHighestInspectorXCoord(winId)){
+                highestX = it->second->getHighestInspectorXCoord(winId);
+            }
         }
     }
     return highestX;
