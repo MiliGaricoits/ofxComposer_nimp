@@ -1043,11 +1043,15 @@ float ofxPatch::getWidth(){
 
 //------------------------------------------------------------------
 ofRectangle ofxPatch::getBox(){
-    ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
-    ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
     
     ofRectangle aux = box;
-    aux.set(ofPoint((aux.x - cam_pos.x)/scale.x, (aux.y - cam_pos.y)/scale.y), aux.width/scale.x, aux.height/scale.y);
+    
+    if (this->getParent() != NULL) {
+        ofVec3f scale = ((ofCamera*)this->getParent())->getScale();
+        ofVec3f cam_pos = ((ofCamera*)this->getParent())->getPosition();
+        
+        aux.set(ofPoint((aux.x - cam_pos.x)/scale.x, (aux.y - cam_pos.y)/scale.y), aux.width/scale.x, aux.height/scale.y);
+    }
     
     return aux;
 }
@@ -1060,6 +1064,7 @@ float ofxPatch::getHighestInspectorYCoord(int winId){
     return -1;
 }
 
+//------------------------------------------------------------------
 float ofxPatch::getHighestInspectorXCoord(int winId){
     if(bInspector && winId == windowId){
         return panel.getPosition().x + panel.getWidth();
@@ -1226,13 +1231,15 @@ void ofxPatch::resetSize(int _width, int _height) {
         height = _height;
     }
 
-    x = textureCorners[0].x;
-    y = textureCorners[0].y;
+    x = textureCorners[1].x;
+    y = textureCorners[1].y;
     
-    textureCorners[0].set(x, y);
-    textureCorners[1].set(x + (width*SCALE_RATIO), y);
-    textureCorners[2].set(x + (width*SCALE_RATIO), y + (height*SCALE_RATIO));
-    textureCorners[3].set(x, y + (height*SCALE_RATIO));
+    textureCorners[0].set(x - (width*SCALE_RATIO), y);
+    textureCorners[1].set(x, y);
+    textureCorners[2].set(x, y + (height*SCALE_RATIO));
+    textureCorners[3].set(x - (width*SCALE_RATIO), y + (height*SCALE_RATIO));
+    
+    bUpdateCoord = true;
 }
 
 //------------------------------------------------------------------
@@ -1583,7 +1590,7 @@ bool ofxPatch::loadSettings(ofxXmlSettings &XML, int nTag_, int nodesCount_) {
 
 //------------------------------------------------------------------
 bool ofxPatch::saveSettings(ofxXmlSettings &XML, bool _new, int _nTag){
-    bool saved = false;
+    bool saved = true;
                 
     // If is not new node ...
     // I need to update my information in the .xml
