@@ -477,6 +477,13 @@ map<int,ofxPatch*> ofxComposer::getActivePatches() {
         if(it->second->bActive) {
             actives[it->second->getId()] = it->second;
         }
+        if (it->second->isLastEncapsulated()) {
+            for(map<int,ofxPatch*>::iterator it2 = patches.begin(); it2 != patches.end(); it2++ ){
+                if(!it2->second->isLastEncapsulated() && it2->second->getEncapsulatedId() == it->second->getEncapsulatedId()) {
+                    actives[it2->second->getId()] = it2->second;
+                }
+            }
+        }
     }
     return actives;
 }
@@ -977,15 +984,15 @@ string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){
 
 //------------------------------------------------------------------
 bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulatedId){
-    bool saved = false;
+    bool saved = true;
     int lastPatch = -1;
+    
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
             lastPatch = it->second->getId();
         }
     }
 
-    
     if(lastPatch < 0){
         stringstream ss;
         ss << "Error saving encapsulatedId " << encapsulatedId;
@@ -1013,9 +1020,11 @@ bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulated
     }
 
     if(saved){
+        int nodeTag = 0;
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             if(!it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
-                XML.setValue("NODE", it->second->getId());
+                nodeTag = XML.addTag("NODE");
+                XML.setValue("NODE", it->second->getId(), nodeTag);
             }
         }
     }
@@ -1032,3 +1041,52 @@ bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulated
     
     return saved;
 }
+
+bool ofxComposer::saveEncapsulatedSettingsToSnippet(ofxXmlSettings &XML, int encapsulatedId, map<int,int> newIdsMap) {
+    
+    bool saved = true;
+    int lastPatch = -1;
+    
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        if(it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+            lastPatch = it->second->getId();
+        }
+    }
+    
+    if(lastPatch < 0){
+        stringstream ss;
+        ss << "Error saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushError(ss.str());
+        ConsoleLog::getInstance()->pushError("It doesn't exist");
+        return false;
+    }
+    
+
+    int lastPlace = XML.addTag("ENCAPSULATED_NODE");
+    XML.addAttribute("ENCAPSULATED_NODE", "id", encapsulatedId, lastPlace);
+    XML.addAttribute("ENCAPSULATED_NODE", "lastEncapsulatedId", newIdsMap[lastPatch], lastPlace);
+    saved = XML.pushTag("ENCAPSULATED_NODE", lastPlace);
+
+    if(saved){
+        int nodeTag = 0;
+        for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+            if(!it->second->isLastEncapsulated() && it->second->getEncapsulatedId() == encapsulatedId) {
+                nodeTag = XML.addTag("NODE");
+                XML.setValue("NODE", newIdsMap[it->second->getId()], nodeTag);
+            }
+        }
+    }
+    XML.popTag();
+    
+    stringstream ss;
+    if(!saved){
+        ss << "Error saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushError(ss.str());
+    } else{
+        ss << "Success saving encapsulatedId " << encapsulatedId;
+        ConsoleLog::getInstance()->pushSuccess(ss.str());
+    }
+    
+    return saved;
+}
+

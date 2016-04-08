@@ -81,6 +81,7 @@ public:
     void    setCameraForWindow(int winId, ofEasyCam cam);
     string  getLastEncapsulatedName(int encapsulatedId);
     bool    saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulatedId);
+    bool    saveEncapsulatedSettingsToSnippet(ofxXmlSettings &XML, int encapsulatedId, map<int,int> newIdsMap);
 
 protected:
     
