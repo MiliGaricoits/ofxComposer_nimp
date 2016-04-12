@@ -96,8 +96,8 @@ ofxPatch::ofxPatch(){
     lastEncapsulated = false;
     encapsulatedId = -1;
     
-    minArea = 5000.f;
-    maxArea = 100000.f;
+//    minArea = 5000.f;
+//    maxArea = 100000.f;
     canPushMinMaxSizeMessage = true;
 };
 
@@ -710,26 +710,75 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
                 } else {
                     // Corner Scale
                     //
-                    ofVec2f center = getPos();
                     
-                    int  opositCorner = (selectedTextureCorner - 2 < 0)? (4+selectedTextureCorner-2) : (selectedTextureCorner-2);
-                    ofVec2f toOpositCorner = center - textureCorners[opositCorner];
+                    ofVec3f camScale = ((ofCamera*)this->getParent())->getScale();
                     
-                    float prevDist = mouseLast.distance( textureCorners[opositCorner] );
-                    float actualDist = mouse.distance( textureCorners[opositCorner] );
+                    float aspectRatio = (textureCorners[1].x - textureCorners[0].x) / (textureCorners[3].y - textureCorners[0].y);
+                    float mouseDifference = mouse.distance(mouseLast)*camScale.x;
+                    int   opositCorner = (selectedTextureCorner - 2 < 0)? (4+selectedTextureCorner-2) : (selectedTextureCorner-2);
                     
-                    float dif = actualDist/prevDist;
-//                    float patchScale = getPatchScale(mouse, mouseLast, dif);
-                    float patchScale = getPatchScale(mouse, mouseLast, actualDist);
-                    if(patchScale > 0){
-                        move( textureCorners[opositCorner] + toOpositCorner * patchScale );
-                        scale(patchScale);
-                    } else {
-                        if(canPushMinMaxSizeMessage){
-                            ConsoleLog::getInstance()->pushWarning("Minimum or maximum node size reached");
+                    ofRectangle boundingBox = textureCorners.getBoundingBox();
+                    ofPoint     patchCenter = boundingBox.getCenter();
+                    
+                    if (abs(mouse.x - mouseLast.x) > abs(mouse.y - mouseLast.y)) {
+                        
+                        if ((mouseLast.x - mouse.x > 0 && (selectedTextureCorner == 1 || selectedTextureCorner == 2)) ||
+                            (mouseLast.x - mouse.x < 0 && (selectedTextureCorner == 0 || selectedTextureCorner == 3))){
+                            mouseDifference = -mouseDifference;
+                        }
+                        boundingBox.setFromCenter(patchCenter.x, patchCenter.y, abs(textureCorners[selectedTextureCorner].x - textureCorners[opositCorner].x) + mouseDifference, (abs(textureCorners[selectedTextureCorner].x - textureCorners[opositCorner].x) + mouseDifference) / aspectRatio);
+                    }
+                    else {
+                        if ((mouseLast.y - mouse.y < 0 && (selectedTextureCorner == 0 || selectedTextureCorner == 1)) ||
+                            (mouseLast.y - mouse.y > 0 && (selectedTextureCorner == 2 || selectedTextureCorner == 3))){
+                            mouseDifference = -mouseDifference;
+                        }
+                        boundingBox.setFromCenter(patchCenter.x, patchCenter.y, (abs(textureCorners[selectedTextureCorner].y - textureCorners[opositCorner].y) + mouseDifference) * aspectRatio, abs(textureCorners[selectedTextureCorner].y - textureCorners[opositCorner].y) + mouseDifference);
+                    }
+                    
+                    if (mouseDifference < 0 && (boundingBox.width < 80*camScale.x || boundingBox.height < 70*camScale.y)) {
+                        if (canPushMinMaxSizeMessage) {
+                            ConsoleLog::getInstance()->pushWarning("Minimum node size reached.");
                             canPushMinMaxSizeMessage = false;
                         }
                     }
+                    else if (mouseDifference > 0 && (boundingBox.width > 400*camScale.x || boundingBox.height > 400*camScale.y)) {
+                        if (canPushMinMaxSizeMessage) {
+                            ConsoleLog::getInstance()->pushWarning("Maximum node size reached.");
+                            canPushMinMaxSizeMessage = false;
+                        }
+                    }
+                    else {
+
+                        textureCorners[0] = boundingBox.getTopLeft();
+                        textureCorners[1] = boundingBox.getTopRight();
+                        textureCorners[2] = boundingBox.getBottomRight();
+                        textureCorners[3] = boundingBox.getBottomLeft();
+                        
+                        bUpdateCoord = true;
+                        canPushMinMaxSizeMessage = true;
+                    }
+                    
+//                    ofVec2f center = getPos();
+//                    
+//                    int  opositCorner = (selectedTextureCorner - 2 < 0)? (4+selectedTextureCorner-2) : (selectedTextureCorner-2);
+//                    ofVec2f toOpositCorner = center - textureCorners[opositCorner];
+//                    
+//                    float prevDist = mouseLast.distance( textureCorners[opositCorner] );
+//                    float actualDist = mouse.distance( textureCorners[opositCorner] );
+//                    
+//                    float dif = actualDist/prevDist;
+//                    //                    float patchScale = getPatchScale(mouse, mouseLast, dif);
+//                    float patchScale = getPatchScale(mouse, mouseLast, actualDist);
+//                    if(patchScale > 0){
+//                        move( textureCorners[opositCorner] + toOpositCorner * patchScale );
+//                        scale(patchScale);
+//                    } else {
+//                        if(canPushMinMaxSizeMessage){
+//                            ConsoleLog::getInstance()->pushWarning("Minimum or maximum node size reached");
+//                            canPushMinMaxSizeMessage = false;
+//                        }
+//                    }
                 }
                 
                 // Drag all the surface
@@ -804,7 +853,7 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
         }
     }
     
-    canPushMinMaxSizeMessage = true;
+//    canPushMinMaxSizeMessage = true;
 }
 
 //------------------------------------------------------------------
@@ -1941,87 +1990,88 @@ void ofxPatch::setToEncapsulatedId(int patchId){
 
 
 // ---------------------------------------------------
-// -------------------------------------- Validate MIN MAX Patch size
+// ----------------------- Validate MIN MAX Patch size
 // ---------------------------------------------------
 
-float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
-    // get patch area
-    float area = textureCorners.getArea();
-    
-    // set if making patch bigger or smaller
-    bool bigger = makingPatchBigger(mouse, mousePrev);
-    bool smaller = makingPatchSmaller(mouse, mousePrev);
-    float scale = 1.f;
-    
-    bool canScale = false;
-    
-    // return -1 if min/max size reached
-    if((area < minArea && smaller) || (area > maxArea && bigger)){
-        return -1.f;
-    }
-    
-    // determine if can be scaled
-    if(area < maxArea && area > minArea){
-        canScale = bigger || smaller;
-    } else if(area < minArea){
-        canScale = bigger;
-    } else if(area > maxArea){
-        canScale = smaller;
-    }
-    
-    float step = SCALE_STEP * ((ofCamera*)this->getParent())->getScale().x;
-    // set patch scale
-    if(canScale) {
-        if(bigger) {
-            scale = 1.f + step + mouse.distance(mousePrev)/500.f;
-        } else if(smaller) {
-            scale = 1.f - step - mouse.distance(mousePrev)/500.f;
-        } else {
-            scale = 1.f;
-        }
-    }
-    
-    return scale;
-    
-}
-
-bool ofxPatch::makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev){
-    switch(selectedTextureCorner){
-        case 0:
-            return mouse.x < mousePrev.x;
-            break;
-        case 1:
-            return mouse.x > mousePrev.x;
-            break;
-        case 2:
-            return mouse.x > mousePrev.x;
-            break;
-        case 3:
-            return mouse.x < mousePrev.x;
-            break;
-        default:
-            return false;
-    }
-}
-
-bool ofxPatch::makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev){
-    switch(selectedTextureCorner){
-        case 0:
-            return mouse.x > mousePrev.x;
-            break;
-        case 1:
-            return mouse.x < mousePrev.x;
-            break;
-        case 2:
-            return mouse.x < mousePrev.x;
-            break;
-        case 3:
-            return mouse.x > mousePrev.x;
-            break;
-        default:
-            return false;
-    }
-}
+//float ofxPatch::getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif){
+//    // get patch area
+//    float area = textureCorners.getArea();
+//    
+//    // set if making patch bigger or smaller
+//    bool bigger = makingPatchBigger(mouse, mousePrev);
+//    bool smaller = makingPatchSmaller(mouse, mousePrev);
+//    float scale = 1.f;
+//    
+//    bool canScale = false;
+//    
+//    // return -1 if min/max size reached
+//    if((area < minArea && smaller) || (area > maxArea && bigger)){
+//        return -1.f;
+//    }
+//    
+//    // determine if can be scaled
+//    if(area < maxArea && area > minArea){
+//        canScale = bigger || smaller;
+//    } else if(area < minArea){
+//        canScale = bigger;
+//    } else if(area > maxArea){
+//        canScale = smaller;
+//    }
+//    
+//    float step = SCALE_STEP * ((ofCamera*)this->getParent())->getScale().x;
+//    // set patch scale
+//    if(canScale) {
+//        if(bigger) {
+//            scale = 1.f + step + mouse.distance(mousePrev)/500.f;
+//        } else if(smaller) {
+//            scale = 1.f - step - mouse.distance(mousePrev)/500.f;
+//        } else {
+//            scale = 1.f;
+//        }
+//    }
+//    
+//    return scale;
+//}
+//
+////------------------------------------------------------------------
+//bool ofxPatch::makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev){
+//    switch(selectedTextureCorner){
+//        case 0:
+//            return mouse.x < mousePrev.x;
+//            break;
+//        case 1:
+//            return mouse.x > mousePrev.x;
+//            break;
+//        case 2:
+//            return mouse.x > mousePrev.x;
+//            break;
+//        case 3:
+//            return mouse.x < mousePrev.x;
+//            break;
+//        default:
+//            return false;
+//    }
+//}
+//
+////------------------------------------------------------------------
+//bool ofxPatch::makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev){
+//    switch(selectedTextureCorner){
+//        case 0:
+//            return mouse.x > mousePrev.x;
+//            break;
+//        case 1:
+//            return mouse.x < mousePrev.x;
+//            break;
+//        case 2:
+//            return mouse.x < mousePrev.x;
+//            break;
+//        case 3:
+//            return mouse.x > mousePrev.x;
+//            break;
+//        default:
+//            return false;
+//    }
+//}
 
 
 // ---------------------------------------------------

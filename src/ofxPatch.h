@@ -278,11 +278,11 @@ private:
     nodeLinkType    linkType;
     bool            linkHit;
     
-    float           minArea, maxArea;
-    // return -1 if max/min size reached
-    float           getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif);
-    bool            makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev);
-    bool            makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev);
+//    float           minArea, maxArea;
+////     return -1 if max/min size reached
+//    float           getPatchScale(ofVec3f mouse, ofVec3f mousePrev, float dif);
+//    bool            makingPatchBigger(ofVec3f mouse, ofVec3f mousePrev);
+//    bool            makingPatchSmaller(ofVec3f mouse, ofVec3f mousePrev);
     bool            canPushMinMaxSizeMessage;
     
 };
