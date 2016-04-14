@@ -104,8 +104,8 @@ public:
     float           getHeight();
     float           getWidth();
     bool            drawInspector();
-    float           getHighestInspectorYCoord(int winId = MAIN_WINDOW);
-    float           getHighestInspectorXCoord(int winId = MAIN_WINDOW);
+    float           getHighestInspectorYCoord(int encapsulatedDrawId);
+    float           getHighestInspectorXCoord(int encapsulatedDrawId);
     bool            getIsAudio(){ return isAudio; };
     bool            getIsAudioAnalizer(){ return isAudioAnalizer; };
     bool            getIsOSCReceiver(){ return isOSC; };
@@ -117,10 +117,10 @@ public:
     
     // when dragging nodes
     //
-    float           getHighestYCoord(int winId = MAIN_WINDOW);
-    float           getLowestYCoord(int winId = MAIN_WINDOW);
-    float           getHighestXCoord(int winId = MAIN_WINDOW);
-    float           getLowestXCoord(int winId = MAIN_WINDOW);
+    float           getHighestYCoord(int encapsulatedDrawId = MAIN_WINDOW);
+    float           getLowestYCoord(int encapsulatedDrawId = MAIN_WINDOW);
+    float           getHighestXCoord(int encapsulatedDrawId = MAIN_WINDOW);
+    float           getLowestXCoord(int encapsulatedDrawId = MAIN_WINDOW);
     
     
     //** OTHER FUNCTIONS **//
@@ -164,11 +164,11 @@ public:
     
     
     // encapsulated
-    int             getWindowId();
+//    int             getWindowId();
     int             getEncapsulatedId();
     int             getToEncapsulatedId();
     bool            isLastEncapsulated();
-    void            setWindowId(int winId);
+//    void            setWindowId(int winId);
     void            setEncapsulatedId(int encapId);
     void            setLastEncapsulated(bool last);
     void            setToEncapsulatedId(int encapId);
@@ -253,7 +253,7 @@ protected:
     
     
     // multiple Window - encapsulated
-    int             windowId;
+//    int             windowId;
     bool            lastEncapsulated;
     int             encapsulatedId;
     

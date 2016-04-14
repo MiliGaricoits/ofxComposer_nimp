@@ -164,7 +164,7 @@ void ofxComposer::drawInspectorGUIs() {
 /* ================================================ */
 
 void ofxComposer::_keyPressed(ofKeyEventArgs &e){
-    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+    if(!EventHandler::getInstance()->isMainEvent()){
         return;
     }
     
@@ -207,6 +207,10 @@ void ofxComposer::_mouseMoved(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mousePressed(ofMouseEventArgs &e){
+    // TODO: ver si esto aplica para cuando este la consola
+//    if(!EventHandler::getInstance()->isMainEvent()){
+//        return;
+//    }
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
@@ -271,7 +275,7 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
-    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+    if(!EventHandler::getInstance()->isMainEvent()){
         return;
     }
     
@@ -342,7 +346,7 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
-    if(EventHandler::getInstance()->getWindowEvent() != MAIN_WINDOW){
+    if(!EventHandler::getInstance()->isMainEvent()){
         return;
     }
     
@@ -366,7 +370,8 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     //
                     if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5){
                         
-                        if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW))) {
+                        // TODO: revisar esto
+                        if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) {
                             // Once he founds it
                             // make the link and forget the selection
                             //
@@ -499,12 +504,12 @@ int ofxComposer::getNodesCount() {
 }
 
 //------------------------------------------------------------------
-int ofxComposer::getPatchesLowestCoord(int winId){
+int ofxComposer::getPatchesLowestCoord(int encapsulatedDrawId){
     int coordMasBaja = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(coordMasBaja > it->second->getLowestYCoord(winId)){
-                coordMasBaja = it->second->getLowestYCoord(winId);
+            if(coordMasBaja > it->second->getLowestYCoord(encapsulatedDrawId)){
+                coordMasBaja = it->second->getLowestYCoord(encapsulatedDrawId);
             }
         }
     }
@@ -512,12 +517,12 @@ int ofxComposer::getPatchesLowestCoord(int winId){
 }
 
 //------------------------------------------------------------------
-int ofxComposer::getPatchesHighestCoord(int winId){
+int ofxComposer::getPatchesHighestCoord(int encapsulatedDrawId){
     int coordMasAlta = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(coordMasAlta < it->second->getHighestYCoord(winId)){
-                coordMasAlta = it->second->getHighestYCoord(winId);
+            if(coordMasAlta < it->second->getHighestYCoord(encapsulatedDrawId)){
+                coordMasAlta = it->second->getHighestYCoord(encapsulatedDrawId);
             }
         }
     }
@@ -525,12 +530,12 @@ int ofxComposer::getPatchesHighestCoord(int winId){
 }
 
 //------------------------------------------------------------------
-int ofxComposer::getPatchesLeftMostCoord(int winId){
+int ofxComposer::getPatchesLeftMostCoord(int encapsulatedDrawId){
     int coordMasIzq = 10000;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(coordMasIzq > it->second->getLowestXCoord(winId)){
-                coordMasIzq = it->second->getLowestXCoord(winId);
+            if(coordMasIzq > it->second->getLowestXCoord(encapsulatedDrawId)){
+                coordMasIzq = it->second->getLowestXCoord(encapsulatedDrawId);
             }
         }
     }
@@ -538,36 +543,36 @@ int ofxComposer::getPatchesLeftMostCoord(int winId){
 }
 
 //------------------------------------------------------------------
-int ofxComposer::getPatchesRightMostCoord(int winId){
+int ofxComposer::getPatchesRightMostCoord(int encapsulatedDrawId){
     int coordMasDer = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(coordMasDer < it->second->getHighestXCoord(winId)){
-                coordMasDer = it->second->getHighestXCoord(winId);
+            if(coordMasDer < it->second->getHighestXCoord(encapsulatedDrawId)){
+                coordMasDer = it->second->getHighestXCoord(encapsulatedDrawId);
             }
         }
     }
     return coordMasDer;
 }
 
-int ofxComposer::getPatchesHighestYInspectorCoord(int winId){
+int ofxComposer::getPatchesHighestYInspectorCoord(int encapsulatedDrawId){
     int highestY = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(highestY < it->second->getHighestInspectorYCoord(winId)){
-                highestY = it->second->getHighestInspectorYCoord(winId);
+            if(highestY < it->second->getHighestInspectorYCoord(encapsulatedDrawId)){
+                highestY = it->second->getHighestInspectorYCoord(encapsulatedDrawId);
             }
         }
     }
     return highestY;
 }
 
-int ofxComposer::getPatchesHighestXInspectorCoord(int winId){
+int ofxComposer::getPatchesHighestXInspectorCoord(int encapsulatedDrawId){
     int highestX = -1;
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer())){
-            if(highestX < it->second->getHighestInspectorXCoord(winId)){
-                highestX = it->second->getHighestInspectorXCoord(winId);
+            if(highestX < it->second->getHighestInspectorXCoord(encapsulatedDrawId)){
+                highestX = it->second->getHighestInspectorXCoord(encapsulatedDrawId);
             }
         }
     }
@@ -768,7 +773,7 @@ int ofxComposer::encapsulate(){
         int encapsulatedId = getNodesCount();
         for(vector<int>::iterator it = patchesToEncapsulate.begin(); it != patchesToEncapsulate.end(); it++ ){
             if(patches.at(*it)->getId() != lastPatch){
-                patches.at(*it)->setWindowId(-1);
+//                patches.at(*it)->setWindowId(-1);
             }
             patches.at(*it)->setEncapsulatedId(encapsulatedId);
             patches.at(*it)->setLastEncapsulated(patches.at(*it)->getId() == lastPatch);
@@ -787,7 +792,7 @@ int ofxComposer::encapsulate(){
 void ofxComposer::uncapsulate(int encapsulatedId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getEncapsulatedId() == encapsulatedId){
-            it->second->setWindowId(MAIN_WINDOW);
+//            it->second->setWindowId(MAIN_WINDOW);
             it->second->setEncapsulatedId(-1);
             it->second->setLastEncapsulated(false);
             it->second->setToEncapsulatedId(-1);
@@ -897,28 +902,28 @@ int ofxComposer::getSelectedEncapsulated(){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::setWindowsIdForEncapsulated(int encapsulatedId, int winId){
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(it->second->getEncapsulatedId() == encapsulatedId){
-            it->second->setWindowId(winId);
-        }
-    }
-}
+//void ofxComposer::setWindowsIdForEncapsulated(int encapsulatedId, int winId){
+//    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+//        if(it->second->getEncapsulatedId() == encapsulatedId){
+//            it->second->setWindowId(winId);
+//        }
+//    }
+//}
 
 //------------------------------------------------------------------
-void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(it->second->getWindowId() == previousWin){
-            if(it->second->isLastEncapsulated()){
-                it->second->setWindowId(MAIN_WINDOW);
-            }else{
-                it->second->setWindowId(-1);
-            }
-        } else if(it->second->getWindowId() > previousWin){
-            it->second->setWindowId(it->second->getWindowId() - 1);
-        }
-    }
-}
+//void ofxComposer::restoreWindowsForEncapsulated(int previousWin){
+//    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+//        if(it->second->getWindowId() == previousWin){
+//            if(it->second->isLastEncapsulated()){
+//                it->second->setWindowId(MAIN_WINDOW);
+//            }else{
+//                it->second->setWindowId(-1);
+//            }
+//        } else if(it->second->getWindowId() > previousWin){
+//            it->second->setWindowId(it->second->getWindowId() - 1);
+//        }
+//    }
+//}
 
 //------------------------------------------------------------------
 // This function sets the output of every node that is conected to one encapsulated
@@ -963,14 +968,14 @@ int ofxComposer::getLastPatchEncapsulated(int encapsulatedId){
 }
 
 //------------------------------------------------------------------
-void ofxComposer::setCameraForWindow(int winId, ofEasyCam cam){
-    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
-        if(it->second->getWindowId() == winId || it->second->isLastEncapsulated()){
-            it->second->setParent(*this->getParent());
-            it->second->title->setParent(*this->getParent());
-        }
-    }
-}
+//void ofxComposer::setCameraForWindow(int winId, ofEasyCam cam){
+//    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+//        if(it->second->getWindowId() == winId || it->second->isLastEncapsulated()){
+//            it->second->setParent(*this->getParent());
+//            it->second->title->setParent(*this->getParent());
+//        }
+//    }
+//}
 
 //------------------------------------------------------------------
 string  ofxComposer::getLastEncapsulatedName(int encapsulatedId){

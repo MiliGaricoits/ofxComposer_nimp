@@ -28,8 +28,8 @@
  *  OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *  ************************************************************************************
- *  
- */ 
+ *
+ */
 
 #include "ofxShaderObj.h"
 
@@ -40,7 +40,7 @@ ofxShaderObj::ofxShaderObj():nTextures(0){
     // Collaborations are welcome
     
     passes = 1;                 // Number of itinerations needs. Default it´s 1;
-    internalFormat = GL_RGBA;   // Tipe of GL textures 
+    internalFormat = GL_RGBA;   // Tipe of GL textures
     
     // And the fragSahder it self. Note that are defaul variables:
     //
@@ -49,42 +49,42 @@ ofxShaderObj::ofxShaderObj():nTextures(0){
     // - resolution
     // - backbuffer texture
     // - tex0, tex1, tex2, ... : this are dynamicaly defined and allocated and can be
-    //   filled with information by using .begin(0) and .end(0), or .begin(1) and .end(1), etc 
+    //   filled with information by using .begin(0) and .end(0), or .begin(1) and .end(1), etc
     //
     // This dafault shader it's timer made of a mix on Ricardo Caballero's webGL Sandbox
     // http://mrdoob.com/projects/glsl_sandbox/
     //
     
-//    fragmentShader = "\n\
-//// \n\
-//// Empty Shader Patch for ofxComposer \n\
-//// by http://PatricioGonzalezVivo.com \n\
-////\n\
-//// For quick GLSL prototyping this Patch have the next native variables\n\
-////\n\
-//uniform sampler2DRect backbuffer;  // Previus frameBuffer \n\
-//uniform sampler2DRect tex0;        // Input texture number 0 \n\
-//                                   // You can add as many as you want\n\
-//                                   // just type name them 'tex'+ N\n\
-//\n\
-//uniform vec2  size0;               // tex0 resolution\n\
-//uniform vec2  resolution;          // Patch resolution\n\
-//uniform vec2  window;              // Window resolution\n\
-//uniform vec2  screen;              // Screen resolution\n\
-//uniform vec2  mouse;               // Mouse position on the screen\n\
-//uniform float time;                // seconds \n\
-//\n\
-//void main( void ){\n\
-//    vec2 st = gl_TexCoord[0].st;    // gl_FragCoord.st;\n\
-//    vec4 color = texture2DRect(tex0, st);\n\
-//    \n\
-//    gl_FragColor = vec4( color.rgb, color.a );\n\
-//}\n";
-//    
-//    vertexShader = "void main(){\n\
-//\n\
-//gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
-//}\n";
+    fragmentShader = "\n\
+    // \n\
+    // Empty Shader Patch for ofxComposer \n\
+    // by http://PatricioGonzalezVivo.com \n\
+    //\n\
+    // For quick GLSL prototyping this Patch have the next native variables\n\
+    //\n\
+    uniform sampler2DRect backbuffer;  // Previus frameBuffer \n\
+    uniform sampler2DRect tex0;        // Input texture number 0 \n\
+    // You can add as many as you want\n\
+    // just type name them 'tex'+ N\n\
+    \n\
+    uniform vec2  size0;               // tex0 resolution\n\
+    uniform vec2  resolution;          // Patch resolution\n\
+    uniform vec2  window;              // Window resolution\n\
+    uniform vec2  screen;              // Screen resolution\n\
+    uniform vec2  mouse;               // Mouse position on the screen\n\
+    uniform float time;                // seconds \n\
+    \n\
+    void main( void ){\n\
+    vec2 st = gl_TexCoord[0].st;    // gl_FragCoord.st;\n\
+    vec4 color = texture2DRect(tex0, st);\n\
+    \n\
+    gl_FragColor = vec4( color.rgb, color.a );\n\
+    }\n";
+    
+    vertexShader = "void main(){\n\
+    \n\
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
+    }\n";
 }
 
 ofxShaderObj::~ofxShaderObj(){
@@ -136,31 +136,31 @@ bool ofxShaderObj::setFragmentShader(string _fragShader){
 }
 
 /*
-bool ofxShaderObj::setVertexShader(string _vertShader){
-    bool loaded = false;
-    
-    if ( vertexShader != _vertShader ){
-        
-        ofShader test;
-        test.setupShaderFromSource(GL_VERTEX_SHADER, _vertShader);
-        bFine = test.linkProgram();
-        
-        if( bFine ){
-            vertexShader = _vertShader;
-            loaded = doFragmentShader();
-        }
-    }
-    
-    return loaded;
-}*/
+ bool ofxShaderObj::setVertexShader(string _vertShader){
+ bool loaded = false;
+ 
+ if ( vertexShader != _vertShader ){
+ 
+ ofShader test;
+ test.setupShaderFromSource(GL_VERTEX_SHADER, _vertShader);
+ bFine = test.linkProgram();
+ 
+ if( bFine ){
+ vertexShader = _vertShader;
+ loaded = doFragmentShader();
+ }
+ }
+ 
+ return loaded;
+ }*/
 
 // A simplified way of filling the insides texture
-void ofxShaderObj::setTexture(ofTexture& tex, int _texNum){ 
+void ofxShaderObj::setTexture(ofTexture& tex, int _texNum){
     if ((_texNum < nTextures) && ( _texNum >= 0)){
-        textures[_texNum].begin(); 
+        textures[_texNum].begin();
         ofClear(0,255);
         ofSetColor(255);
-        tex.draw(0,0); 
+        tex.draw(0,0);
         textures[_texNum].end();
     }
 };
@@ -185,9 +185,9 @@ void ofxShaderObj::update(){
         
         // All the needed textures are provided to the shader by this loop
         for( int i = 0; i < nTextures; i++){
-            string texName = "tex" + ofToString(i); 
+            string texName = "tex" + ofToString(i);
             shader.setUniformTexture(texName.c_str(), textures[i].getTextureReference(), i+1 );
-            string texRes = "size" + ofToString(i); 
+            string texRes = "size" + ofToString(i);
             shader.setUniform2f(texRes.c_str() , (float)textures[i].getWidth(), (float)textures[i].getHeight());
         }
         
@@ -202,7 +202,7 @@ void ofxShaderObj::update(){
         shader.setUniform2f("mouse", (float)ofGetMouseX(), (float)ofGetMouseY());
         shader.setUniform1f("time", (float)ofGetElapsedTimef() );
         
-        // doFrame() it´s a built-in funtion of ofxShaderObj that only draw a white box in order to 
+        // doFrame() it´s a built-in funtion of ofxShaderObj that only draw a white box in order to
         // funtion as a frame here the textures could rest.
         // If you want to distort the points of a textures, probably you want to re-define the renderFrame funtion.
         renderFrame();
@@ -214,8 +214,8 @@ void ofxShaderObj::update(){
         pingPong.swap();    // Swap the ofFbo's. Now dst it's src and src its dst
     }
     
-    pingPong.swap();        // After the loop the render information will be at the src ofFbo of the ofxSwapBuffer 
-                            // this extra swap() call will put it on the dst one. Witch sounds more reasonable... isn´t?
+    pingPong.swap();        // After the loop the render information will be at the src ofFbo of the ofxSwapBuffer
+    // this extra swap() call will put it on the dst one. Witch sounds more reasonable... isn´t?
     
     //time += 1.0/ofGetFrameRate();   // here it´s where the time it´s updated.
 };
@@ -241,7 +241,7 @@ bool ofxShaderObj::doFragmentShader(){
         string searchFor = "tex" + ofToString(i);
         if ( fragmentShader.find(searchFor)!= -1)
             num++;
-        else 
+        else
             break;
     }
     
@@ -270,10 +270,8 @@ bool ofxShaderObj::doFragmentShader(){
     //bool loaded;
     // Compile the shader and loadit to the GPU
     shader.unload();
-//    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShader);
-//    bFine = shader.linkProgram();
-    shader.load("Shaders/shaderObj");
-    bFine = true;
+    shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragmentShader);
+    bFine = shader.linkProgram();
     return bFine;
 }
 
@@ -295,7 +293,7 @@ void ofxShaderObj::renderFrame(float _width, float _height){
     // If it´s not well compiled it will show an image little more gray.
     //
     if (bFine)
-        ofSetColor(255,255);  
+        ofSetColor(255,255);
     else
         ofSetColor(150,255);
     

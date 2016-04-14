@@ -61,7 +61,26 @@ ofxPatch::ofxPatch(){
     midiLearnActive     = false;
     editAudioInActive   = false;
     
-    maskShader.load("Shaders/myShader");
+    
+    string shaderProgram = "#version 120\n\
+    #extension GL_ARB_texture_rectangle : enable\n\
+    \n\
+    uniform sampler2DRect tex0;\n\
+    uniform sampler2DRect maskTex;\n\
+    uniform float texOpacity;\n\
+    uniform float maskOpacity;\n\
+    \n\
+    void main (void){\n\
+    vec2 pos = gl_TexCoord[0].st;\n\
+    \n\
+    vec4 src = texture2DRect(tex0, pos);\n\
+    float mask = texture2DRect(maskTex, pos).r;\n\
+    \n\
+    gl_FragColor = vec4( src.rgb * texOpacity , clamp( min(src.a,mask) , maskOpacity, 1.0));\n\
+    }\n";
+    maskShader.setupShaderFromSource(GL_FRAGMENT_SHADER, shaderProgram);
+    maskShader.linkProgram();
+//    maskShader.load("Shaders/myShader");
     maskFbo.allocate(width, height);
     
     color.set(200,255);
@@ -92,9 +111,9 @@ ofxPatch::ofxPatch(){
     noInputsImg.loadImage("assets/no_inputs.png");
     
     // multiple Window - Encapsulated
-    windowId = MAIN_WINDOW;
+//    windowId = MAIN_WINDOW;
     lastEncapsulated = false;
-    encapsulatedId = -1;
+    encapsulatedId = MAIN_WINDOW;
     
 //    minArea = 5000.f;
 //    maxArea = 100000.f;
@@ -239,8 +258,8 @@ void ofxPatch::update(){
 //------------------------------------------------------------------
 void ofxPatch::customDraw(){
     
-    if ( (EventHandler::getInstance()->getWindowIdDraw() != windowId) &&
-         (!lastEncapsulated || EventHandler::getInstance()->getWindowIdDraw() != MAIN_WINDOW)) {
+    if ( (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId) &&
+         (!lastEncapsulated)) {
         return;
     }
     
@@ -259,8 +278,13 @@ void ofxPatch::customDraw(){
         else
             color.lerp(ofColor(200,200), 0.1);
         
+//        ofPushMatrix();
+//        ofMultMatrix(glMatrix);
+//        ofSetColor(color);
+//        getTextureReference().draw(0,0);
+//        ofPopMatrix();
         ofPushMatrix();
-        ofMultMatrix(glMatrix);
+        glMultMatrixf(glMatrix);
         ofSetColor(color);
         getTextureReference().draw(0,0);
         ofPopMatrix();
@@ -347,8 +371,8 @@ void ofxPatch::customDraw(){
         // Draw the input linking dots (if i'm not audio or OSC receiver)
         //
         if (!isAudio && !isOSC) {
-            
-            if (!lastEncapsulated || (lastEncapsulated && !(EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW))) {
+            //TODO: revisar esto
+            if (!lastEncapsulated || (lastEncapsulated && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) {
                 for(int i = 0; i < inPut.size(); i++){
                     ofSetColor(255, 150);
                     ofNoFill();
@@ -367,7 +391,8 @@ void ofxPatch::customDraw(){
                 
                 // Draw the links between nodes
                 //
-                if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW)){
+                //TODO: revisar esto
+                if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW)){
                     for (int i = 0; i < outPut.size(); i++){
                         if (outPut[i].to != NULL){
                             ofFill();
@@ -375,7 +400,8 @@ void ofxPatch::customDraw(){
                             
                             // set dstOutput to the encapsulated patch, or the regular exit
                             ofPoint dstOutput;
-                            if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getWindowIdDraw() == MAIN_WINDOW){
+                            //TODO: revisar esto
+                            if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW){
                                 dstOutput = outPut[i].toEncapsulated->pos;
                             }else{
                                 dstOutput = outPut[i].to->pos;
@@ -434,7 +460,8 @@ void ofxPatch::customDraw(){
 //------------------------------------------------------------------
 void ofxPatch::drawInspectorGUI() {
     
-    if(EventHandler::getInstance()->getWindowIdDraw() != windowId && !lastEncapsulated){
+    //TODO: revisar esto
+    if(EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated){
         return;
     }
     
@@ -490,7 +517,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
     
     bool result = false;
     
-    if (EventHandler::getInstance()->getWindowEvent() != windowId){
+    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return result;
     }
     
@@ -665,7 +692,7 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
-    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return;
     }
     
@@ -839,7 +866,7 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
-    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return;
     }
     
@@ -865,7 +892,7 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_keyPressed(ofKeyEventArgs &e){
-    if (EventHandler::getInstance()->getWindowEvent() != windowId) {
+    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return;
     }
     
@@ -1113,28 +1140,28 @@ ofRectangle ofxPatch::getBox(){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestInspectorYCoord(int winId){
-    if(bInspector && winId == windowId){
+float ofxPatch::getHighestInspectorYCoord(int encapsulatedId){
+    if(bInspector && encapsulatedId == this->encapsulatedId){
         return panel.getPosition().y + panel.getHeight();
     }
     return -1;
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestInspectorXCoord(int winId){
-    if(bInspector && winId == windowId){
+float ofxPatch::getHighestInspectorXCoord(int encapsulatedId){
+    if(bInspector && encapsulatedId == this->encapsulatedId){
         return panel.getPosition().x + panel.getWidth();
     }
     return -1;
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestYCoord(int winId){
+float ofxPatch::getHighestYCoord(int encapsulatedId){
     int highestCoord = 0;
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].y && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
+        if(highestCoord < textureCorners[i].y && (encapsulatedId == this->encapsulatedId)){
             highestCoord = textureCorners[i].y;
         }
     }
@@ -1143,11 +1170,11 @@ float ofxPatch::getHighestYCoord(int winId){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getLowestYCoord(int winId){
+float ofxPatch::getLowestYCoord(int encapsulatedId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].y && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
+        if(lowestCoord > textureCorners[i].y && (encapsulatedId == this->encapsulatedId)){
             lowestCoord = textureCorners[i].y;
         }
     }
@@ -1156,12 +1183,12 @@ float ofxPatch::getLowestYCoord(int winId){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getHighestXCoord(int winId){
+float ofxPatch::getHighestXCoord(int encapsulatedId){
     int highestCoord = 0;
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].x && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
+        if(highestCoord < textureCorners[i].x && (encapsulatedId == this->encapsulatedId)){
             highestCoord = textureCorners[i].x;
         }
     }
@@ -1170,11 +1197,11 @@ float ofxPatch::getHighestXCoord(int winId){
 }
 
 //------------------------------------------------------------------
-float ofxPatch::getLowestXCoord(int winId){
+float ofxPatch::getLowestXCoord(int encapsulatedId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].x && (winId == windowId || (winId == MAIN_WINDOW && lastEncapsulated))){
+        if(lowestCoord > textureCorners[i].x && (encapsulatedId == this->encapsulatedId)){
             lowestCoord = textureCorners[i].x;
         }
     }
@@ -1954,9 +1981,9 @@ bool ofxPatch::saveSettingsToSnippet(ofxXmlSettings &XML, int _nTag, map<int,int
 // -------------------------------------- ENCAPSULATED
 // ---------------------------------------------------
 
-int ofxPatch::getWindowId(){
-    return windowId;
-}
+//int ofxPatch::getWindowId(){
+//    return windowId;
+//}
 
 //------------------------------------------------------------------
 int ofxPatch::getEncapsulatedId(){
@@ -1974,9 +2001,9 @@ bool ofxPatch::isLastEncapsulated(){
 }
 
 //------------------------------------------------------------------
-void ofxPatch::setWindowId(int winId){
-    windowId = winId;
-}
+//void ofxPatch::setWindowId(int winId){
+//    windowId = winId;
+//}
 
 //------------------------------------------------------------------
 void ofxPatch::setEncapsulatedId(int encapId){
