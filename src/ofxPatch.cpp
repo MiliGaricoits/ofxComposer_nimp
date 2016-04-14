@@ -122,9 +122,16 @@ ofxPatch::~ofxPatch(){
     ofRemoveListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
     ofRemoveListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);
     ofRemoveListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().keyReleased, this, &ofxPatch::_keyReleased, PATCH_EVENT_PRIORITY);
     
     delete title;
     title = NULL;
+    
+    noInputsImg.getTextureReference().clear();
+    noInputsImg.getPixelsRef().clear();
+    noInputsImg.clear();
+    tex.clear();
+
 }
 
 /* ================================================ */
