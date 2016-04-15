@@ -108,7 +108,7 @@ ofxPatch::ofxPatch(){
     ofAddListener(ofEvents().keyPressed, this, &ofxPatch::_keyPressed, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().keyReleased, this, &ofxPatch::_keyReleased, PATCH_EVENT_PRIORITY);
     
-    noInputsImg.loadImage("assets/no_inputs.png");
+    noInputsImg.loadImage("assets/no_input.png");
     
     // multiple Window - Encapsulated
 //    windowId = MAIN_WINDOW;
