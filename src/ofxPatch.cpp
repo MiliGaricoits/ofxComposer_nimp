@@ -259,7 +259,7 @@ void ofxPatch::update(){
 void ofxPatch::customDraw(){
     
     if ( (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId) &&
-         (!lastEncapsulated)) {
+         (!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getEncapsulatedIdDraw() != MAIN_WINDOW) )) {
         return;
     }
     
@@ -371,7 +371,6 @@ void ofxPatch::customDraw(){
         // Draw the input linking dots (if i'm not audio or OSC receiver)
         //
         if (!isAudio && !isOSC) {
-            //TODO: revisar esto
             if (!lastEncapsulated || (lastEncapsulated && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) {
                 for(int i = 0; i < inPut.size(); i++){
                     ofSetColor(255, 150);
@@ -391,7 +390,6 @@ void ofxPatch::customDraw(){
                 
                 // Draw the links between nodes
                 //
-                //TODO: revisar esto
                 if(!lastEncapsulated || (lastEncapsulated && EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW)){
                     for (int i = 0; i < outPut.size(); i++){
                         if (outPut[i].to != NULL){
@@ -400,7 +398,6 @@ void ofxPatch::customDraw(){
                             
                             // set dstOutput to the encapsulated patch, or the regular exit
                             ofPoint dstOutput;
-                            //TODO: revisar esto
                             if(outPut[i].toEncapsulatedId > 0 && outPut[i].toEncapsulatedId != nId && EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW){
                                 dstOutput = outPut[i].toEncapsulated->pos;
                             }else{
@@ -459,8 +456,6 @@ void ofxPatch::customDraw(){
 
 //------------------------------------------------------------------
 void ofxPatch::drawInspectorGUI() {
-    
-    //TODO: revisar esto
     if(EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated){
         return;
     }
@@ -692,7 +687,8 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
-    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+    if ((EventHandler::getInstance()->isMainEvent()) &&
+        (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated) ){
         return;
     }
     
@@ -1141,7 +1137,7 @@ ofRectangle ofxPatch::getBox(){
 
 //------------------------------------------------------------------
 float ofxPatch::getHighestInspectorYCoord(int encapsulatedId){
-    if(bInspector && encapsulatedId == this->encapsulatedId){
+    if(bInspector && (encapsulatedId == this->encapsulatedId || (lastEncapsulated && encapsulatedId == MAIN_WINDOW)) ){
         return panel.getPosition().y + panel.getHeight();
     }
     return -1;
@@ -1149,7 +1145,7 @@ float ofxPatch::getHighestInspectorYCoord(int encapsulatedId){
 
 //------------------------------------------------------------------
 float ofxPatch::getHighestInspectorXCoord(int encapsulatedId){
-    if(bInspector && encapsulatedId == this->encapsulatedId){
+    if(bInspector && (encapsulatedId == this->encapsulatedId || (lastEncapsulated && encapsulatedId == MAIN_WINDOW)) ){
         return panel.getPosition().x + panel.getWidth();
     }
     return -1;
@@ -1161,7 +1157,7 @@ float ofxPatch::getHighestYCoord(int encapsulatedId){
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].y && (encapsulatedId == this->encapsulatedId)){
+        if(highestCoord < textureCorners[i].y && ((encapsulatedId == this->encapsulatedId) || (lastEncapsulated && encapsulatedId == MAIN_WINDOW))){
             highestCoord = textureCorners[i].y;
         }
     }
@@ -1174,7 +1170,7 @@ float ofxPatch::getLowestYCoord(int encapsulatedId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].y && (encapsulatedId == this->encapsulatedId)){
+        if(lowestCoord > textureCorners[i].y && ((encapsulatedId == this->encapsulatedId) || (lastEncapsulated && encapsulatedId == MAIN_WINDOW))){
             lowestCoord = textureCorners[i].y;
         }
     }
@@ -1188,7 +1184,7 @@ float ofxPatch::getHighestXCoord(int encapsulatedId){
     float offSet = 0.0;
     
     for(int i = 0; i < 4; i++){
-        if(highestCoord < textureCorners[i].x && (encapsulatedId == this->encapsulatedId)){
+        if(highestCoord < textureCorners[i].x && ((encapsulatedId == this->encapsulatedId) || (lastEncapsulated && encapsulatedId == MAIN_WINDOW))){
             highestCoord = textureCorners[i].x;
         }
     }
@@ -1201,7 +1197,7 @@ float ofxPatch::getLowestXCoord(int encapsulatedId){
     int lowestCoord = 10000;
     for(int i = 0; i < 4; i++){
         
-        if(lowestCoord > textureCorners[i].x && (encapsulatedId == this->encapsulatedId)){
+        if(lowestCoord > textureCorners[i].x && ((encapsulatedId == this->encapsulatedId) || (lastEncapsulated && encapsulatedId == MAIN_WINDOW))){
             lowestCoord = textureCorners[i].x;
         }
     }

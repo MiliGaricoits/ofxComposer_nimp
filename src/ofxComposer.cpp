@@ -369,8 +369,6 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     // ... fin the one where the mouse it�s over
                     //
                     if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5){
-                        
-                        // TODO: revisar esto
                         if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) {
                             // Once he founds it
                             // make the link and forget the selection
@@ -793,7 +791,7 @@ void ofxComposer::uncapsulate(int encapsulatedId){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         if(it->second->getEncapsulatedId() == encapsulatedId){
 //            it->second->setWindowId(MAIN_WINDOW);
-            it->second->setEncapsulatedId(-1);
+            it->second->setEncapsulatedId(MAIN_WINDOW);
             it->second->setLastEncapsulated(false);
             it->second->setToEncapsulatedId(-1);
         }
