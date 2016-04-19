@@ -360,8 +360,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
             if ((selectedDot != it->first) &&              // If not him self
                 //(it->second->getType() == "ofShader") && // The target it's a shader
                 (it->second->bEditMode) &&                 // And we are in editMode and not on maskMode
-                !(it->second->bEditMask) &&
-                it->second->aceptsMoreInputs()){           // And the node acepts more inputs
+                !(it->second->bEditMask)){                 // And the node acepts more inputs
                 
                 for (int j = 0; j < it->second->inPut.size(); j++){
                     
@@ -369,7 +368,10 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     // ... fin the one where the mouse it�s over
                     //
                     if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5){
-                        if (!it->second->isLastEncapsulated() || (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) {
+                        if ((!it->second->isLastEncapsulated() ||
+                            (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) &&
+                            it->second->aceptsMoreInputs()){
+                            
                             // Once he founds it
                             // make the link and forget the selection
                             //
