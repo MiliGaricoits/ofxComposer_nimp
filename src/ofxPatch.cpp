@@ -271,6 +271,8 @@ void ofxPatch::customDraw(){
     
     ((ofCamera*)this->parent)->begin();
     
+    ofPushStyle();
+    
     if (( bEditMode || bVisible ) && !isAudio ) {
         
         if (bActive || !bEditMode)
@@ -291,8 +293,6 @@ void ofxPatch::customDraw(){
     }
     
     if (bEditMode) {
-        
-        ofPushStyle();
         
         if ( !bEditMask ){
             ofFill();
@@ -386,7 +386,6 @@ void ofxPatch::customDraw(){
                 ofSetColor(255, 150);
                 ofCircle(getOutPutPosition(), 5*scale.x);
                 
-                ofPopStyle();
                 
                 // Draw the links between nodes
                 //
@@ -443,6 +442,7 @@ void ofxPatch::customDraw(){
                 }
             }
         }
+        ofPopStyle();
     }
     
     ((ofCamera*)this->parent)->end();
