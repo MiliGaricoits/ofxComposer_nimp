@@ -783,7 +783,7 @@ int ofxComposer::encapsulate(){
         deactivateAllPatches();
         return encapsulatedId;
     } else {
-        ConsoleLog::getInstance()->pushMessage("The selection of nodes is invalid");
+        ConsoleLog::getInstance()->pushError("The selection of nodes to encapsulate is invalid.");
         return -1;
     }
 }
@@ -871,7 +871,7 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
         
         // validation ok
         if(patchId != -1) {
-            ConsoleLog::getInstance()->pushSuccess("The nodes selected are valid to encapsulate");
+            ConsoleLog::getInstance()->pushSuccess("Nodes encapsulated successfully. For a quick view click on the encapsulated node and type 'e'.");
         }
     }else{
         ConsoleLog::getInstance()->pushError("There are not enough nodes selected to encapsulate");
@@ -1000,9 +1000,9 @@ bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulated
 
     if(lastPatch < 0){
         stringstream ss;
-        ss << "Error saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushError(ss.str());
-        ConsoleLog::getInstance()->pushError("It doesn't exist");
+        ss << "Error saving encapsulated with id " << encapsulatedId << ". The node doesn't exists.";
+        ofLog(OF_LOG_ERROR, ss.str());
+        ConsoleLog::getInstance()->pushError("Error saving encapsulated");
         return false;
     }
     
@@ -1037,11 +1037,9 @@ bool ofxComposer::saveEncapsulatedSettings(ofxXmlSettings &XML, int encapsulated
     
     stringstream ss;
     if(!saved){
-        ss << "Error saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushError(ss.str());
-    } else{
-        ss << "Success saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushSuccess(ss.str());
+        ss << "Error saving encapsulated with id " << encapsulatedId;
+        ofLog(OF_LOG_ERROR, ss.str());
+        ConsoleLog::getInstance()->pushError("Error saving encapsulated");
     }
     
     return saved;
@@ -1060,9 +1058,9 @@ bool ofxComposer::saveEncapsulatedSettingsToSnippet(ofxXmlSettings &XML, int enc
     
     if(lastPatch < 0){
         stringstream ss;
-        ss << "Error saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushError(ss.str());
-        ConsoleLog::getInstance()->pushError("It doesn't exist");
+        ss << "Error saving encapsulated with id " << encapsulatedId << ". The node doesn't exists.";
+        ofLog(OF_LOG_ERROR, ss.str());
+        ConsoleLog::getInstance()->pushError("Error saving encapsulated");
         return false;
     }
     
@@ -1085,11 +1083,9 @@ bool ofxComposer::saveEncapsulatedSettingsToSnippet(ofxXmlSettings &XML, int enc
     
     stringstream ss;
     if(!saved){
-        ss << "Error saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushError(ss.str());
-    } else{
-        ss << "Success saving encapsulatedId " << encapsulatedId;
-        ConsoleLog::getInstance()->pushSuccess(ss.str());
+        ss << "Error saving encapsulated with id " << encapsulatedId;
+        ofLog(OF_LOG_ERROR, ss.str());
+        ConsoleLog::getInstance()->pushError("Error saving encapsulated");
     }
     
     return saved;
