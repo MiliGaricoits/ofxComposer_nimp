@@ -676,6 +676,14 @@ void ofxComposer::deletePatchConection(ofxPatchDeleteEvent &ev){
     patches[ev.patchId]->outPut.erase(patches[ev.patchId]->outPut.begin() + ev.deleteOutputId);
 }
 
+//------------------------------------------------------------------
+void ofxComposer::setDrawInspectors(bool drawInspectors_){
+    
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->setDrawInspector(drawInspectors_);
+    }
+}
+
 // -----------------------------------------------------------
 // ------------------------------------------- MULTIPLE SELECT
 // -----------------------------------------------------------
@@ -712,6 +720,13 @@ void ofxComposer::multipleSelectAndReset(){
 void ofxComposer::deactivateAllPatches(){
     for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
         it->second->bActive = false;
+    }
+}
+
+//------------------------------------------------------------------
+void ofxComposer::activateAllPatches(){
+    for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
+        it->second->bActive = true;
     }
 }
 

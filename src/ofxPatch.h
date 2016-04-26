@@ -234,6 +234,7 @@ protected:
     
     bool            ctrl_active;
     bool            alt_active;
+    bool            command_active;
     
     // Inspector
     //

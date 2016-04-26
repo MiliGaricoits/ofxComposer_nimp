@@ -56,6 +56,7 @@ public:
     void    scalePatches(float yDiff);
     void    updateConnectionsSize(ofxPatch* patch);
     void    deletePatchConection(ofxPatchDeleteEvent &patch_id);
+    void    setDrawInspectors(bool drawInspectors_);
     
     // scroll
     //
@@ -65,6 +66,7 @@ public:
     bool    isDraggingHGrip();
     
     void    deactivateAllPatches();
+    void    activateAllPatches();
     bool    arePatchesDeactivated();
 
     // encapsulate

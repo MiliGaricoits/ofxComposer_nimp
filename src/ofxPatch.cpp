@@ -57,6 +57,7 @@ ofxPatch::ofxPatch(){
     
     ctrl_active         = false;
     alt_active          = false;
+    command_active      = false;
     
     midiLearnActive     = false;
     editAudioInActive   = false;
@@ -898,6 +899,9 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
     else if (e.key == OF_KEY_RIGHT_CONTROL || e.key == OF_KEY_LEFT_CONTROL) {
         ctrl_active = true;
     }
+    else if (e.key == OF_KEY_RIGHT_COMMAND || e.key == OF_KEY_LEFT_COMMAND) {
+        command_active = true;
+    }
     else if (e.key == OF_KEY_F2){
         bEditMode = !bEditMode;
     } else if (e.key == OF_KEY_F3){
@@ -925,32 +929,47 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
         }
     }
     
-    if (bActive && bEditMode & bEditMask) {
+    if (bActive && bEditMode) {
         
-        // Delete the selected mask point
+        // Show or hide Inspector
         //
-        if ( (e.key == 'x') &&
-            (selectedMaskCorner >= 0) &&
-            (selectedMaskCorner < maskCorners.size() ) ){
-            maskCorners.getVertices().erase(maskCorners.getVertices().begin()+ selectedMaskCorner );
-            selectedMaskCorner = -1;
-            
-            bUpdateMask = true;
-            bMasking = true;
+        if ( e.key == 'i' || e.key == 'I' ){
+            bInspector = !bInspector;
         }
         
-        // Reset all the mask or the texture
+        // Show or hide Inspector
         //
-        if ( e.key == 'r' ){
-            maskCorners.clear();
-            selectedMaskCorner = -1;
-            maskCorners.addVertex(0.0,0.0);
-            maskCorners.addVertex(1.0,0.0);
-            maskCorners.addVertex(1.0,1.0);
-            maskCorners.addVertex(0.0,1.0);
+        if (( e.key == 'd' || e.key == 'D' ) && !command_active){
+            bActive = !bActive;
+        }
+        
+        if (bEditMask) {
+        
+            // Delete the selected mask point
+            //
+            if ( (e.key == 'x') &&
+                (selectedMaskCorner >= 0) &&
+                (selectedMaskCorner < maskCorners.size() ) ){
+                maskCorners.getVertices().erase(maskCorners.getVertices().begin()+ selectedMaskCorner );
+                selectedMaskCorner = -1;
+                
+                bUpdateMask = true;
+                bMasking = true;
+            }
             
-            bUpdateMask = true;
-            bMasking = false;
+            // Reset all the mask or the texture
+            //
+            if ( e.key == 'r' ){
+                maskCorners.clear();
+                selectedMaskCorner = -1;
+                maskCorners.addVertex(0.0,0.0);
+                maskCorners.addVertex(1.0,0.0);
+                maskCorners.addVertex(1.0,1.0);
+                maskCorners.addVertex(0.0,1.0);
+                
+                bUpdateMask = true;
+                bMasking = false;
+            }
         }
     }
 }
@@ -958,8 +977,15 @@ void ofxPatch::_keyPressed(ofKeyEventArgs &e){
 //------------------------------------------------------------------
 void ofxPatch::_keyReleased(ofKeyEventArgs &e){
     
-    ctrl_active = false;
-    alt_active  = false;
+    if (e.key == OF_KEY_RIGHT_ALT || e.key == OF_KEY_LEFT_ALT) {
+        alt_active = false;
+    }
+    else if (e.key == OF_KEY_RIGHT_CONTROL || e.key == OF_KEY_LEFT_CONTROL) {
+        ctrl_active = false;
+    }
+    else if (e.key == OF_KEY_RIGHT_COMMAND || e.key == OF_KEY_LEFT_COMMAND) {
+        command_active = false;
+    }
 }
 
 //------------------------------------------------------------------
