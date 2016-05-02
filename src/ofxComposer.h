@@ -18,6 +18,7 @@ class ofxComposer : public ofNode {
 public:
     
     ofxComposer();
+    ~ofxComposer();
     
     //** LOOPS **//
     //

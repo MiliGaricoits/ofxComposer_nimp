@@ -513,7 +513,11 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
     
     bool result = false;
     
-    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//        return result;
+//    }
+    
+    if (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return result;
     }
     
@@ -688,8 +692,12 @@ bool ofxPatch::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
-    if ((EventHandler::getInstance()->isMainEvent()) &&
-        (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated) ){
+//    if ((EventHandler::getInstance()->isMainEvent()) &&
+//        (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated) ){
+//        return;
+//    }
+    
+    if (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId && !lastEncapsulated) {
         return;
     }
     
@@ -863,7 +871,11 @@ void ofxPatch::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
-    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//        return;
+//    }
+    
+    if (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return;
     }
     
@@ -889,7 +901,11 @@ void ofxPatch::_mouseReleased(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxPatch::_keyPressed(ofKeyEventArgs &e){
-    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//    if ((EventHandler::getInstance()->isMainEvent()) && EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
+//        return;
+//    }
+    
+    if (EventHandler::getInstance()->getEncapsulatedIdDraw() != encapsulatedId){
         return;
     }
     

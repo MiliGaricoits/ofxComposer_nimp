@@ -64,6 +64,19 @@ ofxComposer::ofxComposer(){
     editOSCActive = false;
 }
 
+ofxComposer::~ofxComposer(){
+    ofRemoveListener(ofEvents().mouseMoved, this, &ofxComposer::_mouseMoved, COMPOSER_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().mousePressed, this, &ofxComposer::_mousePressed, COMPOSER_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().mouseReleased, this, &ofxComposer::_mouseReleased, COMPOSER_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().keyPressed, this, &ofxComposer::_keyPressed, COMPOSER_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().keyReleased, this, &ofxComposer::_keyReleased, COMPOSER_EVENT_PRIORITY);
+    ofRemoveListener(ofEvents().windowResized, this, &ofxComposer::_windowResized, COMPOSER_EVENT_PRIORITY);
+    
+    // scrollbar
+    //
+    ofRemoveListener(ofEvents().mouseDragged, this, &ofxComposer::_mouseDragged, COMPOSER_EVENT_PRIORITY);
+}
+
 /* ================================================ */
 /*                      LOOPS                       */
 /* ================================================ */
@@ -164,9 +177,9 @@ void ofxComposer::drawInspectorGUIs() {
 /* ================================================ */
 
 void ofxComposer::_keyPressed(ofKeyEventArgs &e){
-    if(!EventHandler::getInstance()->isMainEvent()){
-        return;
-    }
+//    if(!EventHandler::getInstance()->isMainEvent()){
+//        return;
+//    }
     
     if (e.key == OF_KEY_F2 ){
         bEditMode = !bEditMode;
@@ -275,9 +288,9 @@ void ofxComposer::_mousePressed(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
-    if(!EventHandler::getInstance()->isMainEvent()){
-        return;
-    }
+//    if(!EventHandler::getInstance()->isMainEvent()){
+//        return;
+//    }
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
@@ -346,9 +359,9 @@ void ofxComposer::_mouseDragged(ofMouseEventArgs &e){
 
 //------------------------------------------------------------------
 void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
-    if(!EventHandler::getInstance()->isMainEvent()){
-        return;
-    }
+//    if(!EventHandler::getInstance()->isMainEvent()){
+//        return;
+//    }
     
     ofVec3f mouse = ofVec3f(e.x, e.y, 0.0);
     ofVec3f mouse_transformed = mouse*this->getGlobalTransformMatrix();
