@@ -39,7 +39,7 @@ public:
     
     ofEvent<int> close;
     ofEvent<int> reset;
-    ofEvent<int> help;
+    ofEvent<void> help;
 //    ofEvent<int> drag;
     
 private:
