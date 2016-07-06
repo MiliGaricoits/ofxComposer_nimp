@@ -113,6 +113,9 @@ bool ofxTitleBar::_mousePressed(ofMouseEventArgs &e){
                 } else if ( buttons[i].letter == 'r' ){
                     ofNotifyEvent(reset, *windowsId);
                     hit = true;
+                } else if ( buttons[i].letter == '?' ){
+                    ofNotifyEvent(help, *windowsId);
+                    hit = true;
                 } else {
                     if ( buttons[i].state != NULL ){
                         (*buttons[i].state) = !(*buttons[i].state);

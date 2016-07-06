@@ -100,8 +100,10 @@ ofxPatch::ofxPatch(){
     title->addButton('m', &bEditMask, TOGGLE_BUTTON);
     title->addButton('v', &bVisible, TOGGLE_BUTTON);
     title->addButton('i', &bInspector, TOGGLE_BUTTON);
+    title->addButton('?', NULL, PUSH_BUTTON);
     title->setParent(*this->getParent());
     ofAddListener( title->reset , this, &ofxPatch::_reMakeFrame);
+    ofAddListener( title->help , this, &ofxPatch::_showHelp);
     
     ofAddListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
     ofAddListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
@@ -138,6 +140,7 @@ ofxPatch::~ofxPatch(){
     maskCorners.clear();
     
     ofRemoveListener( title->reset , this, &ofxPatch::_reMakeFrame);
+    ofRemoveListener( title->help , this, &ofxPatch::_showHelp);
     ofRemoveListener(ofEvents().mousePressed, this, &ofxPatch::_mousePressed, PATCH_EVENT_PRIORITY);
     ofRemoveListener(ofEvents().mouseDragged, this, &ofxPatch::_mouseDragged, PATCH_EVENT_PRIORITY);
     ofRemoveListener(ofEvents().mouseReleased, this, &ofxPatch::_mouseReleased, PATCH_EVENT_PRIORITY);

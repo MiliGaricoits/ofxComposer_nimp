@@ -39,6 +39,7 @@ public:
     
     ofEvent<int> close;
     ofEvent<int> reset;
+    ofEvent<int> help;
 //    ofEvent<int> drag;
     
 private:

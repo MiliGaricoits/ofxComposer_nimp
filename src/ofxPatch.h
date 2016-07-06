@@ -183,6 +183,7 @@ protected:
     void            _keyPressed(ofKeyEventArgs &e);
     void            _keyReleased(ofKeyEventArgs &e);
     void            _reMakeFrame( int &_nId );
+    virtual void    _showHelp( int &_nId ) = 0;
     
     ofVideoGrabber  *videoGrabber;
     ofxShaderObj    *shader;
