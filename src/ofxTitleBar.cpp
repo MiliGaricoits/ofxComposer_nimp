@@ -73,7 +73,7 @@ void ofxTitleBar::customDraw(){
     //
     ofFill();
     ofSetColor(100);
-    (tittleBox.width - title.size() * 8) > (57)
+    (tittleBox.width - title.size() * 8) > (70)
         ? ofDrawBitmapString(title, tittleBox.x -1 + tittleBox.width - (title.size() * 8), tittleBox.y + letterHeight)
         : ofDrawBitmapString("...", tittleBox.x -1 + tittleBox.width - 24, tittleBox.y + letterHeight);
 
