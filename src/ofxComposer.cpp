@@ -380,7 +380,7 @@ void ofxComposer::_mouseReleased(ofMouseEventArgs &e){
                     // And after checking in each dot of each shader...
                     // ... fin the one where the mouse it�s over
                     //
-                    if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5 || it->second->getBox().inside(mouse_transformed.x, mouse_transformed.y)){
+                    if ( it->second->inPut[j].pos.distance(ofPoint(mouse_transformed.x, mouse_transformed.y)) < 5 || it->second->isOver(mouse_transformed)){
                         if ((!it->second->isLastEncapsulated() ||
                             (it->second->isLastEncapsulated() && !(EventHandler::getInstance()->getEncapsulatedIdDraw() == MAIN_WINDOW))) &&
                             it->second->aceptsMoreInputs()){
