@@ -470,7 +470,7 @@ void ofxPatch::drawInspectorGUI() {
     
     // Draw the inspector
     //
-    if (bInspector) {
+    if (bEditMode && bInspector) {
         panel.setPosition( ofVec3f( ((textureCorners[1].x  - cam_pos.x)/scale.x) + 2, ((textureCorners[1].y - cam_pos.y)/scale.y) - 42, cam_pos.z/scale.z));
         panel.draw();
     }
