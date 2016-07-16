@@ -708,7 +708,7 @@ void ofxComposer::multipleSelectAndReset(){
         for(map<int,ofxPatch*>::iterator it = patches.begin(); it != patches.end(); it++ ){
             
             // if it is invisible, don't make it count, it is encapsulated
-            if(it->second->bVisible && (!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer()))){
+            if( ((!it->second->bEditMode && it->second->bVisible) || it->second->bEditMode) && (!it->second->getIsAudioAnalizer() || (it->second->getIsAudioAnalizer() && it->second->getDrawAudioAnalizer()))){
                 ofRectangle aux = multipleSelectRectangle.getIntersection(it->second->getBox());
                 
                 if(aux.getArea() > 0){
