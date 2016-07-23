@@ -1385,6 +1385,9 @@ void ofxPatch::resetSizeBasedOnInput(ofxPatch* input_){
     
     setCoorners(iC);
     setup();
+    
+    bUpdateCoord = true;
+    bUpdateMask = true;
 }
 
 //------------------------------------------------------------------
