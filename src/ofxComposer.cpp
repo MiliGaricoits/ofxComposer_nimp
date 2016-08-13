@@ -899,7 +899,8 @@ int ofxComposer::validateEncapsulation(vector<int> &patchesToEncapsulate){
         
         // validation ok
         if(patchId != -1) {
-            ConsoleLog::getInstance()->pushSuccess("Nodes encapsulated successfully. For a quick view click on the encapsulated node and press command key and 'e'.");
+            ConsoleLog::getInstance()->pushSuccess("Nodes encapsulated successfully.");
+            ConsoleLog::getInstance()->pushSuccess(" \t \t For a quick view click on the encapsulated node and press command key and 'e'.", false);
         }
     }else{
         ConsoleLog::getInstance()->pushError("There are not enough nodes selected to encapsulate");
